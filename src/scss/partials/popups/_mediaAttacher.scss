@@ -196,6 +196,8 @@
   }
 
   .popup-photo > .popup-item-media {
+    position: relative;
+
     display: flex;
     justify-content: center;
     margin: 0 auto;
@@ -203,6 +205,67 @@
     img {
       object-fit: contain;
     }
+  }
+
+
+  .popup-item-media-action-menu {
+    position: absolute;
+    --scale: 1;
+
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%) scale(var(--scale));
+
+    display: flex;
+    padding: 2px 6px;
+    gap: 8px;
+
+    border-radius: 999px;
+    background-color: rgba(0,0,0,.4); // TODO: Tune opacity notice??
+    backdrop-filter: blur(35px);
+
+    color: rgba(255,255,255,.7);
+    font-size: 20px;
+
+    transition: .2s; // TODO: CHECK VARIABLES
+
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .popup-item-media:hover > .popup-item-media-action-menu {
+    opacity: 1;
+    pointer-events: initial;
+  }
+
+
+  .popup-item-media-action {
+    position: relative;
+
+    cursor: pointer;
+    pointer-events: initial;
+
+    // Increase the clickable area or the icon
+    padding: 4px;
+    border-radius: 50%;
+
+    transition: .2s; // TODO: CHECK VARIABLES
+
+    &:hover {
+      color: #ffffff;
+    }
+
+    // &::before {
+    //   content: '';
+    //   position: absolute;
+    //   left: 50%;
+    //   top: 50%;
+    //   transform: translate(-50%, -50%);
+    //   width: 28px;
+    //   height: 28px;
+    //   border-radius: 50%;
+    // }
   }
 
   .popup-photo > .popup-item {
