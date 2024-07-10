@@ -20,25 +20,24 @@ export default function MediaEditorTabContent(props: {
 
     const newElement = <div>{props.tabs[props.activeTab]}</div> as HTMLDivElement
 
-    newElement.classList.add('media-editor-tab-content-enter')
     prevElement.classList.add('media-editor-tab-content-exit')
 
     if(toRight) {
-      newElement.classList.add('media-editor-tab-content-enter-right')
+      newElement.classList.add('media-editor-tab-content-go-right')
       container.append(newElement)
       await doubleRaf()
-      prevElement.classList.add('media-editor-tab-content-exit-left')
-      newElement.classList.remove('media-editor-tab-content-enter-right')
+      prevElement.classList.add('media-editor-tab-content-go-left')
+      newElement.classList.remove('media-editor-tab-content-go-right')
     } else {
-      newElement.classList.add('media-editor-tab-content-enter-left')
+      newElement.classList.add('media-editor-tab-content-go-left')
       container.append(newElement)
       await doubleRaf()
-      prevElement.classList.add('media-editor-tab-content-exit-right')
-      newElement.classList.remove('media-editor-tab-content-enter-left')
+      prevElement.classList.add('media-editor-tab-content-go-right')
+      newElement.classList.remove('media-editor-tab-content-go-left')
     }
 
     await delay(200)
-    newElement.classList.remove('media-editor-tab-content-enter')
+    // newElement.classList.remove('media-editor-tab-content-enter')
     prevElement.remove()
 
     prevElement = newElement

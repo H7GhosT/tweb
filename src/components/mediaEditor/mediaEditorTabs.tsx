@@ -30,9 +30,8 @@ export default function MediaEditorTabs(props: {
       <div
         class="media-editor-tabs-item"
         classList={{'media-editor-tabs-item-active': props.tab === item.key}}
-        onClick={() => onTabClick(item.key)}
       >
-        <ButtonIconTsx icon={item.icon} />
+        <ButtonIconTsx icon={item.icon} onClick={() => onTabClick(item.key)} />
       </div>
      ) as HTMLElement
   }))

@@ -6,8 +6,8 @@ import {doubleRaf} from '../../helpers/schedulers';
 
 import MediaEditorTabs from './mediaEditorTabs';
 import MediaEditorTopbar from './mediaEditorTopbar';
-import {delay} from './utils';
 import MediaEditorTabContent from './mediaEditorTabContent';
+import {delay} from './utils';
 
 
 export function MediaEditor(props: {
