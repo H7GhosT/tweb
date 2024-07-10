@@ -15,6 +15,8 @@ export default function MediaEditorTabContent(props: {
 
 
   createEffect(async() => {
+    if(prevTab === props.activeTab) return
+
     const toRight = mediaEditorTabsOrder.indexOf(props.activeTab) > mediaEditorTabsOrder.indexOf(prevTab)
     prevTab = props.activeTab
 
