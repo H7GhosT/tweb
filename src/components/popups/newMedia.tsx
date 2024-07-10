@@ -54,7 +54,7 @@ import {ChatType} from '../chat/chat';
 import pause from '../../helpers/schedulers/pause';
 import {Accessor, createRoot, createSignal, Setter} from 'solid-js';
 import SelectedEffect from '../chat/selectedEffect';
-import { IconTsx } from '../iconTsx';
+import Icon from '../icon';
 
 type SendFileParams = SendFileDetails & {
   file?: File,
@@ -454,6 +454,10 @@ export default class PopupNewMedia extends PopupElement {
       mediaSpoiler,
       reveal: false
     });
+    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle')
+    if(spoilerToggle) {
+      spoilerToggle.dataset.toggled = 'true'
+    }
   }
 
   private removeMediaSpoiler(item: SendFileParams) {
@@ -462,6 +466,11 @@ export default class PopupNewMedia extends PopupElement {
       reveal: true,
       destroyAfter: true
     });
+
+    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle')
+    if(spoilerToggle) {
+      delete spoilerToggle.dataset.toggled
+    }
 
     item.mediaSpoiler = undefined;
   }
@@ -758,7 +767,6 @@ export default class PopupNewMedia extends PopupElement {
     const file = params.file;
     const isVideo = file.type.startsWith('video/');
 
-    console.log('Media rendered', params);
 
     if(isVideo) {
       const video = createVideo({middleware: params.middlewareHelper.get()});
@@ -830,28 +838,46 @@ export default class PopupNewMedia extends PopupElement {
             };
           })
         ]).then(() => {});
-      } else {
-        const onSpoilderClick = () => {
-          (!params.mediaSpoiler) ? this.applyMediaSpoiler(params) : this.removeMediaSpoiler(params)
-        }
-
-        // TODO: Smooth image changing when deleting image
-        const onDeleteClick = () => {
-          const idx = this.files.findIndex(file => file === params.file)
-          if(idx >= 0) {
-            this.files.splice(idx, 1)
-            this.files.length ? this.attachFiles() : this.btnClose.click()
-          }
-        }
-
-        const actions = <div class="popup-item-media-action-menu">
-          <IconTsx class='popup-item-media-action' icon="settings" />
-          <IconTsx class='popup-item-media-action' icon={params.mediaSpoiler ? 'mediaspoileroff' : 'mediaspoiler'} onClick={onSpoilderClick} />
-          <IconTsx class='popup-item-media-action' icon="delete" onClick={onDeleteClick} />
-        </div>
-
-        itemDiv.append(actions as HTMLElement)
       }
+    }
+    {
+      const actions = document.createElement('div')
+      actions.classList.add('popup-item-media-action-menu')
+      const itemCls = 'popup-item-media-action'
+
+      let equalizeIcon: HTMLSpanElement
+      if(!isVideo && file.type !== 'image/gif') {
+        equalizeIcon = Icon('equalizer', itemCls)
+        equalizeIcon.addEventListener('click', () => {
+          // empty
+        })
+      }
+
+      const spoilerToggle = document.createElement('span')
+      spoilerToggle.classList.add(itemCls, 'spoiler-toggle')
+      if(params.mediaSpoiler) spoilerToggle.dataset.toggled = 'true'
+      spoilerToggle.append(
+        Icon('mediaspoiler'),
+        Icon('mediaspoileroff')
+      );
+      spoilerToggle.addEventListener('click', () => {
+        (!params.mediaSpoiler) ? this.applyMediaSpoiler(params) : this.removeMediaSpoiler(params)
+      })
+
+      const deleteIcon = Icon('delete', itemCls)
+      deleteIcon.addEventListener('click', () => {
+        const idx = this.files.findIndex(file => file === params.file)
+        if(idx >= 0) {
+          this.files.splice(idx, 1)
+          this.files.length ? this.attachFiles() : this.btnClose.click()
+        }
+      })
+
+      actions.append(
+        ...[equalizeIcon, spoilerToggle, deleteIcon].filter(Boolean)
+      )
+
+      itemDiv.append(actions)
     }
   }
 

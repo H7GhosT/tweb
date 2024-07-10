@@ -211,6 +211,7 @@
   .popup-item-media-action-menu {
     position: absolute;
     --scale: 1;
+    --size: 20px;
 
     bottom: 6px;
     left: 50%;
@@ -225,7 +226,7 @@
     backdrop-filter: blur(35px);
 
     color: rgba(255,255,255,.7);
-    font-size: 20px;
+    font-size: var(--size);
 
     transition: .2s; // TODO: CHECK VARIABLES
 
@@ -242,13 +243,17 @@
 
   .popup-item-media-action {
     position: relative;
-
     cursor: pointer;
     pointer-events: initial;
 
     // Increase the clickable area or the icon
-    padding: 4px;
+    --padding: 4px;
+    padding: var(--padding);
+    line-height: 1;
     border-radius: 50%;
+
+    height: calc(var(--size) + var(--padding) * 2);
+    width: calc(var(--size) + var(--padding) * 2);
 
     transition: .2s; // TODO: CHECK VARIABLES
 
@@ -256,16 +261,27 @@
       color: #ffffff;
     }
 
-    // &::before {
-    //   content: '';
-    //   position: absolute;
-    //   left: 50%;
-    //   top: 50%;
-    //   transform: translate(-50%, -50%);
-    //   width: 28px;
-    //   height: 28px;
-    //   border-radius: 50%;
-    // }
+    >span {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      transition: .2s;
+    }
+    
+    >span:nth-child(2) {
+      opacity: 0;
+    }
+
+    &[data-toggled="true"] {
+      >span:nth-child(1) {
+        opacity: 0;
+      }
+
+      >span:nth-child(2) {
+        opacity: 1;
+      }
+    }
   }
 
   .popup-photo > .popup-item {
