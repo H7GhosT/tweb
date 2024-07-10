@@ -222,8 +222,15 @@
     gap: 8px;
 
     border-radius: 999px;
-    background-color: rgba(0,0,0,.4); // TODO: Tune opacity notice??
+
+    background-color: rgba(0,0,0,.4);
     backdrop-filter: blur(35px);
+    
+    @supports (-moz-animation: animation 1s) {
+      // Firefox doesn't render backdrop-filter by default
+      background-color: rgba(0,0,0,.8);
+      backdrop-filter: none;
+    }
 
     color: rgba(255,255,255,.7);
     font-size: var(--size);
