@@ -28,8 +28,8 @@ export default function MediaEditorTabs(props: {
     ...item,
     element: (
       <div
-        class="media-editor-tabs-item"
-        classList={{'media-editor-tabs-item-active': props.tab === item.key}}
+        class="media-editor__tabs-item"
+        classList={{'media-editor__tabs-item--active': props.tab === item.key}}
       >
         <ButtonIconTsx icon={item.icon} onClick={() => onTabClick(item.key)} />
       </div>
@@ -48,9 +48,9 @@ export default function MediaEditorTabs(props: {
 
 
   return (
-    <div ref={container} class="media-editor-tabs">
+    <div ref={container} class="media-editor__tabs">
       {tabs.map(tab => tab.element)}
-      <div ref={underline} class="media-editor-tabs-underline" />
+      <div ref={underline} class="media-editor__tabs-underline" />
     </div>
   )
 }

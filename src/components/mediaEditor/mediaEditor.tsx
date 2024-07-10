@@ -4,10 +4,11 @@ import {render} from 'solid-js/web';
 import {NoneToVoidFunction} from '../../types';
 import {doubleRaf} from '../../helpers/schedulers';
 
+import {delay} from './utils';
 import MediaEditorTabs from './mediaEditorTabs';
 import MediaEditorTopbar from './mediaEditorTopbar';
 import MediaEditorTabContent from './mediaEditorTabContent';
-import {delay} from './utils';
+import MediaEditorEqualizer from './mediaEditorEqualizer';
 
 
 export function MediaEditor(props: {
@@ -19,9 +20,9 @@ export function MediaEditor(props: {
 
   onMount(async() => {
     console.log('[Media editor] mounted');
-    overlay.classList.add('media-editor-overlay-hidden')
+    overlay.classList.add('media-editor__overlay--hidden')
     await doubleRaf()
-    overlay.classList.remove('media-editor-overlay-hidden')
+    overlay.classList.remove('media-editor__overlay--hidden')
   })
 
   onCleanup(() => {
@@ -29,21 +30,21 @@ export function MediaEditor(props: {
   })
 
   async function handleClose() {
-    overlay.classList.add('media-editor-overlay-hidden')
+    overlay.classList.add('media-editor__overlay--hidden')
     await delay(200)
     props.onClose()
   }
 
 
   return (
-    <div ref={overlay} class="media-editor-overlay night">
-      <div class="media-editor-container">
-        <div class="media-editor-image-container"></div>
-        <div class="media-editor-toolbar">
+    <div ref={overlay} class="media-editor__overlay night">
+      <div class="media-editor__container">
+        <div class="media-editor__image-container"></div>
+        <div class="media-editor__toolbar">
           <MediaEditorTopbar onClose={handleClose} />
           <MediaEditorTabs tab={tab()} onTabChange={setTab} />
           <MediaEditorTabContent activeTab={tab()} tabs={{
-            equalizer: <div>equalizer</div>,
+            equalizer: <MediaEditorEqualizer />,
             crop: <div>crop</div>,
             text: <div>text</div>,
             brush: <div>brush</div>,
