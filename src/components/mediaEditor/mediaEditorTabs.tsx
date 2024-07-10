@@ -20,9 +20,8 @@ export default function MediaEditorTabs(props: {
   tab: string
   onTabChange: (value: string) => void
 }) {
-  let underline: HTMLDivElement
   let container: HTMLDivElement
-
+  let underline: HTMLDivElement
 
   const tabs = config.map(item => ({
     ...item,

@@ -378,6 +378,10 @@ export default class PopupNewMedia extends PopupElement {
   };
 
   private async applyMediaSpoiler(item: SendFileParams, noAnimation?: boolean) {
+    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle')
+    if(spoilerToggle) spoilerToggle.dataset.disabled = 'true'
+
+
     const middleware = item.middlewareHelper.get();
     const {width: widthStr, height: heightStr} = item.itemDiv.style;
 
@@ -454,22 +458,26 @@ export default class PopupNewMedia extends PopupElement {
       mediaSpoiler,
       reveal: false
     });
-    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle')
+
     if(spoilerToggle) {
       spoilerToggle.dataset.toggled = 'true'
+      delete spoilerToggle.dataset.disabled
     }
   }
 
   private removeMediaSpoiler(item: SendFileParams) {
+    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle')
+    if(spoilerToggle) spoilerToggle.dataset.disabled = 'true'
+
     toggleMediaSpoiler({
       mediaSpoiler: item.mediaSpoiler,
       reveal: true,
       destroyAfter: true
     });
 
-    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle')
     if(spoilerToggle) {
       delete spoilerToggle.dataset.toggled
+      delete spoilerToggle.dataset.disabled
     }
 
     item.mediaSpoiler = undefined;
@@ -861,6 +869,7 @@ export default class PopupNewMedia extends PopupElement {
         Icon('mediaspoileroff')
       );
       spoilerToggle.addEventListener('click', () => {
+        if(spoilerToggle.dataset.disabled) return // Prevent double clicks
         (!params.mediaSpoiler) ? this.applyMediaSpoiler(params) : this.removeMediaSpoiler(params)
       })
 
