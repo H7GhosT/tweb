@@ -36,9 +36,11 @@
     flex: 1;
   }
 
-  &-toolbar-container {
+  &-toolbar {
     background-color: #212121;
     flex: 400px 0 0;
+    display: flex;
+    flex-direction: column;
 
     overflow: hidden;
   }
@@ -48,6 +50,8 @@
     display: flex;
     padding: 0 12px;
     justify-content: space-between;
+
+    flex-shrink: 0;
 
     box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
   }
@@ -81,6 +85,7 @@
     display: flex;
     align-items: center;
     gap: 24px;
+    flex-shrink: 0;
 
     height: 56px;
     padding: 0 16px;
@@ -101,6 +106,7 @@
 
   &-tab-content {
     position: relative;
+    flex: 1;
 
     >* {
       transition: .2s;
@@ -110,26 +116,32 @@
       position: absolute;
       top: 0;
       width: 100%;
+      height: 100%;
       opacity: 0.5;
+      background-color: #000000;
 
       &-left {
-        transform: translateX(-40px);
+        transform: translateX(-20px);
         opacity: 0;
       }
 
       &-right {
-        transform: translateX(40px);
+        transform: translateX(20px);
         opacity: 0;
       }
     }
 
     &-enter {
+      z-index: 5;
+      height: 100%;
+      background-color: #212121;
+
       &-left {
-        transform: translateX(-40px);
+        transform: translateX(-200px);
       }
 
       &-right {
-        transform: translateX(40px);
+        transform: translateX(200px);
       }
     }
   }

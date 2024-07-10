@@ -39,7 +39,7 @@ export function MediaEditor(props: {
     <div ref={overlay} class="media-editor-overlay night">
       <div class="media-editor-container">
         <div class="media-editor-image-container"></div>
-        <div class="media-editor-toolbar-container">
+        <div class="media-editor-toolbar">
           <MediaEditorTopbar onClose={handleClose} />
           <MediaEditorTabs tab={tab()} onTabChange={setTab} />
           <MediaEditorTabContent activeTab={tab()} tabs={{
