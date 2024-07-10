@@ -59,10 +59,10 @@ export function MediaEditor(props: {
 export function openMediaEditor() {
   const element = document.createElement('div')
   document.body.append(element)
-  console.log('[Media editor] appended');
+  console.log('[Media editor] appended wrapper');
 
   const dispose = render(() => <MediaEditor onClose={onClose} />, element)
-  console.log('[Media editor] rendered');
+  console.log('[Media editor] rendered jsx');
 
   function onClose() {
     dispose()
