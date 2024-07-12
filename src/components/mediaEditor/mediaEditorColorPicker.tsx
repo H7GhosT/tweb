@@ -33,7 +33,6 @@ export default function MediaEditorColorPicker(props: {}) {
     </div>
 
   const onCollapseToggle = () => {
-    // if(!collapsed()) setColor(colors[0])
     setCollapsed(prev => !prev)
   }
 
