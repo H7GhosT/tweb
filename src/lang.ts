@@ -2844,7 +2844,11 @@ const lang = {
   'Chat.UploadLimit.Text': {
     'one_value': 'Subscribe to [Telegram Premium]() to increase upload speeds %d time.',
     'other_value': 'Subscribe to [Telegram Premium]() to increase upload speeds %d times.'
-  }
+  },
+  'MediaEditor.Free': 'Free',
+  'MediaEditor.Original': 'Original',
+  'MediaEditor.Square': 'Square',
+  'MediaEditor.AspectRatio': 'Aspect ratio'
 };
 
 export default lang;

@@ -216,4 +216,56 @@
       cursor: pointer;
     }
   }
+
+  &__label {
+    color: #717579;
+
+    font-size: 16px;
+    font-weight: 600;
+    padding: 14px 16px;
+  }
+
+  &__crop-item {
+    height: 48px;
+    padding: 0 16px;
+    border-radius: 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    gap: 32px;
+
+    color: #ffffff;
+
+    cursor: pointer;
+    transition: .1s;
+    overflow: hidden;
+
+    .tgico {
+      font-size: 24px;
+    }
+
+    svg {
+      width: 24px;
+      height: 24px;
+      flex: 24px 0 0;
+    }
+
+    &-icon--rotated {
+      transform: rotate(90deg);
+    }
+
+    &:hover:not(&--active) {
+      background-color: #262626;
+    }
+
+    &--active {
+      background-color: #2b2b2b;
+    }
+  }
+
+  &__crop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
 }
