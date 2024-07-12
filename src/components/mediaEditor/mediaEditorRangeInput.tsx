@@ -1,4 +1,4 @@
-import {createMemo} from 'solid-js'
+import {createMemo, JSX} from 'solid-js'
 
 import clamp from '../../helpers/number/clamp'
 
@@ -7,7 +7,7 @@ function nMap(value: number, min: number, max: number, tMin: number, tMax: numbe
 }
 
 export default function MediaEditorRangeInput(props: {
-  label: string
+  label: JSX.Element
   value: number
   min: number
   max: number
@@ -26,9 +26,9 @@ export default function MediaEditorRangeInput(props: {
       }}
       style={{
         '--normalized': normalizedValue(),
-        '--bar-left': props.value > 0 ? mappedCenter() + '%' : undefined,
-        '--bar-right': props.value < 0 ? mappedCenter() + '%' : undefined,
-        '--bar-w': Math.abs(props.value / (props.max - props.min)) * 100 + '%'
+        '--w': Math.abs(props.value - Math.max(0, props.min)) / (props.max - props.min) * 100 + '%',
+        '--bar-left': props.value >= 0 ? Math.max(0, mappedCenter()) + '%' : undefined,
+        '--bar-right': props.value < 0 ? mappedCenter() + '%' : undefined
       }}
     >
       <div class="media-editor__range-input-row">

@@ -4,8 +4,11 @@ import ripple from '../ripple';
 import {IconTsx} from '../iconTsx';
 
 import MediaEditorColorPicker from './mediaEditorColorPicker';
+import MediaEditorRangeInput from './mediaEditorRangeInput';
+import {i18n} from '../../lib/langPack';
 
 export default function MediaEditorText(props: {}) {
+  const [size, setSize] = createSignal(24)
   const [alignment, setAlignment] = createSignal('left')
   const [style, setStyle] = createSignal('normal')
 
@@ -42,6 +45,8 @@ export default function MediaEditorText(props: {}) {
           {toggleButton('fontframe_bg', 'background', style, setStyle)}
         </div>
       </div>
+
+      <MediaEditorRangeInput label={i18n('MediaEditor.Size')} min={8} max={40} value={size()} onChange={setSize} passiveLabel />
     </>
   )
 }
