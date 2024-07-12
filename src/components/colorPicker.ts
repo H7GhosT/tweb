@@ -25,6 +25,7 @@ interface ColorPickerOptions {
 
 export default class ColorPicker {
   private static BASE_CLASS = 'color-picker';
+  private static idSeed = 0;
   public container: HTMLElement;
 
   private boxRect: DOMRect;
@@ -55,23 +56,26 @@ export default class ColorPicker {
     sliderWidth = pickerBoxWidth,
     thickSlider = false
   }: ColorPickerOptions = {}) {
+    // Multiple instances of color pickers will need different id's for SVG markup
+    const id = ColorPicker.idSeed++;
+
     const pickerBox: SVGSVGElement = createElementFromMarkup(`
       <svg class="${ColorPicker.BASE_CLASS + '-box'}" viewBox="0 0 ${pickerBoxWidth} ${pickerBoxHeight}" style="width: ${pickerBoxWidth}px; height: ${pickerBoxHeight}px;">
         <defs>
-          <linearGradient id="color-picker-saturation" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id="color-picker-saturation-${id}" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stop-color="#fff"></stop>
             <stop offset="100%" stop-color="hsl(0,100%,50%)"></stop>
           </linearGradient>
-          <linearGradient id="color-picker-brightness" x1="0%" y1="0%" x2="0%" y2="100%">
+          <linearGradient id="color-picker-brightness-${id}" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stop-color="rgba(0,0,0,0)"></stop>
             <stop offset="100%" stop-color="#000"></stop>
           </linearGradient>
-          <pattern id="color-picker-pattern" width="100%" height="100%">
-            <rect x="0" y="0" width="100%" height="100%" fill="url(#color-picker-saturation)"></rect>
-            <rect x="0" y="0" width="100%" height="100%" fill="url(#color-picker-brightness)"></rect>
+          <pattern id="color-picker-pattern-${id}" width="100%" height="100%">
+            <rect x="0" y="0" width="100%" height="100%" fill="url(#color-picker-saturation-${id})"></rect>
+            <rect x="0" y="0" width="100%" height="100%" fill="url(#color-picker-brightness-${id})"></rect>
           </pattern>
         </defs>
-        <rect rx="10" ry="10" x="0" y="0" width="${pickerBoxWidth}" height="${pickerBoxHeight}" fill="url(#color-picker-pattern)"></rect>
+        <rect rx="10" ry="10" x="0" y="0" width="${pickerBoxWidth}" height="${pickerBoxHeight}" fill="url(#color-picker-pattern-${id})"></rect>
         <svg class="${ColorPicker.BASE_CLASS + '-dragger'} ${ColorPicker.BASE_CLASS + '-box-dragger'}" x="0" y="0">
           <circle r="11" fill="inherit" stroke="#fff" stroke-width="2"></circle>
         </svg>
@@ -82,7 +86,7 @@ export default class ColorPicker {
       <div class="${ColorPicker.BASE_CLASS + '-sliders'}" style="width: ${sliderWidth}px; height: 24px">
         <svg class="${ColorPicker.BASE_CLASS + '-color-slider'}" viewBox="0 0 ${sliderWidth} 24">
           <defs>
-            <linearGradient id="hue" x1="100%" y1="0%" x2="0%" y2="0%">
+            <linearGradient id="hue-${id}" x1="100%" y1="0%" x2="0%" y2="0%">
               <stop offset="0%" stop-color="#f00"></stop>
               <stop offset="16.666%" stop-color="#f0f"></stop>
               <stop offset="33.333%" stop-color="#00f"></stop>
@@ -92,7 +96,7 @@ export default class ColorPicker {
               <stop offset="100%" stop-color="#f00"></stop>
             </linearGradient>
           </defs>
-          <rect id="hue-box" rx="${thickSlider ? 10 : 4}" x="0" y="${thickSlider ? 3 : 9}" width="${sliderWidth}" height="${thickSlider ? 20 : 8}" fill="url(#hue)"></rect>
+          <rect rx="${thickSlider ? 10 : 4}" x="0" y="${thickSlider ? 3 : 9}" width="${sliderWidth}" height="${thickSlider ? 20 : 8}" fill="url(#hue-${id})"></rect>
           <svg class="${ColorPicker.BASE_CLASS + '-dragger'} ${ColorPicker.BASE_CLASS + '-color-slider-dragger'}" x="0" y="13">
             <circle r="11" fill="inherit" stroke="#fff" stroke-width="2"></circle>
           </svg>
@@ -102,7 +106,7 @@ export default class ColorPicker {
 
     this.elements.box = pickerBox;
     this.elements.boxDragger = pickerBox.lastElementChild as SVGSVGElement;
-    this.elements.saturation = pickerBox.querySelector('#color-picker-saturation');
+    this.elements.saturation = pickerBox.querySelector(`#color-picker-saturation-${id}`);
 
     this.elements.sliders = slider;
 
