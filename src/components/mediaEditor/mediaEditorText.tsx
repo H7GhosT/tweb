@@ -1,11 +1,11 @@
 import {onMount, createSignal, Accessor} from 'solid-js';
 
+import {i18n} from '../../lib/langPack';
 import ripple from '../ripple';
 import {IconTsx} from '../iconTsx';
 
 import MediaEditorColorPicker from './mediaEditorColorPicker';
 import MediaEditorRangeInput from './mediaEditorRangeInput';
-import {i18n} from '../../lib/langPack';
 
 export default function MediaEditorText(props: {}) {
   const [size, setSize] = createSignal(24)

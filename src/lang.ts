@@ -2848,7 +2848,8 @@ const lang = {
   'MediaEditor.Free': 'Free',
   'MediaEditor.Original': 'Original',
   'MediaEditor.Square': 'Square',
-  'MediaEditor.AspectRatio': 'Aspect ratio'
+  'MediaEditor.AspectRatio': 'Aspect ratio',
+  'MediaEditor.Size': 'Size'
 };
 
 export default lang;
