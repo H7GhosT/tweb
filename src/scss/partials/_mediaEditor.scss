@@ -268,4 +268,119 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
   }
+
+
+  &__color-picker {
+    &-swatches {
+      position: relative;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 4px 8px;
+    }
+
+    &-swatch {
+      --color-rgb: 255 255 255;
+
+      width: 40px;
+      height: 40px;
+      flex: 40px 0 0;
+
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      cursor: pointer;
+      transition: .1s;
+      overflow: hidden;
+
+      &-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: rgb(var(--color-rgb));
+      }
+      
+      &:hover:not(&--active) {
+        background-color: rgba(var(--color-rgb) / 0.05);
+      }
+
+      &--active {
+        background-color: rgba(var(--color-rgb) / 0.1);
+      }
+
+
+      &--gradient &-color {
+        background:
+          radial-gradient(#fff, transparent 75%),
+          conic-gradient(
+            hsl(360 100% 50%),
+            hsl(315 100% 50%),
+            hsl(270 100% 50%),
+            hsl(225 100% 50%),
+            hsl(180 100% 50%),
+            hsl(135 100% 50%),
+            hsl(90 100% 50%),
+            hsl(45 100% 50%),
+            hsl(0 100% 50%)
+          );
+      }
+    }
+
+    &:not(&--collapsed) &-swatch:not(&-swatch--gradient) {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    &-slider {
+      position: absolute;
+      top: 50%;
+      left: 16px;
+      transform: translateY(-50%);
+
+      transition: .2s;
+    }
+
+    &--collapsed &-slider {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    &-layout {
+      display: flex;
+      gap: 24px;
+      --padding-top: 12px;
+      padding: 20px 16px 16px; 
+      height: calc(var(--picker-height) + 36px);
+    }
+
+    &-layout-wrapper {
+      transition: .2s;
+      height: calc(var(--picker-height) + 36px);
+      overflow: hidden;
+    }
+
+    &--collapsed &-layout-wrapper {
+      pointer-events: none;
+      opacity: 0;
+      height: 0px;
+
+      mask-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.6), transparent 40%);
+    }
+
+    &-box {
+      flex-shrink: 0;
+      flex-grow: 0;
+    }
+
+    &-inputs {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+  }
 }

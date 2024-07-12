@@ -10,6 +10,7 @@ import MediaEditorTopbar from './mediaEditorTopbar';
 import MediaEditorTabContent from './mediaEditorTabContent';
 import MediaEditorEqualizer from './mediaEditorEqualizer';
 import MediaEditorCrop from './mediaEditorCrop';
+import MediaEditorText from './mediaEditorText';
 
 
 export function MediaEditor(props: {
@@ -47,7 +48,7 @@ export function MediaEditor(props: {
           <MediaEditorTabContent activeTab={tab()} tabs={{
             equalizer: <MediaEditorEqualizer />,
             crop: <MediaEditorCrop />,
-            text: <div>text</div>,
+            text: <MediaEditorText />,
             brush: <div>brush</div>,
             stickers: <div>stickers</div>
           }} />
