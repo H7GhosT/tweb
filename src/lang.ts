@@ -2853,7 +2853,14 @@ const lang = {
   'MediaEditor.Font': 'Font',
   'MediaEditor.Fonts.Roboto': 'Roboto',
   'MediaEditor.Fonts.TimesNewRoman': 'Times new roman',
-  'MediaEditor.Fonts.SegoeUI': 'Segoe UI'
+  'MediaEditor.Fonts.SegoeUI': 'Segoe UI',
+  'MediaEditor.Tool': 'Tool',
+  'MediaEditor.Brushes.Pen': 'Pen',
+  'MediaEditor.Brushes.Arrow': 'Arrow',
+  'MediaEditor.Brushes.Brush': 'Brush',
+  'MediaEditor.Brushes.Neon': 'Neon',
+  'MediaEditor.Brushes.Blur': 'Blur',
+  'MediaEditor.Brushes.Eraser': 'Eraser'
 };
 
 export default lang;
