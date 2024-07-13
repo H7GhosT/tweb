@@ -2849,7 +2849,11 @@ const lang = {
   'MediaEditor.Original': 'Original',
   'MediaEditor.Square': 'Square',
   'MediaEditor.AspectRatio': 'Aspect ratio',
-  'MediaEditor.Size': 'Size'
+  'MediaEditor.Size': 'Size',
+  'MediaEditor.Font': 'Font',
+  'MediaEditor.Fonts.Roboto': 'Roboto',
+  'MediaEditor.Fonts.TimesNewRoman': 'Times new roman',
+  'MediaEditor.Fonts.SegoeUI': 'Segoe UI'
 };
 
 export default lang;

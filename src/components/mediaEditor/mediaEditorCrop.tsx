@@ -1,8 +1,8 @@
-import {createSignal, JSX, onMount, splitProps} from 'solid-js';
+import {createSignal, JSX, splitProps} from 'solid-js';
 
 import {i18n} from '../../lib/langPack';
 import {IconTsx} from '../iconTsx';
-import ripple from '../ripple';
+import MediaEditorLargeButton, {MediaEditorLargeButtonProps} from './mediaEditorLargeButton';
 
 const ratioRects = {
   '1x1': () => <rect x="4" y="4" width="16" height="16" rx="2" stroke="white" stroke-width="1.66"/>,
@@ -18,29 +18,20 @@ const ratioIcon = (ratio: keyof typeof ratioRects, rotated?: boolean) =>
     {ratioRects[ratio]()}
   </svg>
 
-function Item(inProps: {
+function Item(inProps: MediaEditorLargeButtonProps & {
   icon: JSX.Element
   text: JSX.Element
-  active: boolean
-} & JSX.HTMLAttributes<HTMLDivElement>) {
-  const [props, divProps] = splitProps(inProps, ['icon', 'text', 'active'])
-
-  let element: HTMLDivElement
-
-  onMount(() => {
-    ripple(element)
-  })
+}) {
+  const [props, divProps] = splitProps(inProps, ['icon', 'text'])
 
   return (
-    <div
+    <MediaEditorLargeButton
       {...divProps}
-      ref={element}
       class="media-editor__crop-item"
-      classList={{'media-editor__crop-item--active': props.active}}
     >
       {props.icon}
       {props.text}
-    </div>
+    </MediaEditorLargeButton>
   );
 }
 

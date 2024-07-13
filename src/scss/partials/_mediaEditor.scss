@@ -226,20 +226,33 @@
     padding: 14px 16px;
   }
 
-  &__crop-item {
+  &__large-button {
     height: 48px;
     padding: 0 16px;
     border-radius: 10px;
 
     display: flex;
     align-items: center;
-    gap: 32px;
+    gap: 16px;
 
     color: #ffffff;
+    font-weight: 500;
 
     cursor: pointer;
     transition: .1s;
     overflow: hidden;
+
+    &:hover:not(&--active) {
+      background-color: #262626;
+    }
+
+    &--active {
+      background-color: #2b2b2b;
+    }
+  }
+
+  &__crop-item {
+    gap: 32px;
 
     .tgico {
       font-size: 24px;
@@ -253,14 +266,6 @@
 
     &-icon--rotated {
       transform: rotate(90deg);
-    }
-
-    &:hover:not(&--active) {
-      background-color: #262626;
-    }
-
-    &--active {
-      background-color: #2b2b2b;
     }
   }
 
@@ -411,6 +416,18 @@
 
     &--active {
       background-color: #2b2b2b;
+    }
+  }
+
+  &__font-button {
+    &--roboto {
+      font-family: 'Roboto';
+    }
+    &--times {
+      font-family: 'Times New Roman', Times, serif;
+    }
+    &--segoe-ui {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
   }
 }
