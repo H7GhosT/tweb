@@ -5,8 +5,8 @@ export function PenBrush() {
         <g filter="url(#filter0_iiii_6102_2542)">
           <path d="M0 15H80L110.2 22.4465C112.048 22.9021 112.971 23.1299 113.185 23.4931C113.369 23.806 113.369 24.194 113.185 24.5069C112.971 24.8701 112.048 25.0979 110.2 25.5535L80 33H0V15Z" fill="#3E3F3F" />
         </g>
-        <path d="M112.564 24.9709L103.474 27.2132C103.21 27.2782 102.944 27.121 102.883 26.8566C102.736 26.2146 102.5 25.0296 102.5 24C102.5 22.9705 102.736 21.7855 102.883 21.1434C102.944 20.8791 103.21 20.7219 103.474 20.7868L112.564 23.0291C113.578 23.2792 113.578 24.7208 112.564 24.9709Z" fill="white" />
-        <rect x="76" y="15" width="4" height="18" rx="0.5" fill="white" />
+        <path d="M112.564 24.9709L103.474 27.2132C103.21 27.2782 102.944 27.121 102.883 26.8566C102.736 26.2146 102.5 25.0296 102.5 24C102.5 22.9705 102.736 21.7855 102.883 21.1434C102.944 20.8791 103.21 20.7219 103.474 20.7868L112.564 23.0291C113.578 23.2792 113.578 24.7208 112.564 24.9709Z" fill="currentColor" />
+        <rect x="76" y="15" width="4" height="18" rx="0.5" fill="currentColor" />
       </g>
       <defs>
         <filter id="filter0_iiii_6102_2542" x="0" y="10" width="116.323" height="28" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
@@ -53,7 +53,7 @@ export function ArrowBrush() {
         <g filter="url(#filter0_iiii_6102_2543)">
           <path d="M0 15H92C94.2091 15 96 16.7909 96 19V29C96 31.2091 94.2091 33 92 33H0V15Z" fill="#3E3F3F" />
         </g>
-        <path d="M92 15V15C94.2091 15 96 16.7909 96 19V29C96 31.2091 94.2091 33 92 33V33V15Z" fill="white" />
+        <path d="M92 15V15C94.2091 15 96 16.7909 96 19V29C96 31.2091 94.2091 33 92 33V33V15Z" fill="currentColor" />
       </g>
       <defs>
         <filter id="filter0_iiii_6102_2543" x="0" y="10" width="99" height="28" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
@@ -85,8 +85,8 @@ export function ArrowBrush() {
           <feBlend mode="normal" in2="effect3_innerShadow_6102_2543" result="effect4_innerShadow_6102_2543" />
         </filter>
         <linearGradient id="paint0_linear_6102_2543" x1="110" y1="24" x2="94" y2="24" gradientUnits="userSpaceOnUse">
-          <stop offset="0.755" stop-color="white" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
+          <stop offset="0.755" stop-color="currentColor" />
+          <stop offset="1" stop-color="currentColor" stop-opacity="0" />
         </linearGradient>
         <clipPath id="clip0_6102_2543">
           <rect width="20" height="120" fill="white" transform="matrix(0 1 -1 0 120 14)" />
@@ -103,8 +103,8 @@ export function MarkerBrush() {
         <g filter="url(#filter0_iiii_6102_2546)">
           <path d="M0 15H82.3579C83.4414 15 84.5135 15.2201 85.5093 15.6468L91 18H101C101.552 18 102 18.4477 102 19V29C102 29.5523 101.552 30 101 30H91L85.5093 32.3532C84.5135 32.7799 83.4414 33 82.3579 33H0V15Z" fill="#3E3F3F" />
         </g>
-        <rect x="76" y="15" width="4" height="18" rx="0.5" fill="white" />
-        <path d="M102 19H106.434C106.785 19 107.111 19.1843 107.291 19.4855L112.091 27.4855C112.491 28.152 112.011 29 111.234 29H102V19Z" fill="white" />
+        <rect x="76" y="15" width="4" height="18" rx="0.5" fill="currentColor" />
+        <path d="M102 19H106.434C106.785 19 107.111 19.1843 107.291 19.4855L112.091 27.4855C112.491 28.152 112.011 29 111.234 29H102V19Z" fill="currentColor" />
       </g>
       <defs>
         <filter id="filter0_iiii_6102_2546" x="0" y="10" width="105" height="28" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
@@ -148,19 +148,19 @@ export function NeonBrush() {
     <svg width="120" height="48" viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <g clip-path="url(#clip0_6102_2547)">
         <g filter="url(#filter0_f_6102_2547)">
-          <path d="M102 19H107.146C108.282 19 109.323 19.6487 109.601 20.7506C109.813 21.593 110 22.703 110 24C110 25.297 109.813 26.407 109.601 27.2494C109.323 28.3513 108.282 29 107.146 29H102V19Z" fill="white" />
+          <path d="M102 19H107.146C108.282 19 109.323 19.6487 109.601 20.7506C109.813 21.593 110 22.703 110 24C110 25.297 109.813 26.407 109.601 27.2494C109.323 28.3513 108.282 29 107.146 29H102V19Z" fill="currentColor" />
         </g>
         <g filter="url(#filter1_f_6102_2547)">
-          <path d="M102 19H107.146C108.282 19 109.323 19.6487 109.601 20.7506C109.813 21.593 110 22.703 110 24C110 25.297 109.813 26.407 109.601 27.2494C109.323 28.3513 108.282 29 107.146 29H102V19Z" fill="white" />
+          <path d="M102 19H107.146C108.282 19 109.323 19.6487 109.601 20.7506C109.813 21.593 110 22.703 110 24C110 25.297 109.813 26.407 109.601 27.2494C109.323 28.3513 108.282 29 107.146 29H102V19Z" fill="currentColor" />
         </g>
         <g filter="url(#filter2_f_6102_2547)">
-          <path d="M102 19H107.146C108.282 19 109.323 19.6487 109.601 20.7506C109.813 21.593 110 22.703 110 24C110 25.297 109.813 26.407 109.601 27.2494C109.323 28.3513 108.282 29 107.146 29H102V19Z" fill="white" />
+          <path d="M102 19H107.146C108.282 19 109.323 19.6487 109.601 20.7506C109.813 21.593 110 22.703 110 24C110 25.297 109.813 26.407 109.601 27.2494C109.323 28.3513 108.282 29 107.146 29H102V19Z" fill="currentColor" />
         </g>
         <g filter="url(#filter3_iiii_6102_2547)">
           <path d="M0 15H82.3579C83.4414 15 84.5135 15.2201 85.5093 15.6468L91 18H101C101.552 18 102 18.4477 102 19V29C102 29.5523 101.552 30 101 30H91L85.5093 32.3532C84.5135 32.7799 83.4414 33 82.3579 33H0V15Z" fill="#3E3F3F" />
         </g>
-        <rect x="76" y="15" width="4" height="18" rx="0.5" fill="white" />
-        <path d="M102 19H107.146C108.282 19 109.323 19.6487 109.601 20.7506C109.813 21.593 110 22.703 110 24C110 25.297 109.813 26.407 109.601 27.2494C109.323 28.3513 108.282 29 107.146 29H102V19Z" fill="white" />
+        <rect x="76" y="15" width="4" height="18" rx="0.5" fill="currentCOlor" />
+        <path d="M102 19H107.146C108.282 19 109.323 19.6487 109.601 20.7506C109.813 21.593 110 22.703 110 24C110 25.297 109.813 26.407 109.601 27.2494C109.323 28.3513 108.282 29 107.146 29H102V19Z" fill="currentCOlor" />
       </g>
       <defs>
         <filter id="filter0_f_6102_2547" x="96" y="13" width="20" height="22" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
@@ -214,7 +214,7 @@ export function NeonBrush() {
   )
 }
 
-export function ArrowBrush() {
+export function EraserBrush() {
   return (
     <svg width="120" height="48" viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <g clip-path="url(#clip0_6102_2544)">
@@ -356,7 +356,7 @@ export function BlurBrush() {
           <feGaussianBlur stdDeviation="3.5" result="effect1_foregroundBlur_6102_2545" />
         </filter>
         <radialGradient id="paint0_angular_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0.00999999" stop-color="#FFBF00" />
+          <stop offset="0.01" stop-color="#FFBF00" />
           <stop offset="0.17" stop-color="#7FFF00" />
           <stop offset="0.365" stop-color="#00FF40" />
           <stop offset="0.55" stop-color="#00FFFF" />
@@ -370,7 +370,7 @@ export function BlurBrush() {
           <stop offset="1" stop-color="white" stop-opacity="0" />
         </radialGradient>
         <radialGradient id="paint2_angular_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0.00999999" stop-color="#FFBF00" />
+          <stop offset="0" stop-color="#FFBF00" />
           <stop offset="0.17" stop-color="#7FFF00" />
           <stop offset="0.365" stop-color="#00FF40" />
           <stop offset="0.55" stop-color="#00FFFF" />
@@ -384,7 +384,7 @@ export function BlurBrush() {
           <stop offset="1" stop-color="white" stop-opacity="0" />
         </radialGradient>
         <radialGradient id="paint4_angular_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0.00999999" stop-color="#FFBF00" />
+          <stop offset="0" stop-color="#FFBF00" />
           <stop offset="0.17" stop-color="#7FFF00" />
           <stop offset="0.365" stop-color="#00FF40" />
           <stop offset="0.55" stop-color="#00FFFF" />
@@ -398,7 +398,7 @@ export function BlurBrush() {
           <stop offset="1" stop-color="white" stop-opacity="0" />
         </radialGradient>
         <radialGradient id="paint6_angular_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0.00999999" stop-color="#FFBF00" />
+          <stop offset="0" stop-color="#FFBF00" />
           <stop offset="0.17" stop-color="#7FFF00" />
           <stop offset="0.365" stop-color="#00FF40" />
           <stop offset="0.55" stop-color="#00FFFF" />
@@ -418,3 +418,4 @@ export function BlurBrush() {
     </svg>
   )
 }
+
