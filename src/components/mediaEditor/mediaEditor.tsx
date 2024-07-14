@@ -6,6 +6,7 @@ import {doubleRaf} from '../../helpers/schedulers';
 import {AppManagers} from '../../lib/appManagers/managers';
 
 import {delay} from './utils';
+import {injectMediaEditorLangPack} from './langPack';
 import MediaEditorTabs from './mediaEditorTabs';
 import MediaEditorTopbar from './mediaEditorTopbar';
 import MediaEditorTabContent from './mediaEditorTabContent';
@@ -68,6 +69,8 @@ export function MediaEditor(props: MediaEditorProps) {
 }
 
 export function openMediaEditor(props: MediaEditorProps) {
+  injectMediaEditorLangPack()
+
   const element = document.createElement('div')
   document.body.append(element)
   console.log('[Media editor] appended wrapper');
