@@ -2860,7 +2860,8 @@ const lang = {
   'MediaEditor.Brushes.Brush': 'Brush',
   'MediaEditor.Brushes.Neon': 'Neon',
   'MediaEditor.Brushes.Blur': 'Blur',
-  'MediaEditor.Brushes.Eraser': 'Eraser'
+  'MediaEditor.Brushes.Eraser': 'Eraser',
+  'MediaEditor.RecentlyUsed': 'Recently Used'
 };
 
 export default lang;

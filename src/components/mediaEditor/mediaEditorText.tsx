@@ -26,7 +26,6 @@ export default function MediaEditorText(props: {}) {
 
   onMount(() => {
     document.querySelectorAll('.media-editor__toggle-button').forEach((element) => {
-      console.log('element', element)
       ripple(element as HTMLElement)
     })
   })

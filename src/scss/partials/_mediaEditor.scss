@@ -471,4 +471,32 @@
   &__large-button--active &__brush-button-svg-wrapper {
     width: 120px;
   }
+
+  &__stickers-recent-button {
+
+  }
+
+  &__sticker-search {
+    background-color: #717579;
+    border-radius: 50%;
+  }
+
+  &__stickers-set-thumb {
+    &-render {
+      position: relative;
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+
+  &__stickers-grid-item {
+
+  }
+
+  &__stickers-grid {
+
+  }
+
+  
 }
