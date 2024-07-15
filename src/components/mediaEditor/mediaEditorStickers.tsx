@@ -103,6 +103,7 @@ export default function MediaEditorStickers(props: {}) {
     )
   }
 
+  // TODO: Scrollable thumb
   onMount(() => {
     new Scrollable(containerScrollable)
   })
