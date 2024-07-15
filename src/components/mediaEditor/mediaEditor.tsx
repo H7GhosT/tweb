@@ -7,6 +7,7 @@ import {AppManagers} from '../../lib/appManagers/managers';
 
 import {delay} from './utils';
 import {injectMediaEditorLangPack} from './langPack';
+import {createAdjustmentsConfig} from './adjustments';
 import MediaEditorTabs from './mediaEditorTabs';
 import MediaEditorTopbar from './mediaEditorTopbar';
 import MediaEditorTabContent from './mediaEditorTabContent';
@@ -16,6 +17,7 @@ import MediaEditorText from './mediaEditorText';
 import MediaEditorBrush from './mediaEditorBrush';
 import MediaEditorStickers from './mediaEditorStickers';
 import MediaEditorContext from './context';
+import MainCanvas from './mainCanvas';
 
 
 type MediaEditorProps = {
@@ -50,10 +52,13 @@ export function MediaEditor(props: MediaEditorProps) {
     <MediaEditorContext.Provider value={{
       managers: props.managers,
       canvasResolutionSignal: createSignal(),
-      pixelRatio: window.devicePixelRatio
+      pixelRatio: window.devicePixelRatio,
+      adjustments: createAdjustmentsConfig(),
+      imageSrc: 'tmp/texture2.jpg'
     }}>
       <div ref={overlay} class="media-editor__overlay night">
         <div class="media-editor__container">
+          <MainCanvas />
           <div class="media-editor__toolbar">
             <MediaEditorTopbar onClose={handleClose} />
             <MediaEditorTabs tab={tab()} onTabChange={setTab} />

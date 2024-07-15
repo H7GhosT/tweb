@@ -1,10 +1,15 @@
+type LoadTextureResult = {
+  texture: WebGLTexture
+  image: HTMLImageElement
+}
+
 export function loadTexture(gl: WebGLRenderingContext, url: string) {
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
   const image = new Image();
 
-  return new Promise<WebGLTexture>(resolve => {
+  return new Promise<LoadTextureResult>(resolve => {
     image.addEventListener('load', () => {
       gl.bindTexture(gl.TEXTURE_2D, texture);
       gl.texImage2D(
@@ -21,7 +26,7 @@ export function loadTexture(gl: WebGLRenderingContext, url: string) {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-      resolve(texture)
+      resolve({texture, image})
     })
 
     image.src = url;

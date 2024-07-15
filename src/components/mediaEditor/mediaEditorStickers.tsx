@@ -15,7 +15,7 @@ import Scrollable, {ScrollableX} from '../scrollable';
 // Don't forget favorites
 
 export default function MediaEditorStickers(props: {}) {
-  const managers = useContext(AppManagersContext)
+  const {managers} = useContext(AppManagersContext)
   const [search, setSearch] = createSignal('')
   const [group, setGroup] = createSignal<EmojiGroup>()
   const [recentStickers] = createResource(() => managers.appStickersManager.getRecentStickersStickers())

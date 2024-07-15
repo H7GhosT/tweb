@@ -17,7 +17,6 @@ void main(void) {
   // Center to 0,0
   position = position - uImageSize / 2.0;
   // Scale
-  position *= uResolution.y / uImageSize.y;
   position *= uScale;
 
   // Rotate
@@ -39,7 +38,7 @@ void main(void) {
 `;
 
 export const fragmentShaderSource = `
-precision mediump float;
+precision highp float;
 
 varying highp vec2 vTextureCoord;
 
