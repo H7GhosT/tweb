@@ -1,6 +1,7 @@
-import {createEffect, JSX} from 'solid-js'
+import {createEffect, JSX, onCleanup, onMount} from 'solid-js'
 
 import {doubleRaf} from '../../helpers/schedulers'
+import Scrollable from '../scrollable'
 
 import {delay} from './utils'
 import {mediaEditorTabsOrder} from './mediaEditorTabs'
@@ -12,6 +13,7 @@ export default function MediaEditorTabContent(props: {
   let container: HTMLDivElement
   let prevElement: HTMLDivElement
   let prevTab = props.activeTab
+  let scrollable: Scrollable
 
 
   createEffect(async() => {
@@ -20,7 +22,10 @@ export default function MediaEditorTabContent(props: {
     const toRight = mediaEditorTabsOrder.indexOf(props.activeTab) > mediaEditorTabsOrder.indexOf(prevTab)
     prevTab = props.activeTab
 
-    const newElement = <div>{props.tabs[props.activeTab]}</div> as HTMLDivElement
+    scrollable.destroy()
+    const newElement = <div><div class="media-editor__tab-content-scrollable-content">{props.tabs[props.activeTab]}</div></div> as HTMLDivElement
+    scrollable = new Scrollable(newElement)
+    scrollable.setListeners()
 
     const cls = (element: HTMLElement, action: 'add' | 'remove', modifier: string) =>
       element.classList[action]('media-editor__tab-content--' + modifier)
@@ -47,12 +52,25 @@ export default function MediaEditorTabContent(props: {
     prevElement = newElement
   })
 
+  
   const initialTab = props.tabs[props.activeTab]
+  
+  onMount(() => {
+    // TODO: Scrollable thumb not showing
+    scrollable = new Scrollable(prevElement)
+    scrollable.setListeners()
+  })
+
+  onCleanup(() => {
+    scrollable.destroy()
+  })
 
   return (
     <div ref={container} class="media-editor__tab-content">
       <div ref={prevElement}>
-        {initialTab}
+        <div class="media-editor__tab-content-scrollable-content">
+          {initialTab}
+        </div>
       </div>
     </div>
   );

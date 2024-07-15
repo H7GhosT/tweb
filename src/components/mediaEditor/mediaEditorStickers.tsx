@@ -51,8 +51,6 @@ export default function MediaEditorStickers(props: {}) {
     )
   }
 
-  // wrapEmojiText(set.title)
-
   function Sticker(props: {
     doc: Document.document
   }) {
@@ -103,65 +101,58 @@ export default function MediaEditorStickers(props: {}) {
     )
   }
 
-  // TODO: Scrollable thumb
-  onMount(() => {
-    new Scrollable(containerScrollable)
-  })
-
   createEffect(() => {
     if(!stickerSets()) return
     new ScrollableX(thumbsListScrollable)
   })
 
   return (
-    <div class='media-editor__stickers-container-scrollable' ref={containerScrollable}>
-      <div class='media-editor__stickers-container'>
-        <div class='media-editor__stickers-thumb-list-scrollable' ref={thumbsListScrollable}>
-          <div class='media-editor__stickers-thumb-list'>
-            <Show when={stickerSets()}>
-              <Show when={recentStickers()?.length}>
-                <div class='media-editor__stickers-recent-button'>
-                  <IconTsx icon='recent' />
-                </div>
-              </Show>
-              <For each={stickerSets().sets}>
-                {set => <StickerSetThumb set={set} />}
-              </For>
+    <>
+      <div class='media-editor__stickers-thumb-list-scrollable' ref={thumbsListScrollable}>
+        <div class='media-editor__stickers-thumb-list'>
+          <Show when={stickerSets()}>
+            <Show when={recentStickers()?.length}>
+              <div class='media-editor__stickers-recent-button'>
+                <IconTsx icon='recent' />
+              </div>
             </Show>
-          </div>
-        </div>
-
-        <Space amount="8px" />
-
-        <div class='media-editor__sticker-search'>
-          <EmoticonsSearch type="stickers" onValue={(value) => {
-            console.log('[Media Editor] search', value)
-            setSearch(value)
-          }} onGroup={(group) => {
-            console.log('[Media Editor] group', group)
-            setGroup(group)
-          }} categoryColor='white' />
-        </div>
-
-        {/* TODO: Favorties */}
-
-        <Show when={recentStickers()?.length > 0}>
-          <Space amount="16px" />
-          <div class='media-editor__label'>{i18n('MediaEditor.RecentlyUsed')}</div>
-
-          <div class='media-editor__stickers-grid'>
-            <For each={recentStickers()}>
-              {doc => <Sticker doc={doc} />}
+            <For each={stickerSets().sets}>
+              {set => <StickerSetThumb set={set} />}
             </For>
-          </div>
-        </Show>
-
-        <Show when={stickerSets()}>
-          <For each={stickerSets().sets}>
-            {set => <StickerSetSection set={set} />}
-          </For>
-        </Show>
+          </Show>
+        </div>
       </div>
-    </div>
+
+      <Space amount="8px" />
+
+      <div class='media-editor__sticker-search'>
+        <EmoticonsSearch type="stickers" onValue={(value) => {
+          console.log('[Media Editor] search', value)
+          setSearch(value)
+        }} onGroup={(group) => {
+          console.log('[Media Editor] group', group)
+          setGroup(group)
+        }} categoryColor='white' />
+      </div>
+
+      {/* TODO: Favorties */}
+
+      <Show when={recentStickers()?.length > 0}>
+        <Space amount="16px" />
+        <div class='media-editor__label'>{i18n('MediaEditor.RecentlyUsed')}</div>
+
+        <div class='media-editor__stickers-grid'>
+          <For each={recentStickers()}>
+            {doc => <Sticker doc={doc} />}
+          </For>
+        </div>
+      </Show>
+
+      <Show when={stickerSets()}>
+        <For each={stickerSets().sets}>
+          {set => <StickerSetSection set={set} />}
+        </For>
+      </Show>
+    </>
   )
 }
