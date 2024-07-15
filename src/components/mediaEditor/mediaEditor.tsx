@@ -15,7 +15,7 @@ import MediaEditorCrop from './mediaEditorCrop';
 import MediaEditorText from './mediaEditorText';
 import MediaEditorBrush from './mediaEditorBrush';
 import MediaEditorStickers from './mediaEditorStickers';
-import AppManagersContext from './AppManagersContext';
+import MediaEditorContext from './context';
 
 
 type MediaEditorProps = {
@@ -47,10 +47,13 @@ export function MediaEditor(props: MediaEditorProps) {
 
 
   return (
-    <AppManagersContext.Provider value={props.managers}>
+    <MediaEditorContext.Provider value={{
+      managers: props.managers,
+      canvasResolutionSignal: createSignal(),
+      pixelRatio: window.devicePixelRatio
+    }}>
       <div ref={overlay} class="media-editor__overlay night">
         <div class="media-editor__container">
-          <div class="media-editor__image-container"></div>
           <div class="media-editor__toolbar">
             <MediaEditorTopbar onClose={handleClose} />
             <MediaEditorTabs tab={tab()} onTabChange={setTab} />
@@ -64,7 +67,7 @@ export function MediaEditor(props: MediaEditorProps) {
           </div>
         </div>
       </div>
-    </AppManagersContext.Provider>
+    </MediaEditorContext.Provider>
   )
 }
 

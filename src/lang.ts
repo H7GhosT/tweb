@@ -2861,7 +2861,18 @@ const lang = {
   'MediaEditor.Brushes.Neon': 'Neon',
   'MediaEditor.Brushes.Blur': 'Blur',
   'MediaEditor.Brushes.Eraser': 'Eraser',
-  'MediaEditor.RecentlyUsed': 'Recently Used'
+  'MediaEditor.RecentlyUsed': 'Recently Used',
+  'MediaEditor.Adjustments.Enhance': 'Enhance',
+  'MediaEditor.Adjustments.Brightness': 'Brightness',
+  'MediaEditor.Adjustments.Contrast': 'Contrast',
+  'MediaEditor.Adjustments.Saturation': 'Saturation',
+  'MediaEditor.Adjustments.Warmth': 'Warmth',
+  'MediaEditor.Adjustments.Fade': 'Fade',
+  'MediaEditor.Adjustments.Highlights': 'Highlights',
+  'MediaEditor.Adjustments.Shadows': 'Shadows',
+  'MediaEditor.Adjustments.Vignette': 'Vignette',
+  'MediaEditor.Adjustments.Grain': 'Grain',
+  'MediaEditor.Adjustments.Sharpen': 'Sharpen'
 };
 
 export default lang;

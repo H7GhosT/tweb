@@ -1,6 +1,6 @@
 import {createEffect, createResource, createSignal, For, onMount, Show, useContext} from 'solid-js';
 import EmoticonsSearch from '../emoticonsDropdown/search';
-import AppManagersContext from './AppManagersContext';
+import AppManagersContext from './context';
 import {Document, EmojiGroup, StickerSet} from '../../layer';
 import LazyLoadQueue from '../lazyLoadQueue';
 import wrapStickerSetThumb from '../wrappers/stickerSetThumb';
