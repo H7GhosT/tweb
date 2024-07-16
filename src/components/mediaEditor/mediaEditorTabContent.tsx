@@ -8,7 +8,7 @@ import {mediaEditorTabsOrder} from './mediaEditorTabs'
 
 export default function MediaEditorTabContent(props: {
   activeTab: string
-  tabs: Record<string, JSX.Element>
+  tabs: Record<string, () => JSX.Element>
 }) {
   let container: HTMLDivElement
   let prevElement: HTMLDivElement
@@ -23,7 +23,11 @@ export default function MediaEditorTabContent(props: {
     prevTab = props.activeTab
 
     scrollable.destroy()
-    const newElement = <div><div class="media-editor__tab-content-scrollable-content">{props.tabs[props.activeTab]}</div></div> as HTMLDivElement
+    const newElement = (
+      <div>
+        <div class="media-editor__tab-content-scrollable-content">{props.tabs[props.activeTab]()}</div>
+      </div>
+     ) as HTMLDivElement
     scrollable = new Scrollable(newElement)
     scrollable.setListeners()
 
@@ -52,9 +56,8 @@ export default function MediaEditorTabContent(props: {
     prevElement = newElement
   })
 
-  
-  const initialTab = props.tabs[props.activeTab]
-  
+  const initialTab = props.tabs[props.activeTab]()
+
   onMount(() => {
     // TODO: Scrollable thumb not showing
     scrollable = new Scrollable(prevElement)

@@ -17,7 +17,7 @@ import MediaEditorText from './mediaEditorText';
 import MediaEditorBrush from './mediaEditorBrush';
 import MediaEditorStickers from './mediaEditorStickers';
 import MediaEditorContext from './context';
-import MainCanvas from './mainCanvas';
+import MainCanvas from './canvas/mainCanvas';
 
 
 type MediaEditorProps = {
@@ -51,10 +51,13 @@ export function MediaEditor(props: MediaEditorProps) {
   return (
     <MediaEditorContext.Provider value={{
       managers: props.managers,
-      canvasResolutionSignal: createSignal(),
+      imageSrc: 'tmp/texture2.jpg',
       pixelRatio: window.devicePixelRatio,
+
       adjustments: createAdjustmentsConfig(),
-      imageSrc: 'tmp/texture2.jpg'
+      isCroping: createSignal(false),
+      canvasResolution: createSignal(),
+      currentImageRatio: createSignal(0)
     }}>
       <div ref={overlay} class="media-editor__overlay night">
         <div class="media-editor__container">
@@ -63,11 +66,11 @@ export function MediaEditor(props: MediaEditorProps) {
             <MediaEditorTopbar onClose={handleClose} />
             <MediaEditorTabs tab={tab()} onTabChange={setTab} />
             <MediaEditorTabContent activeTab={tab()} tabs={{
-              equalizer: <MediaEditorEqualizer />,
-              crop: <MediaEditorCrop />,
-              text: <MediaEditorText />,
-              brush: <MediaEditorBrush />,
-              stickers: <MediaEditorStickers />
+              equalizer: () => <MediaEditorEqualizer />,
+              crop: () => <MediaEditorCrop />,
+              text: () => <MediaEditorText />,
+              brush: () => <MediaEditorBrush />,
+              stickers: () => <MediaEditorStickers />
             }} />
           </div>
         </div>

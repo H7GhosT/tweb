@@ -1,8 +1,10 @@
-import {createSignal, JSX, splitProps} from 'solid-js';
+import {createSignal, JSX, onCleanup, onMount, splitProps, useContext} from 'solid-js';
 
 import {i18n} from '../../lib/langPack';
 import {IconTsx} from '../iconTsx';
+
 import MediaEditorLargeButton, {MediaEditorLargeButtonProps} from './mediaEditorLargeButton';
+import MediaEditorContext from './context';
 
 const ratioRects = {
   '1x1': () => <rect x="4" y="4" width="16" height="16" rx="2" stroke="white" stroke-width="1.66"/>,
@@ -22,11 +24,11 @@ function Item(inProps: MediaEditorLargeButtonProps & {
   icon: JSX.Element
   text: JSX.Element
 }) {
-  const [props, divProps] = splitProps(inProps, ['icon', 'text'])
+  const [props, buttonProps] = splitProps(inProps, ['icon', 'text'])
 
   return (
     <MediaEditorLargeButton
-      {...divProps}
+      {...buttonProps}
       class="media-editor__crop-item"
     >
       {props.icon}
@@ -36,7 +38,12 @@ function Item(inProps: MediaEditorLargeButtonProps & {
 }
 
 export default function MediaEditorCrop(props: {}) {
+  const context = useContext(MediaEditorContext)
   const [active, setActive] = createSignal('free')
+  const [, setIsCroping] = context.isCroping
+
+  onMount(() => setIsCroping(true))
+  onCleanup(() => setIsCroping(false))
 
   const isActive = (what: string) => active() === what
 
