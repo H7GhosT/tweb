@@ -31,12 +31,16 @@ function ImageCanvas() {
 
   createEffect(() => {
     const payload = renderingPayload()
-    const cropOffset = getCropOffset()
     if(!payload) return
+
+    const cropOffset = getCropOffset()
+    const [translation] = context.translation
+    const [scale] = context.scale
 
     const [w,  h] = canvasResolution()
 
-    const imageRatio = currentImageRatio()
+    // const imageRatio = currentImageRatio()
+    const imageRatio = payload.image.width / payload.image.height
     let cropScale = 1
     if(isCroping()) {
       if(cropOffset.width / imageRatio > cropOffset.height) cropScale = cropOffset.height / h
@@ -55,8 +59,11 @@ function ImageCanvas() {
 
     draw(gl, payload, {
       rotation: 0,
-      scale: context.pixelRatio * imageScale * cropScale,
-      translation: [0 + cropTranslation[0], 0  + cropTranslation[1]].map(v => v * context.pixelRatio) as [number, number],
+      scale: scale() * context.pixelRatio * imageScale * cropScale,
+      translation: [
+        0 + cropTranslation[0] + translation()[0],
+        0  + cropTranslation[1]  + translation()[1]
+      ].map(v => v * context.pixelRatio) as [number, number],
       imageSize: [payload.image.width, payload.image.height],
       ...(
         Object.fromEntries(

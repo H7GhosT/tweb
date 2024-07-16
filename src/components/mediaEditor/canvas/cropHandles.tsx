@@ -9,7 +9,9 @@ export default function CropHandles() {
   const context = useContext(MediaEditorContext)
   const [canvasResolution] = context.canvasResolution
   const [isCroping] = context.isCroping
-  const [currentImageRatio] = context.currentImageRatio
+  const [currentImageRatio, setCurrentImageRatio] = context.currentImageRatio
+  const [scale, setScale] = context.scale
+  const [translation, setTranslation] = context.translation
   const cropOffset = getCropOffset()
 
   const [leftTop, setLeftTop] = createSignal([0, 0])
@@ -17,7 +19,7 @@ export default function CropHandles() {
   const [size, setSize] = createSignal([0, 0])
   const [diff, setDiff] = createSignal([0, 0])
 
-  const getSize = () => {
+  const resetSize = () => {
     const imageRatio = currentImageRatio()
     let width = cropOffset.width, height = cropOffset.height
 
@@ -28,11 +30,11 @@ export default function CropHandles() {
       cropOffset.left + (cropOffset.width - width) / 2,
       cropOffset.top + (cropOffset.height - height) / 2
     ])
-    return [width, height]
+    setSize([width, height])
   }
 
   createEffect(() => {
-    setSize(getSize())
+    resetSize()
   })
 
   const circleOffset = '-5px'
@@ -57,11 +59,32 @@ export default function CropHandles() {
           setDiff([xDiff * (left ? -1 : 1), yDiff * (top ? -1 : 1)])
           setLeftTopDiff([xDiff * left, yDiff * top])
         },
+        onStart() {
+          el.classList.add('media-editor__crop-handles-circle--anti-flicker')
+        },
         onReset() {
-          setSize(size => [size[0] + diff()[0], size[1] + diff()[1]])
-          setLeftTop(leftTop => [leftTop[0] + leftTopDiff()[0], leftTop[1] + leftTopDiff()[1]])
+          // setSize(size => [size[0] + diff()[0], size[1] + diff()[1]])
+          // setLeftTop(leftTop => [leftTop[0] + leftTopDiff()[0], leftTop[1] + leftTopDiff()[1]])
+          const newWidth = size()[0] + diff()[0], newHeight = size()[1] + diff()[1];
+          const newRatio = newWidth / newHeight
+
+          setScale(scale => scale * Math.min(
+            cropOffset.width / newWidth,
+            cropOffset.height / newHeight
+          ))
+          setCurrentImageRatio(newRatio)
+
+          const s = (v: number) => v * -scale() * 0.5
+          setTranslation(translation => [
+            translation[0] + s(diff()[0] * (left ? -1 : 1)),
+            translation[1] + s(diff()[1] * (top ? -1 : 1))
+          ])
+
+          resetSize()
           setDiff([0, 0])
           setLeftTopDiff([0, 0])
+
+          el.classList.remove('media-editor__crop-handles-circle--anti-flicker')
         }
       })
     })

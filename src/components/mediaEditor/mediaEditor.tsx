@@ -57,7 +57,9 @@ export function MediaEditor(props: MediaEditorProps) {
       adjustments: createAdjustmentsConfig(),
       isCroping: createSignal(false),
       canvasResolution: createSignal(),
-      currentImageRatio: createSignal(0)
+      currentImageRatio: createSignal(0),
+      scale: createSignal(1),
+      translation: createSignal([0, 0])
     }}>
       <div ref={overlay} class="media-editor__overlay night">
         <div class="media-editor__container">

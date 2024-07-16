@@ -4,12 +4,15 @@ import {AdjustmentsConfig} from './adjustments';
 
 export interface MediaEditorContextValue {
   managers: AppManagers
-  canvasResolution: Signal<[number, number]>
   pixelRatio: number
   imageSrc: string
   adjustments: AdjustmentsConfig
+
   isCroping: Signal<boolean>
+  canvasResolution: Signal<[number, number]>
   currentImageRatio: Signal<number>
+  scale: Signal<number>
+  translation: Signal<[number, number]>
 }
 
 const MediaEditorContext = createContext<MediaEditorContextValue>()

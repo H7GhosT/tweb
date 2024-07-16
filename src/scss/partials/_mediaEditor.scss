@@ -577,6 +577,18 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
+
+      &--anti-flicker::before {
+        cursor: grabbing;
+        content: '';
+        display: block;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        height: 12px;
+        width: 12px;
+        transform: translate(-50%, -50%);
+      }
     }
 
     &-line-v {
