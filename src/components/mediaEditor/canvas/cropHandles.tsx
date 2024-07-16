@@ -63,21 +63,21 @@ export default function CropHandles() {
           el.classList.add('media-editor__crop-handles-circle--anti-flicker')
         },
         onReset() {
-          // setSize(size => [size[0] + diff()[0], size[1] + diff()[1]])
-          // setLeftTop(leftTop => [leftTop[0] + leftTopDiff()[0], leftTop[1] + leftTopDiff()[1]])
           const newWidth = size()[0] + diff()[0], newHeight = size()[1] + diff()[1];
           const newRatio = newWidth / newHeight
 
-          setScale(scale => scale * Math.min(
+          const upScale = Math.min(
             cropOffset.width / newWidth,
             cropOffset.height / newHeight
-          ))
+          )
+          const newScale = scale() * upScale
+          setScale(newScale)
+
           setCurrentImageRatio(newRatio)
 
-          const s = (v: number) => v * -scale() * 0.5
           setTranslation(translation => [
-            translation[0] + s(diff()[0] * (left ? -1 : 1)),
-            translation[1] + s(diff()[1] * (top ? -1 : 1))
+            upScale * (translation[0] + (-diff()[0] * (left ? -1 : 1)) * 0.5),
+            upScale * (translation[1] + (-diff()[1] * (top ? -1 : 1)) * 0.5)
           ])
 
           resetSize()
@@ -90,26 +90,47 @@ export default function CropHandles() {
     })
   })
 
-  return (
-    <div
-      class="media-editor__crop-handles"
-      style={{
-        display: isCroping() ? undefined : 'none',
-        left: leftTop()[0] + leftTopDiff()[0] + 'px',
-        top: leftTop()[1] + leftTopDiff()[1] + 'px',
-        width: size()[0] + diff()[0] + 'px',
-        height: size()[1] + diff()[1] + 'px'
-      }}
-    >
-      <div class="media-editor__crop-handles-line-h" style={{top: '33%'}} />
-      <div class="media-editor__crop-handles-line-h" style={{top: '66%'}} />
-      <div class="media-editor__crop-handles-line-v" style={{left: '33%'}} />
-      <div class="media-editor__crop-handles-line-v" style={{left: '66%'}} />
+  const left = () => leftTop()[0] + leftTopDiff()[0]
+  const top = () => leftTop()[1] + leftTopDiff()[1]
+  const width = () => size()[0] + diff()[0]
+  const height = () => size()[1] + diff()[1]
+  const right = () => left() + width()
+  const bottom = () => top() + height()
 
-      <div ref={leftTopEl} class="media-editor__crop-handles-circle" style={{left: circleOffset, top: circleOffset}} />
-      <div ref={rightTopEl} class="media-editor__crop-handles-circle" style={{right: circleOffset, top: circleOffset}} />
-      <div ref={leftBottomEl} class="media-editor__crop-handles-circle" style={{left: circleOffset, bottom: circleOffset}} />
-      <div ref={rightBottomEl} class="media-editor__crop-handles-circle" style={{right: circleOffset, bottom: circleOffset}} />
-    </div>
+  return (
+    <>
+      <div
+        class="media-editor__crop-handles-backdrop"
+        style={{
+          display: isCroping() ? undefined : 'none',
+          ['clip-path']: `polygon(
+            0 0, 0 100%,
+            ${left()}px 100%, ${left()}px ${top()}px, ${right()}px ${top()}px,
+            ${right()}px ${bottom()}px, ${left()}px ${bottom()}px, ${left()}px 100%,
+            100% 100%, 100% 0%
+          )`
+        }}
+      />
+      <div
+        class="media-editor__crop-handles"
+        style={{
+          display: isCroping() ? undefined : 'none',
+          left: left() + 'px',
+          top: top() + 'px',
+          width: width() + 'px',
+          height: height() + 'px'
+        }}
+      >
+        <div class="media-editor__crop-handles-line-h" style={{top: '33%'}} />
+        <div class="media-editor__crop-handles-line-h" style={{top: '66%'}} />
+        <div class="media-editor__crop-handles-line-v" style={{left: '33%'}} />
+        <div class="media-editor__crop-handles-line-v" style={{left: '66%'}} />
+
+        <div ref={leftTopEl} class="media-editor__crop-handles-circle" style={{left: circleOffset, top: circleOffset}} />
+        <div ref={rightTopEl} class="media-editor__crop-handles-circle" style={{right: circleOffset, top: circleOffset}} />
+        <div ref={leftBottomEl} class="media-editor__crop-handles-circle" style={{left: circleOffset, bottom: circleOffset}} />
+        <div ref={rightBottomEl} class="media-editor__crop-handles-circle" style={{right: circleOffset, bottom: circleOffset}} />
+      </div>
+    </>
   )
 }
