@@ -38,6 +38,7 @@ function ImageCanvas() {
     const cropOffset = getCropOffset()
     const [translation] = context.translation
     const [scale] = context.scale
+    const [rotation] = context.rotation
 
     const [w,  h] = canvasResolution()
 
@@ -76,7 +77,7 @@ function ImageCanvas() {
     }
 
     draw(gl, payload, {
-      rotation: 0,
+      rotation: rotation(),
       scale: scale() * context.pixelRatio * imageScale * cropScale,
       translation: [
         0 + cropTranslation[0] + translation()[0],

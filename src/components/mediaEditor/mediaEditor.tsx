@@ -59,6 +59,7 @@ export function MediaEditor(props: MediaEditorProps) {
       canvasResolution: createSignal(),
       currentImageRatio: createSignal(0),
       scale: createSignal(1),
+      rotation: createSignal(0),
       translation: createSignal([0, 0])
     }}>
       <div ref={overlay} class="media-editor__overlay night">

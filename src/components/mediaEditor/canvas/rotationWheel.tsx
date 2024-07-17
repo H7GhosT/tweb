@@ -1,19 +1,30 @@
-import {createSignal, onMount, useContext} from 'solid-js'
+import {createEffect, createSignal, onMount, useContext} from 'solid-js'
 import {ButtonIconTsx} from '../../buttonIconTsx'
 import SwipeHandler from '../../swipeHandler'
 import MediaEditorContext from '../context'
 
+const DEGREE_DIST = 42
+
 export default function RotationWheel(props: {}) {
   const context = useContext(MediaEditorContext)
   const [isCroping] = context.isCroping
+  const [rotation, setRotation] = context.rotation
+  const [translation, setTranslation] = context.translation
   const [moved, setMoved] = createSignal(0)
   const [movedDiff, setMovedDiff] = createSignal(0)
 
   let swiperEl: HTMLDivElement
 
   onMount(() => {
+    let initialRotation = 0
+    let initialTranslation = [0, 0]
+
     new SwipeHandler({
       element: swiperEl,
+      onStart() {
+        initialRotation = rotation()
+        initialTranslation = translation()
+      },
       onSwipe(xDiff) {
         setMovedDiff(xDiff)
       },
@@ -22,6 +33,21 @@ export default function RotationWheel(props: {}) {
         setMovedDiff(0)
       }
     })
+  })
+
+  createEffect(() => {
+    const rotation = (moved() + movedDiff()) / DEGREE_DIST * 15 * Math.PI / 180
+    let rotationDiff = 0
+    setRotation(prev => {
+      rotationDiff = prev - rotation
+      return rotation
+    })
+    const r = [Math.cos(rotationDiff), Math.sin(rotationDiff)]
+
+    setTranslation(translation => [
+      translation[0] * r[0] + translation[1] * r[1],
+      translation[1] * r[0] - translation[0] * r[1]
+    ])
   })
 
   return (
