@@ -39,6 +39,7 @@ export default function CropHandles() {
 
   const circleOffset = '-5px'
 
+  let cropAreaEl: HTMLDivElement
   let leftTopEl: HTMLDivElement
   let rightTopEl: HTMLDivElement
   let leftBottomEl: HTMLDivElement
@@ -87,6 +88,18 @@ export default function CropHandles() {
           el.classList.remove('media-editor__crop-handles-circle--anti-flicker')
         }
       })
+    })
+
+    let initialTranslation: [number, number] = [0, 0]
+
+    new SwipeHandler({
+      element: cropAreaEl,
+      onStart() {
+        initialTranslation = translation()
+      },
+      onSwipe(xDiff, yDiff) {
+        setTranslation([initialTranslation[0] + xDiff, initialTranslation[1] + yDiff])
+      }
     })
   })
 
@@ -141,6 +154,7 @@ export default function CropHandles() {
         }}
       />
       <div
+        ref={cropAreaEl}
         class="media-editor__crop-handles"
         style={{
           display: isCroping() ? undefined : 'none',

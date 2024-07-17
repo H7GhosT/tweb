@@ -30,36 +30,6 @@ function ImageCanvas() {
     setCurrentImageRatio(payload.image.width / payload.image.height)
   })
 
-  // createEffect(() => {
-  //   const payload = renderingPayload()
-  //   if(!payload) return
-  //   const cropOffset = getCropOffset()
-  //   const [w,  h] = canvasResolution()
-
-  //   const imageRatio = payload.image.width / payload.image.height
-
-  //   if(isCroping()) {
-  //     let cropScale = 1
-  //     if(cropOffset.width / imageRatio > cropOffset.height) cropScale = cropOffset.height / h
-  //     else cropScale = cropOffset.width / w
-
-  //     setScale(scale => scale * cropScale)
-  //     const ty = (cropOffset.left + cropOffset.height / 2) - h / 2
-  //     setTranslation(translation => [
-  //       translation[0],
-  //       translation[1] + ty
-  //     ])
-
-  //     onCleanup(() => {
-  //       setScale(scale => scale / cropScale)
-  //       setTranslation(translation => [
-  //         translation[0],
-  //         translation[1] - ty
-  //       ])
-  //     })
-  //   }
-  // })
-
   createEffect(() => {
     const payload = renderingPayload()
     if(!payload) return
