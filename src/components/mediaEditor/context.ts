@@ -12,6 +12,7 @@ export interface MediaEditorContextValue {
   imageSize: Signal<[number, number]>
   canvasResolution: Signal<[number, number]>
   currentImageRatio: Signal<number>
+  fixedImageRatioKey: Signal<string>
   scale: Signal<number>
   rotation: Signal<number>
   translation: Signal<[number, number]>

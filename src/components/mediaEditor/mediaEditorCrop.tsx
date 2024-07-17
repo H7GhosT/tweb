@@ -1,10 +1,11 @@
-import {createSignal, JSX, onCleanup, onMount, splitProps, useContext} from 'solid-js';
+import {createEffect, createSignal, JSX, onCleanup, onMount, splitProps, useContext} from 'solid-js';
 
 import {i18n} from '../../lib/langPack';
 import {IconTsx} from '../iconTsx';
 
 import MediaEditorLargeButton, {MediaEditorLargeButtonProps} from './mediaEditorLargeButton';
 import MediaEditorContext from './context';
+import {getCropOffset} from './canvas/cropOffset';
 
 const ratioRects = {
   '1x1': () => <rect x="4" y="4" width="16" height="16" rx="2" stroke="white" stroke-width="1.66"/>,
@@ -39,37 +40,77 @@ function Item(inProps: MediaEditorLargeButtonProps & {
 
 export default function MediaEditorCrop(props: {}) {
   const context = useContext(MediaEditorContext)
-  const [active, setActive] = createSignal('free')
   const [, setIsCroping] = context.isCroping
+  const [, setTranslation] = context.translation
+  const [, setScale] = context.scale
+  const [, setRotation] = context.rotation
+  const [, setCurrentImageRatio] = context.currentImageRatio
+  const [fixedImageRatioKey, setFixedImageRatioKey] = context.fixedImageRatioKey
+  const [imageSize] = context.imageSize
+  const cropOffset = getCropOffset()
 
   onMount(() => setIsCroping(true))
   onCleanup(() => setIsCroping(false))
 
-  const isActive = (what: string) => active() === what
+  const isActive = (what?: string) => fixedImageRatioKey() === what
+
+  createEffect(() => {
+    const [w, h] = imageSize()
+
+    if(fixedImageRatioKey() === 'original') {
+      setScale(1)
+      setTranslation([0, 0])
+      setCurrentImageRatio(w / h)
+      setRotation(0)
+      return
+    }
+
+    if(!fixedImageRatioKey().includes('x')) return
+
+    const parts = fixedImageRatioKey().split('x')
+    const ratio = parseInt(parts[0]) / parseInt(parts[1])
+    const originalRatio = w / h
+
+    let initialWidth = cropOffset.width, initialHeight = cropOffset.height
+
+    if(cropOffset.width / originalRatio > cropOffset.height) initialWidth = cropOffset.height * originalRatio
+    else initialHeight = cropOffset.width / originalRatio
+
+
+    let width = cropOffset.width, height = cropOffset.height
+
+    if(cropOffset.width / ratio > cropOffset.height) width = cropOffset.height * ratio
+    else height = cropOffset.width / ratio
+
+    setScale(Math.max(width / initialWidth, height / initialHeight))
+    setCurrentImageRatio(ratio)
+    setTranslation([0, 0])
+    setRotation(0)
+  })
 
   return (
     <>
       <div class="media-editor__label">{i18n('MediaEditor.AspectRatio')}</div>
 
-      <Item icon={<IconTsx icon="free_transform" />} text={i18n('MediaEditor.Free')} active={isActive('free')} onClick={() => setActive('free')} />
-      <Item icon={<IconTsx icon="image_original" />} text={i18n('MediaEditor.Original')} active={isActive('original')} onClick={() => setActive('original')} />
-      <Item icon={ratioIcon('1x1')} text={i18n('MediaEditor.Square')} active={isActive('1x1')} onClick={() => setActive('1x1')} />
+      <Item icon={<IconTsx icon="free_transform" />} text={i18n('MediaEditor.Free')} active={isActive()} onClick={() => setFixedImageRatioKey()} />
+      <Item icon={<IconTsx icon="image_original" />} text={i18n('MediaEditor.Original')} active={isActive('original')} onClick={() => setFixedImageRatioKey('original')} />
+      <Item icon={ratioIcon('1x1')} text={i18n('MediaEditor.Square')} active={isActive('1x1')} onClick={() => setFixedImageRatioKey('1x1')} />
 
       <div class="media-editor__crop-grid">
-        <Item icon={ratioIcon('3x2')} text="3:2" active={isActive('3x2')} onClick={() => setActive('3x2')} />
-        <Item icon={ratioIcon('3x2', true)} text="2:3" active={isActive('2x3')} onClick={() => setActive('2x3')} />
+        <Item icon={ratioIcon('3x2')} text="3:2" active={isActive('3x2')} onClick={() => setFixedImageRatioKey('3x2')} />
+        <Item icon={ratioIcon('3x2', true)} text="2:3" active={isActive('2x3')} onClick={() => setFixedImageRatioKey('2x3')} />
 
-        <Item icon={ratioIcon('4x3')} text="4:3" active={isActive('4x3')} onClick={() => setActive('4x3')} />
-        <Item icon={ratioIcon('4x3', true)} text="3:4" active={isActive('3x4')} onClick={() => setActive('3x4')} />
+        <Item icon={ratioIcon('4x3')} text="4:3" active={isActive('4x3')} onClick={() => setFixedImageRatioKey('4x3')} />
+        <Item icon={ratioIcon('4x3', true)} text="3:4" active={isActive('3x4')} onClick={() => setFixedImageRatioKey('3x4')} />
 
-        <Item icon={ratioIcon('5x4')} text="5:4" active={isActive('5x4')} onClick={() => setActive('5x4')} />
-        <Item icon={ratioIcon('5x4', true)} text="4:5" active={isActive('4x5')} onClick={() => setActive('4x5')} />
+        <Item icon={ratioIcon('5x4')} text="5:4" active={isActive('5x4')} onClick={() => setFixedImageRatioKey('5x4')} />
+        <Item icon={ratioIcon('5x4', true)} text="4:5" active={isActive('4x5')} onClick={() => setFixedImageRatioKey('4x5')} />
 
-        <Item icon={ratioIcon('7x5')} text="7:5" active={isActive('7x5')} onClick={() => setActive('7x5')} />
-        <Item icon={ratioIcon('7x5', true)} text="5:7" active={isActive('5x7')} onClick={() => setActive('5x7')} />
+        <Item icon={ratioIcon('7x5')} text="7:5" active={isActive('7x5')} onClick={() => setFixedImageRatioKey('7x5')} />
+        <Item icon={ratioIcon('7x5', true)} text="5:7" active={isActive('5x7')} onClick={() => setFixedImageRatioKey('5x7')} />
 
-        <Item icon={ratioIcon('16x9')} text="16:9" active={isActive('16x9')} onClick={() => setActive('16x9')} />
-        <Item icon={ratioIcon('16x9', true)} text="9:16" active={isActive('9x16')} onClick={() => setActive('9x16')} />
+        <Item icon={ratioIcon('16x9')} text="16:9" active={isActive('16x9')} onClick={() => setFixedImageRatioKey('16x9')} />
+        <Item icon={ratioIcon('16x9', true)} text="9:16" active={isActive('9x16')} onClick={() => setFixedImageRatioKey('9x16')} />
       </div>
     </>
   );

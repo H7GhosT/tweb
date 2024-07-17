@@ -62,7 +62,8 @@ export function MediaEditor(props: MediaEditorProps) {
       scale: createSignal(1),
       rotation: createSignal(0),
       translation: createSignal([0, 0]),
-      flip: createSignal([1, 1])
+      flip: createSignal([1, 1]),
+      fixedImageRatioKey: createSignal()
     }}>
       <div ref={overlay} class="media-editor__overlay night">
         <div class="media-editor__container">
