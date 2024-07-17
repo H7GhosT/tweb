@@ -97,8 +97,37 @@ export default function CropHandles() {
   const right = () => left() + width()
   const bottom = () => top() + height()
 
+  const croppedSizeFull = () => {
+    const [cw, ch] = canvasResolution()
+    let [w, h] = [cw, ch]
+    const ratio = currentImageRatio()
+
+    if(w / ratio > h) w = h * ratio
+    else h = w / ratio
+
+    return [(cw - w) / 2, (ch - h) / 2]
+  }
+
+
   return (
     <>
+      <Show when={!isCroping()}>
+        <div style={{background: 'black', position: 'absolute', left: '0px', top: '0px', width: '100%', height: croppedSizeFull()[1] + 'px'}}></div>
+        <div style={{background: 'black', position: 'absolute', left: '0px', bottom: '0px', width: '100%', height: croppedSizeFull()[1] + 'px'}}></div>
+        <div style={{background: 'black', position: 'absolute', left: '0px', top: '0px', height: '100%', width: croppedSizeFull()[0] + 'px'}}></div>
+        <div style={{background: 'black', position: 'absolute', right: '0px', top: '0px', height: '100%', width: croppedSizeFull()[0] + 'px'}}></div>
+      </Show>
+      <div
+        style={{
+          position: isCroping() ? 'absolute' : 'static',
+          left: left() + 'px',
+          top: top() + 'px',
+          width: width() + 'px',
+          height: height() + 'px'
+        }}
+      >
+        <div style={{position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: '6px', height: '6px', background: 'rgba(255, 0, 0, .4)'}} />
+      </div>
       <div
         class="media-editor__crop-handles-backdrop"
         style={{
