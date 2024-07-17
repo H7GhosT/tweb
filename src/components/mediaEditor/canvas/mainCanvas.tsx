@@ -5,6 +5,7 @@ import {draw} from '../webgl/draw'
 import {AdjustmentsConfig} from '../adjustments'
 import {getCropOffset} from './cropOffset'
 import CropHandles from './cropHandles'
+import RotationWheel from './rotationWheel'
 
 
 function ImageCanvas() {
@@ -114,6 +115,7 @@ export default function MainCanvas(props: {}) {
       <Show when={canvasResolution()}>
         <ImageCanvas />
         <CropHandles />
+        <RotationWheel />
       </Show>
     </div>
   )
