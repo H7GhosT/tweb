@@ -6,6 +6,7 @@ attribute vec2 aTextureCoord;
 
 uniform float uAngle;
 uniform float uScale;
+uniform vec2 uFlip;
 uniform vec2 uImageSize;
 uniform vec2 uResolution;
 uniform vec2 uTranslation;
@@ -16,6 +17,8 @@ void main(void) {
   vec2 position = aVertexPosition;
   // Center to 0,0
   position = position - uImageSize / 2.0;
+  // Flip
+  position = position * uFlip;
   // Scale
   position *= uScale;
 

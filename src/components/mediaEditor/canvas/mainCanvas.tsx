@@ -13,8 +13,11 @@ function ImageCanvas() {
   const [canvasResolution] = context.canvasResolution
   const [isCroping] = context.isCroping
   const [currentImageRatio, setCurrentImageRatio] = context.currentImageRatio
-  const [, setScale] = context.scale
-  const [, setTranslation] = context.translation
+  const [, setImageSize] = context.imageSize
+  const [translation] = context.translation
+  const [scale] = context.scale
+  const [rotation] = context.rotation
+  const [flip] = context.flip
 
   const canvas = (
     <canvas
@@ -29,6 +32,7 @@ function ImageCanvas() {
     const payload = await initWebGL(gl, context)
     setRenderingPayload(payload)
     setCurrentImageRatio(payload.image.width / payload.image.height)
+    setImageSize([payload.image.width, payload.image.height])
   })
 
   createEffect(() => {
@@ -36,9 +40,6 @@ function ImageCanvas() {
     if(!payload) return
 
     const cropOffset = getCropOffset()
-    const [translation] = context.translation
-    const [scale] = context.scale
-    const [rotation] = context.rotation
 
     const [w,  h] = canvasResolution()
 
@@ -77,6 +78,7 @@ function ImageCanvas() {
     }
 
     draw(gl, payload, {
+      flip: flip(),
       rotation: rotation(),
       scale: scale() * context.pixelRatio * imageScale * cropScale,
       translation: [

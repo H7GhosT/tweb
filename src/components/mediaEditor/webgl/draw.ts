@@ -6,6 +6,7 @@ type DrawingParameters = {
   scale: number
   translation: [number, number]
   imageSize: [number, number]
+  flip: [number, number]
 } & Record<AdjustmentsConfig[number]['key'], number>
 
 export function draw(gl: WebGLRenderingContext, payload: RenderingPayload, parameters: DrawingParameters) {
@@ -31,9 +32,10 @@ export function draw(gl: WebGLRenderingContext, payload: RenderingPayload, param
 
   gl.uniform1f(payload.uniforms.uAngle, -parameters.rotation);
   gl.uniform2f(payload.uniforms.uResolution, gl.canvas.width, gl.canvas.height);
+  gl.uniform1f(payload.uniforms.uScale, parameters.scale)
   gl.uniform2fv(payload.uniforms.uTranslation, parameters.translation);
   gl.uniform2fv(payload.uniforms.uImageSize, parameters.imageSize);
-  gl.uniform1f(payload.uniforms.uScale, parameters.scale)
+  gl.uniform2fv(payload.uniforms.uFlip, parameters.flip)
 
   gl.uniform1f(payload.uniforms.uSaturation, parameters.saturation)
   gl.uniform1f(payload.uniforms.uBrightness, parameters.brightness)

@@ -34,6 +34,7 @@ export async function initWebGL(gl: WebGLRenderingContext, context: MediaEditorC
     },
     uniforms: {
       uSampler: gl.getUniformLocation(shaderProgram, 'uSampler'),
+      uFlip: gl.getUniformLocation(shaderProgram, 'uFlip'),
       uAngle: gl.getUniformLocation(shaderProgram, 'uAngle'),
       uResolution: gl.getUniformLocation(shaderProgram, 'uResolution'),
       uTranslation: gl.getUniformLocation(shaderProgram, 'uTranslation'),

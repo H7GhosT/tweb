@@ -9,11 +9,13 @@ export interface MediaEditorContextValue {
   adjustments: AdjustmentsConfig
 
   isCroping: Signal<boolean>
+  imageSize: Signal<[number, number]>
   canvasResolution: Signal<[number, number]>
   currentImageRatio: Signal<number>
   scale: Signal<number>
   rotation: Signal<number>
   translation: Signal<[number, number]>
+  flip: Signal<[number, number]>
 }
 
 const MediaEditorContext = createContext<MediaEditorContextValue>()
