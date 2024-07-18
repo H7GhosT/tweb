@@ -25,6 +25,7 @@ export interface MediaEditorContextValue {
     size: number
     font: string
   }>
+  selectedTextLayer: Signal<number>
 }
 
 const MediaEditorContext = createContext<MediaEditorContextValue>()

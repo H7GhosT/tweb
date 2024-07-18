@@ -734,18 +734,60 @@
 
     display: flex;
     flex-direction: column;
-    align-items: center;
 
     text-wrap: nowrap;
 
-    >div {
-      position: relative;
-      line-height: 1.33em;
-      padding: 0 .1em;
-      >span {
+    &-layout {
+      display: flex;
+      align-items: var(--align-items);
+      flex-direction: column;
+      text-wrap: nowrap;
+      outline: none;
+
+      >div {
         position: relative;
+        line-height: 1.33em;
+        padding: 0 .2em;
       }
     }
+
+    &--with-bg &-layout {
+      >div {
+        padding: 0 .3em;
+        min-width: 2em;
+      }
+    }
+
+    &-svg-background {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    &-background {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: var(--align-items);
+
+      flex-direction: column;
+      text-wrap: nowrap;
+      outline: none;
+
+      >div {
+        position: relative;
+        line-height: 1.33em;
+        padding: 0 .2em;
+      }
+    }
+
+   
+   
 
     &-svg-outline {
       pointer-events: none;
