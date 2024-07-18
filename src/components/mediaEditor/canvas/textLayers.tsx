@@ -1,8 +1,9 @@
-import {createEffect, createSignal, For, Match, on, onCleanup, onMount, Signal, Switch, useContext} from 'solid-js'
+import {createEffect, createSignal, For, Match, on, onCleanup, onMount, ParentProps, Signal, Switch, useContext} from 'solid-js'
 import createElementFromMarkup from '../../../helpers/createElementFromMarkup'
 import {withCurrentOwner} from '../utils'
 import MediaEditorContext from '../context'
 import {hexaToHsla} from '../../../helpers/color'
+import SwipeHandler from '../../swipeHandler'
 
 let idSeed = 0
 
@@ -35,6 +36,8 @@ export default function TextLayers() {
       createSignal({
         id: idSeed++,
         position: [e.clientX - bcr.left, e.clientY - bcr.top],
+        rotation: 0,
+        scale: 1,
         ...currentLayerInfo()
       })
     ])
@@ -47,17 +50,17 @@ export default function TextLayers() {
       onClick={withCurrentOwner(addLayer)}
     >
       <For each={layers()}>
-        {layer => <TextLayer info={layer[0]()} />}
+        {layerSignal => <TextLayer layerSignal={layerSignal} />}
       </For>
     </div>
   )
 }
 
-type TextLayerInfo = {
+export type TextLayerInfo = {
   id: number
   position: [number, number]
-  // rotation: number
-  // scale: number
+  rotation: number
+  scale: number
   color: string
   alignment: string
   style: string
@@ -66,40 +69,46 @@ type TextLayerInfo = {
 }
 
 type TextLayerProps = {
-  info: TextLayerInfo
+  layerSignal: Signal<TextLayerInfo>
 }
 
 
 function TextLayer(props: TextLayerProps) {
   const context = useContext(MediaEditorContext)
-  const [, setSelectedTextLayer] = context.selectedTextLayer
+  const [selectedTextLayer, setSelectedTextLayer] = context.selectedTextLayer
   const [, setCurrentLayerInfo] = context.currentTextLayerInfo
 
+  const [layerInfo, setLayerInfo] = props.layerSignal
+
   const onFocus = () => {
-    setSelectedTextLayer(props.info.id)
+    setSelectedTextLayer(layerInfo().id)
     setCurrentLayerInfo({
-      color: props.info.color,
-      alignment: props.info.alignment,
-      style: props.info.style,
-      size: props.info.size,
-      font: props.info.font
+      color: layerInfo().color,
+      alignment: layerInfo().alignment,
+      style: layerInfo().style,
+      size: layerInfo().size,
+      font: layerInfo().font
     })
   }
 
-  const fontInfo = () => fontInfoMap[props.info.font]
+  const fontInfo = () => fontInfoMap[layerInfo().font]
 
   function updateBackground() {
     container.querySelector('.media-editor__text-layer-background')?.remove()
-    if(props.info.style === 'background') return updateBackgroundStyle(container, contentEditable, props.info)
-    if(props.info.style === 'outline') return updateOutlineStyle(container, contentEditable, props.info)
+    if(layerInfo().style === 'background') return updateBackgroundStyle(container, contentEditable, layerInfo())
+    if(layerInfo().style === 'outline') return updateOutlineStyle(container, contentEditable, layerInfo())
   }
 
-  onMount(() => {
+  function selectAll() {
     const range = document.createRange();
     range.selectNodeContents(contentEditable);
     const selection = window.getSelection();
     selection.removeAllRanges();
     selection.addRange(range);
+  }
+
+  onMount(() => {
+    selectAll()
   })
 
   createEffect(() => {
@@ -110,41 +119,178 @@ function TextLayer(props: TextLayerProps) {
   let contentEditable: HTMLDivElement
 
   const color = () => {
-    if(props.info.style === 'normal') return props.info.color
-    return hexaToHsla(props.info.color).l < 80 ? '#ffffff' : '#000000'
+    if(layerInfo().style === 'normal') return layerInfo().color
+    return hexaToHsla(layerInfo().color).l < 80 ? '#ffffff' : '#000000'
   }
 
   return (
-    <div
-      ref={container}
-      class="media-editor__text-layer"
-      classList={{
-        'media-editor__text-layer--with-bg': props.info.style === 'background'
-      }}
-      style={{
-        'left': props.info.position[0] + 'px',
-        'top': props.info.position[1] + 'px',
-        'color': color(),
-        'font-size': props.info.size + 'px',
-        'font-family': fontInfo().fontFamily,
-        'font-weight': fontInfo().fontWeight,
-        '--align-items': alignMap[props.info.alignment]
-      }}
+    <ResizableContainer
+      active={layerInfo().id === selectedTextLayer()}
+      position={layerInfo().position}
+      scale={layerInfo().scale}
+      rotation={layerInfo().rotation}
+      onPositionChange={(position) => setLayerInfo(prev => ({...prev, position}))}
+      onRotationChange={(rotation) => setLayerInfo(prev => ({...prev, rotation}))}
+      onScaleChange={(scale) => setLayerInfo(prev => ({...prev, scale}))}
+      onDoubleClick={() => selectAll()}
     >
       <div
-        ref={contentEditable}
-        class="media-editor__text-layer-layout"
-        contenteditable
-        onInput={() => updateBackground()}
-        onFocus={onFocus}
+        ref={container}
+        class="media-editor__text-layer"
+        classList={{
+          'media-editor__text-layer--with-bg': layerInfo().style === 'background'
+        }}
+        style={{
+          // 'left': layerInfo().position[0] + 'px',
+          // 'top': layerInfo().position[1] + 'px',
+          'color': color(),
+          'font-size': layerInfo().size + 'px',
+          'font-family': fontInfo().fontFamily,
+          'font-weight': fontInfo().fontWeight,
+          '--align-items': alignMap[layerInfo().alignment]
+        }}
       >
-        <div>
-          Type something...
+        <div
+          ref={contentEditable}
+          class="media-editor__text-layer-layout"
+          contenteditable
+          onInput={() => updateBackground()}
+          onFocus={onFocus}
+        >
+          <div>
+            Type something...
+          </div>
         </div>
       </div>
+    </ResizableContainer>
+  )
+}
+
+
+type ResizableContainerProps = {
+  position: [number, number]
+  scale: number
+  rotation: number
+  onPositionChange: (value: [number, number]) => void
+  onRotationChange: (value: number) => void
+  onScaleChange: (value: number) => void
+  onDoubleClick?: () => void
+  active: boolean
+}
+
+function ResizableContainer(props: ParentProps<ResizableContainerProps>) {
+  const [diff, setDiff] = createSignal([0, 0])
+
+  let container: HTMLDivElement
+  let leftTopEl: HTMLDivElement
+  let rightTopEl: HTMLDivElement
+  let leftBottomEl: HTMLDivElement
+  let rightBottomEl: HTMLDivElement
+
+  const circleOffset = '-5px'
+
+
+  onMount(() => {
+    const multipliers = [
+      {el: leftTopEl, x: -1, y: -1},
+      {el: rightTopEl, x: 1, y: -1},
+      {el: leftBottomEl, x: -1, y: 1},
+      {el: rightBottomEl, x: 1, y: 1}
+    ]
+
+    multipliers.forEach(({el, x, y}) => {
+      new SwipeHandler({
+        element: el,
+        onStart() {
+          el.classList.add('media-editor__resizable-container-circle--anti-flicker')
+        },
+        onSwipe(_, __, _e) {
+          const e = getEvent(_e)
+
+          const initialVector = [
+            container.clientWidth / 2 * x,
+            container.clientHeight / 2 * y
+          ]
+          const bcr = container.getBoundingClientRect()
+          const resizedVector = [
+            bcr.left + bcr.width / 2 - e.clientX,
+            bcr.top + bcr.height / 2 - e.clientY
+          ]
+
+          const rotation = Math.atan2(resizedVector[1], resizedVector[0]) - Math.atan2(initialVector[1], initialVector[0]) + Math.PI
+          const scale = Math.hypot(resizedVector[0], resizedVector[1]) / Math.hypot(initialVector[0], initialVector[1])
+
+          props.onRotationChange(rotation)
+          props.onScaleChange(scale)
+        },
+        onReset() {
+          el.classList.remove('media-editor__resizable-container-circle--anti-flicker')
+        }
+      })
+    })
+
+    // let selectionRemoved = false
+
+    new SwipeHandler({
+      element: container,
+      onSwipe(xDiff, yDiff) {
+        // if(!selectionRemoved) { // onStart messes up here
+        //   container.classList.add('media-editor__resizable-container--no-selection')
+        //   selectionRemoved = true
+        //   const selection = window.getSelection();
+        //   selection.removeAllRanges();
+        // }
+
+        setDiff([xDiff, yDiff])
+      },
+      onReset() {
+        props.onPositionChange([
+          props.position[0] + diff()[0],
+          props.position[1] + diff()[1]
+        ])
+        setDiff([0, 0])
+      }
+    })
+  })
+
+  return (
+    <div
+      class="media-editor__resizable-container"
+      classList={{
+        'media-editor__resizable-container--active': props.active
+      }}
+      style={{
+        'left': props.position[0] + diff()[0] + 'px',
+        'top': props.position[1] + diff()[1] + 'px',
+        '--rotation': props.rotation / Math.PI * 180 + 'deg',
+        '--scale': props.scale
+      }}
+      ref={container}
+    >
+      {props.children}
+      <div ref={leftTopEl} class="media-editor__resizable-container-circle" style={{left: circleOffset, top: circleOffset}} />
+      <div ref={rightTopEl} class="media-editor__resizable-container-circle" style={{right: circleOffset, top: circleOffset}} />
+      <div ref={leftBottomEl} class="media-editor__resizable-container-circle" style={{left: circleOffset, bottom: circleOffset}} />
+      <div ref={rightBottomEl} class="media-editor__resizable-container-circle" style={{right: circleOffset, bottom: circleOffset}} />
     </div>
   )
 }
+
+type E = {
+  clientX: number,
+  clientY: number,
+  target: EventTarget,
+  button?: number,
+  type?: string
+};
+
+type EE = E | (Exclude<E, 'clientX' | 'clientY'> & {
+  touches: E[]
+});
+
+const getEvent = (e: EE) => {
+  return 'touches' in e ? e.touches[0] : e;
+};
 
 function updateBackgroundStyle(container: HTMLDivElement, contentEditable: HTMLDivElement, info: TextLayerInfo) {
   const children = Array.from(contentEditable.children)
@@ -238,7 +384,7 @@ function updateOutlineStyle(container: HTMLDivElement, contentEditable: HTMLDivE
         <svg width="${div.clientWidth}" height="${div.clientHeight}" viewBox="0 0 ${div.clientWidth} ${div.clientHeight}">
           <text
             x="${info.size * 0.2}"
-            y="${div.clientHeight * fontInfo.baseline}"
+            y="${(div.clientHeight * fontInfo.baseline)}"
             style="font-size:${info.size}px;stroke:${info.color};stroke-width:${div.clientHeight * 0.15}px;font-family:${fontInfo.fontFamily};font-weight:${fontInfo.fontWeight};">
             ${div.innerText}
           </text>
