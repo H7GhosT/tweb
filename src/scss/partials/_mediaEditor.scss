@@ -734,6 +734,7 @@
 
     display: flex;
     flex-direction: column;
+    line-height: 1.33em;
 
     text-wrap: nowrap;
 
@@ -746,7 +747,6 @@
 
       >div {
         position: relative;
-        line-height: 1.33em;
         padding: 0 .2em;
       }
     }
@@ -755,15 +755,9 @@
       >div {
         padding: 0 .3em;
         min-width: 2em;
+        display: flex;
+        justify-content: var(--align-items);
       }
-    }
-
-    &-svg-background {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
     }
 
     &-background {
@@ -772,22 +766,21 @@
       top: 0;
       width: 100%;
       height: 100%;
-      display: flex;
-      align-items: var(--align-items);
 
-      flex-direction: column;
-      text-wrap: nowrap;
-      outline: none;
-
-      >div {
-        position: relative;
-        line-height: 1.33em;
-        padding: 0 .2em;
+      &--as-layout {
+        display: flex;
+        align-items: var(--align-items);
+        flex-direction: column;
+        text-wrap: nowrap;
+        outline: none;
+  
+        >div {
+          position: relative;
+          line-height: 1.33em;
+          padding: 0 .2em;
+        }
       }
     }
-
-   
-   
 
     &-svg-outline {
       pointer-events: none;

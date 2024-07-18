@@ -70,7 +70,7 @@ export function MediaEditor(props: MediaEditorProps) {
         style: 'outline',
         color: '#ffffff',
         font: 'roboto',
-        size: 24
+        size: 40
       }),
       selectedTextLayer: createSignal()
     }}>

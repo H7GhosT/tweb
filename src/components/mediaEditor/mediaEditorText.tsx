@@ -11,10 +11,6 @@ import Space from './Space';
 import MediaEditorContext from './context';
 
 export default function MediaEditorText(props: {}) {
-  // const [size, setSize] = createSignal(24)
-  // const [alignment, setAlignment] = createSignal('left')
-  // const [style, setStyle] = createSignal('normal')
-  // const [font, setFont] = createSignal('roboto')
   const context = useContext(MediaEditorContext)
   const [layerInfo, setLayerInfo] = context.currentTextLayerInfo
 
@@ -77,7 +73,7 @@ export default function MediaEditorText(props: {}) {
         </div>
       </div>
 
-      <MediaEditorRangeInput label={i18n('MediaEditor.Size')} min={8} max={40} value={layerInfo()?.size} onChange={setSize} passiveLabel />
+      <MediaEditorRangeInput label={i18n('MediaEditor.Size')} min={16} max={64} value={layerInfo()?.size} onChange={setSize} passiveLabel />
 
       <Space amount="16px" />
 
