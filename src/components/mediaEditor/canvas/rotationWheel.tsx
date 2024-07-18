@@ -17,7 +17,9 @@ export default function RotationWheel(props: {}) {
   const [imageSize] = context.imageSize
   const [, setFlip] = context.flip
   const [moved, setMoved] = createSignal(0)
-  const [movedDiff, setMovedDiff] = createSignal(0)
+  const [movedDiff, setMovedDiff] = createSignal(0);
+
+  // TODO: When resetting rotation from somewhere else the slider is not reset
 
   let swiperEl: HTMLDivElement
 
