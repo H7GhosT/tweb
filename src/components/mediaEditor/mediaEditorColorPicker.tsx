@@ -3,6 +3,7 @@ import {createEffect, createSignal, onMount} from 'solid-js';
 import {hexToRgb} from '../../helpers/color';
 import ColorPicker from '../colorPicker';
 import ripple from '../ripple';
+import {delay} from './utils';
 
 const colors = [
   '#FFFFFF',
@@ -13,27 +14,34 @@ const colors = [
   '#62E5E0',
   '#0A84FF',
   '#BD5CF3'
-]
+].map(color => color.toLowerCase())
 
-export default function MediaEditorColorPicker(props: {}) {
+export default function MediaEditorColorPicker(props: {
+  value: string
+  onChange: (value: string) => void
+}) {
   const [collapsed, setCollapsed] = createSignal(true);
-  const [color, setColor] = createSignal(colors[0])
 
   const swatch = (hexColor: string, i: number) =>
     <div
       class='media-editor__color-picker-swatch'
-      classList={{'media-editor__color-picker-swatch--active': color() === hexColor && collapsed()}}
+      classList={{'media-editor__color-picker-swatch--active': props.value === hexColor && collapsed()}}
       style={{
         '--color-rgb': hexToRgb(hexColor).join(' '),
         '--i': i
       }}
-      onClick={() => setColor(hexColor)}
+      onClick={() => props.onChange(hexColor)}
     >
       <div class='media-editor__color-picker-swatch-color' />
     </div>
 
-  const onCollapseToggle = () => {
+  const onCollapseToggle = async() => {
+    const willCollapse = !collapsed()
     setCollapsed(prev => !prev)
+    if(willCollapse) {
+      await delay(200)
+      props.onChange(colors[0])
+    }
   }
 
   const colorPicker = new ColorPicker({
@@ -80,10 +88,14 @@ export default function MediaEditorColorPicker(props: {}) {
   })
 
   createEffect(() => {
-    colorPicker.setColor(color())
+    console.log('props.value', props.value)
+    colorPicker.setColor(props.value)
   })
 
   onMount(() => {
+    colorPicker.onChange = (color) => {
+      if(color.hex !== props.value) props.onChange(color.hex)
+    }
     colorPicker.container.querySelectorAll('.media-editor__color-picker-swatch').forEach(element => {
       ripple(element as HTMLElement)
     })

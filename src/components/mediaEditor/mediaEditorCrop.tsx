@@ -65,7 +65,7 @@ export default function MediaEditorCrop(props: {}) {
       return
     }
 
-    if(!fixedImageRatioKey().includes('x')) return
+    if(!fixedImageRatioKey()?.includes('x')) return
 
     const parts = fixedImageRatioKey().split('x')
     const ratio = parseInt(parts[0]) / parseInt(parts[1])

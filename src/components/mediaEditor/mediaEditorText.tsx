@@ -1,4 +1,4 @@
-import {onMount, createSignal, Accessor, JSX} from 'solid-js';
+import {onMount, createSignal, Accessor, JSX, useContext} from 'solid-js';
 
 import {i18n} from '../../lib/langPack';
 import ripple from '../ripple';
@@ -8,12 +8,32 @@ import MediaEditorColorPicker from './mediaEditorColorPicker';
 import MediaEditorRangeInput from './mediaEditorRangeInput';
 import MediaEditorLargeButton from './mediaEditorLargeButton';
 import Space from './Space';
+import MediaEditorContext from './context';
 
 export default function MediaEditorText(props: {}) {
-  const [size, setSize] = createSignal(24)
-  const [alignment, setAlignment] = createSignal('left')
-  const [style, setStyle] = createSignal('normal')
-  const [font, setFont] = createSignal('roboto')
+  // const [size, setSize] = createSignal(24)
+  // const [alignment, setAlignment] = createSignal('left')
+  // const [style, setStyle] = createSignal('normal')
+  // const [font, setFont] = createSignal('roboto')
+  const context = useContext(MediaEditorContext)
+  const [layerInfo, setLayerInfo] = context.currentTextLayerInfo
+
+
+  function setSize(value: number) {
+    setLayerInfo(prev => ({...prev, size: value}))
+  }
+  function setAlignment(value: string) {
+    setLayerInfo(prev => ({...prev, alignment: value}))
+  }
+  function setStyle(value: string) {
+    setLayerInfo(prev => ({...prev, style: value}))
+  }
+  function setFont(value: string) {
+    setLayerInfo(prev => ({...prev, font: value}))
+  }
+  function setColor(value: string) {
+    setLayerInfo(prev => ({...prev, color: value}))
+  }
 
   const toggleButton = (icon: Icon, value: string, currentValue: Accessor<string>, setValue: (value: string) => void) =>
     <div
@@ -32,7 +52,7 @@ export default function MediaEditorText(props: {}) {
 
   const fontButton = (text: JSX.Element, textFont: string) =>
     <MediaEditorLargeButton
-      active={font() === textFont}
+      active={layerInfo()?.font === textFont}
       onClick={() => setFont(textFont)}
       class={`media-editor__font-button--${textFont}`}
     >
@@ -41,23 +61,23 @@ export default function MediaEditorText(props: {}) {
 
   return (
     <>
-      <MediaEditorColorPicker />
+      <MediaEditorColorPicker value={layerInfo()?.color} onChange={setColor} />
 
       <div class="media-editor__toggle-group-row">
         <div class="media-editor__toggle-group">
-          {toggleButton('align_left', 'left', alignment, setAlignment)}
-          {toggleButton('align_center', 'center', alignment, setAlignment)}
-          {toggleButton('align_right', 'right', alignment, setAlignment)}
+          {toggleButton('align_left', 'left', () => layerInfo()?.alignment, setAlignment)}
+          {toggleButton('align_center', 'center', () => layerInfo()?.alignment, setAlignment)}
+          {toggleButton('align_right', 'right', () => layerInfo()?.alignment, setAlignment)}
         </div>
 
         <div class="media-editor__toggle-group">
-          {toggleButton('fontframe', 'normal', style, setStyle)}
-          {toggleButton('fontframe_outline', 'outline', style, setStyle)}
-          {toggleButton('fontframe_bg', 'background', style, setStyle)}
+          {toggleButton('fontframe', 'normal', () => layerInfo()?.style, setStyle)}
+          {toggleButton('fontframe_outline', 'outline', () => layerInfo()?.style, setStyle)}
+          {toggleButton('fontframe_bg', 'background', () => layerInfo()?.style, setStyle)}
         </div>
       </div>
 
-      <MediaEditorRangeInput label={i18n('MediaEditor.Size')} min={8} max={40} value={size()} onChange={setSize} passiveLabel />
+      <MediaEditorRangeInput label={i18n('MediaEditor.Size')} min={8} max={40} value={layerInfo()?.size} onChange={setSize} passiveLabel />
 
       <Space amount="16px" />
 

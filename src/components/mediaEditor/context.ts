@@ -17,6 +17,14 @@ export interface MediaEditorContextValue {
   rotation: Signal<number>
   translation: Signal<[number, number]>
   flip: Signal<[number, number]>
+
+  currentTextLayerInfo: Signal<{
+    color: string
+    alignment: string
+    style: string
+    size: number
+    font: string
+  }>
 }
 
 const MediaEditorContext = createContext<MediaEditorContextValue>()

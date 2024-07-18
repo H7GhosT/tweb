@@ -3,6 +3,7 @@ import {ButtonIconTsx} from '../../buttonIconTsx'
 import SwipeHandler from '../../swipeHandler'
 import MediaEditorContext from '../context'
 import {getCropOffset} from './cropOffset'
+import {withCurrentOwner} from '../utils'
 
 const DEGREE_DIST_PX = 42
 const DEGREE_STEP = 15
@@ -125,11 +126,4 @@ function ArrowUp() {
       <path d="M2.29289 0.707106L0.28033 2.71967C-0.192143 3.19214 0.142482 4 0.81066 4H5.18934C5.85752 4 6.19214 3.19214 5.71967 2.71967L3.70711 0.707107C3.31658 0.316583 2.68342 0.316582 2.29289 0.707106Z" fill="white"/>
     </svg>
   )
-}
-
-function withCurrentOwner<Args extends []>(fn: (...args: Args) => void) {
-  const owner = getOwner()
-  return (...args: Args) => {
-    runWithOwner(owner, fn)
-  }
 }

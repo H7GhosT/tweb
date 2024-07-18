@@ -26,7 +26,7 @@ export default function MediaEditorBrush(props: {}) {
 
   return (
     <>
-      <MediaEditorColorPicker />
+      <MediaEditorColorPicker value="#fff" onChange={() => {}} />
       <Space amount="16px" />
       <MediaEditorRangeInput label={i18n('MediaEditor.Size')} min={8} max={40} value={size()} onChange={setSize} passiveLabel />
       <Space amount="16px" />

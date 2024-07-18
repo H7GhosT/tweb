@@ -6,6 +6,7 @@ import {AdjustmentsConfig} from '../adjustments'
 import {getCropOffset} from './cropOffset'
 import CropHandles from './cropHandles'
 import RotationWheel from './rotationWheel'
+import TextLayers from './textLayers'
 
 
 function ImageCanvas() {
@@ -117,6 +118,7 @@ export default function MainCanvas(props: {}) {
     <div ref={container} class="media-editor__main-canvas">
       <Show when={canvasResolution()}>
         <ImageCanvas />
+        <TextLayers />
         <CropHandles />
         <RotationWheel />
       </Show>
