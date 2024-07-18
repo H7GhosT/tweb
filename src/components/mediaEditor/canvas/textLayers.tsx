@@ -111,13 +111,16 @@ function TextLayer(props: TextLayerProps) {
 
   const color = () => {
     if(props.info.style === 'normal') return props.info.color
-    return hexaToHsla(props.info.color).l < 70 ? '#ffffff' : '#000000'
+    return hexaToHsla(props.info.color).l < 80 ? '#ffffff' : '#000000'
   }
 
   return (
     <div
       ref={container}
-      class="media-editor__text-layer media-editor__text-layer--with-bg"
+      class="media-editor__text-layer"
+      classList={{
+        'media-editor__text-layer--with-bg': props.info.style === 'background'
+      }}
       style={{
         'left': props.info.position[0] + 'px',
         'top': props.info.position[1] + 'px',
@@ -236,7 +239,7 @@ function updateOutlineStyle(container: HTMLDivElement, contentEditable: HTMLDivE
           <text
             x="${info.size * 0.2}"
             y="${div.clientHeight * fontInfo.baseline}"
-            style="font-size:${info.size}px;stroke:${info.color};stroke-width:${div.clientHeight * 0.2}px;font-family:${fontInfo.fontFamily};font-weight:${fontInfo.fontWeight};">
+            style="font-size:${info.size}px;stroke:${info.color};stroke-width:${div.clientHeight * 0.15}px;font-family:${fontInfo.fontFamily};font-weight:${fontInfo.fontWeight};">
             ${div.innerText}
           </text>
         </svg>
