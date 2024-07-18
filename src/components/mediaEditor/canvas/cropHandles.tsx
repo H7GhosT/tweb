@@ -12,6 +12,7 @@ export default function CropHandles() {
   const [currentImageRatio, setCurrentImageRatio] = context.currentImageRatio
   const [scale, setScale] = context.scale
   const [translation, setTranslation] = context.translation
+  const [fixedImageRatioKey] = context.fixedImageRatioKey
   const cropOffset = getCropOffset()
 
   const [leftTop, setLeftTop] = createSignal([0, 0])
@@ -57,6 +58,15 @@ export default function CropHandles() {
       new SwipeHandler({
         element: el,
         onSwipe(xDiff, yDiff) {
+          if(fixedImageRatioKey()) {
+            let ratio = currentImageRatio()
+            if(left !== top) {
+              ratio = -ratio
+            }
+            const x = xDiff
+            xDiff = (xDiff + yDiff * ratio) / 2
+            yDiff = (x / ratio + yDiff) / 2
+          }
           setDiff([xDiff * (left ? -1 : 1), yDiff * (top ? -1 : 1)])
           setLeftTopDiff([xDiff * left, yDiff * top])
         },
