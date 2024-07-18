@@ -71,7 +71,8 @@ export function MediaEditor(props: MediaEditorProps) {
         color: '#ffffff',
         font: 'roboto',
         size: 24
-      })
+      }),
+      selectedTextLayer: createSignal()
     }}>
       <div ref={overlay} class="media-editor__overlay night">
         <div class="media-editor__container">

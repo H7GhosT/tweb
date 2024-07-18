@@ -441,6 +441,7 @@
 
     &--times {
       font-family: 'Times New Roman', Times, serif;
+      font-weight: 600;
     }
 
     &--segoe-ui {
@@ -746,7 +747,7 @@
       }
     }
 
-    .svg-outline {
+    &-svg-outline {
       pointer-events: none;
       position: absolute;
       left: 0;
@@ -754,13 +755,9 @@
       height: 100%;
 
       text {
-        // font-size:52px;
         font-style:normal;
-        font-weight:normal;
         fill:white;
         fill-opacity:1;
-        // stroke:#000000;
-        // stroke-width:${bcr.height / 10}px;
         stroke-linecap:butt;
         stroke-linejoin:miter;
         stroke-opacity:1;

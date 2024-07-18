@@ -1,4 +1,4 @@
-import {createSignal, For, onMount, Signal, useContext} from 'solid-js'
+import {createEffect, createSignal, For, Match, on, onMount, Signal, Switch, useContext} from 'solid-js'
 import createElementFromMarkup from '../../../helpers/createElementFromMarkup'
 import {withCurrentOwner} from '../utils'
 import MediaEditorContext from '../context'
@@ -10,6 +10,18 @@ export default function TextLayers() {
   const [layers, setLayers] = createSignal<Signal<TextLayerInfo>[]>([])
   const context = useContext(MediaEditorContext)
   const [currentLayerInfo, setCurrentLayerInfo] = context.currentTextLayerInfo
+  const [selectedTextLayer] = context.selectedTextLayer
+
+
+  createEffect(on(currentLayerInfo, () => {
+    const layerSignal = layers().find(layer => layer[0]().id === selectedTextLayer())
+    if(!layerSignal) return
+
+    layerSignal[1](prev => ({
+      ...prev,
+      ...currentLayerInfo()
+    }))
+  }))
 
   let container: HTMLDivElement
 
@@ -35,7 +47,7 @@ export default function TextLayers() {
       onClick={withCurrentOwner(addLayer)}
     >
       <For each={layers()}>
-        {layer => <OutlinedTextLayer info={layer[0]()} />}
+        {layer => <TextLayerEntry info={layer[0]()} />}
       </For>
     </div>
   )
@@ -53,17 +65,54 @@ type TextLayerInfo = {
   font: string
 }
 
-function OutlinedTextLayer(props: {info: TextLayerInfo}) {
+type TextLayerEntryProps = {
+  info: TextLayerInfo
+}
+
+type TextLayerProps = TextLayerEntryProps & {
+  onFocus: () => void
+}
+
+function TextLayerEntry(props: TextLayerEntryProps) {
+  const context = useContext(MediaEditorContext)
+  const [, setSelectedTextLayer] = context.selectedTextLayer
+  const [, setCurrentLayerInfo] = context.currentTextLayerInfo
+
+  const onFocus = () => {
+    setSelectedTextLayer(props.info.id)
+    setCurrentLayerInfo({
+      color: props.info.color,
+      alignment: props.info.alignment,
+      style: props.info.style,
+      size: props.info.size,
+      font: props.info.font
+    })
+  }
+
+  return (
+    <>
+      <Switch fallback={'nothing'}>
+        <Match when={props.info.style === 'outline'}>
+          <OutlinedTextLayer info={props.info} onFocus={onFocus} />
+        </Match>
+      </Switch>
+    </>
+  )
+}
+
+function OutlinedTextLayer(props: TextLayerProps) {
+  const fontInfo = () => fontInfoMap[props.info.font]
+
   function updateSvg(div: HTMLDivElement) {
     const bcr = div.getBoundingClientRect()
-    div.querySelector('.svg-outline')?.remove()
+    div.querySelector('.media-editor__text-layer-svg-outline')?.remove()
     const svg = createElementFromMarkup(`
-      <div contenteditable="false" class="svg-outline">
+      <div contenteditable="false" class="media-editor__text-layer-svg-outline">
         <svg width="${bcr.width}" height="${bcr.height}" viewBox="0 0 ${bcr.width} ${bcr.height}">
           <text
-            x="${52 / 10}"
-            y="${bcr.height * 0.75}"
-            style="font-size:52px;stroke:${props.info.color};stroke-width:${bcr.height / 10}px;">
+            x="${props.info.size * 0.1}"
+            y="${bcr.height * fontInfo().baseline}"
+            style="font-size:${props.info.size}px;stroke:${props.info.color};stroke-width:${bcr.height / 10}px;font-family:${fontInfo().fontFamily};font-weight:${fontInfo().fontWeight};">
             ${div.innerText}
           </text>
         </svg>
@@ -90,18 +139,26 @@ function OutlinedTextLayer(props: {info: TextLayerInfo}) {
     selection.addRange(range);
   })
 
+  createEffect(() => {
+    updateContainer()
+  })
+
   return (
     <div
       ref={container}
       class="media-editor__text-layer media-editor__text-layer--outline"
       style={{
-        left: props.info.position[0] + 'px',
-        top: props.info.position[1] + 'px',
-        color: hexaToHsla(props.info.color).l < 70 ? '#ffffff' : '#000000',
-        ['font-size']: '52px'
+        'left': props.info.position[0] + 'px',
+        'top': props.info.position[1] + 'px',
+        'color': hexaToHsla(props.info.color).l < 70 ? '#ffffff' : '#000000',
+        'font-size': props.info.size + 'px',
+        'font-family': fontInfo().fontFamily,
+        'font-weight': fontInfo().fontWeight,
+        'align-items': alignMap[props.info.alignment]
       }}
       contenteditable
       onInput={() => updateContainer()}
+      onFocus={props.onFocus}
     >
       <div>
         <span>
@@ -110,4 +167,34 @@ function OutlinedTextLayer(props: {info: TextLayerInfo}) {
       </div>
     </div>
   )
+}
+
+const alignMap: Record<string, string> = {
+  left: 'start',
+  center: 'center',
+  right: 'end'
+}
+
+type FontInfo = {
+  fontFamily: string
+  fontWeight: number
+  baseline: number
+}
+
+const fontInfoMap: Record<string, FontInfo> = {
+  roboto: {
+    fontFamily: '\'Roboto\'',
+    fontWeight: 500,
+    baseline: 0.75
+  },
+  times: {
+    fontFamily: '\'Times New Roman\'',
+    fontWeight: 600,
+    baseline: 0.75
+  },
+  segoe: {
+    fontFamily: '\'Segoe UI\'',
+    fontWeight: 500,
+    baseline: 0.78
+  }
 }

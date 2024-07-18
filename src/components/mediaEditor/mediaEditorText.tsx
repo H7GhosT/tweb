@@ -85,7 +85,7 @@ export default function MediaEditorText(props: {}) {
 
       {fontButton(i18n('MediaEditor.Fonts.Roboto'), 'roboto')}
       {fontButton(i18n('MediaEditor.Fonts.TimesNewRoman'), 'times')}
-      {fontButton(i18n('MediaEditor.Fonts.SegoeUI'), 'segoe-ui')}
+      {fontButton(i18n('MediaEditor.Fonts.SegoeUI'), 'segoe')}
     </>
   )
 }
