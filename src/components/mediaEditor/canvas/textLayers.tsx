@@ -24,6 +24,20 @@ export default function TextLayers() {
     }))
   }))
 
+  createEffect(on(selectedTextLayer, () => {
+    setLayers(prev => {
+      const res = [...(prev || [])]
+      const idx = res.findIndex(layer => layer[0]().id === selectedTextLayer())
+      if(idx > -1) {
+        const signal = res[idx]
+        res.splice(idx, 1)
+        res.push(signal)
+        return res
+      }
+      return prev
+    })
+  }))
+
   let container: HTMLDivElement
 
   function addLayer(e: MouseEvent) {
