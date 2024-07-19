@@ -63,6 +63,7 @@ export function MediaEditor(props: MediaEditorProps) {
       flip: createSignal([1, 1]),
       fixedImageRatioKey: createSignal(),
 
+      resizableLayersSeed: 1,
       resizableLayers: createSignal([]),
       currentTextLayerInfo: createSignal({
         alignment: 'left',

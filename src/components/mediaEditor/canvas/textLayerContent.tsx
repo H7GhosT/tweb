@@ -7,30 +7,30 @@ import {ResizableContainer, ResizableLayerProps, TextLayerInfo} from './resizabl
 
 export default function TextLayerContent(props: ResizableLayerProps) {
   const context = useContext(MediaEditorContext)
-  const [, setSelectedResizableLayer] = context.selectedResizableLayer
+  const [selectedResizableLayer, setSelectedResizableLayer] = context.selectedResizableLayer
   const [currentTextLayerInfo, setCurrentTextLayerInfo] = context.currentTextLayerInfo
 
   const [layer, setLayer] = props.layerSignal
 
-  if(!layer().info) return
+  if(!layer().textInfo) return
 
   const onFocus = () => {
     setSelectedResizableLayer(layer().id)
     setCurrentTextLayerInfo({
-      color: layer().info.color,
-      alignment: layer().info.alignment,
-      style: layer().info.style,
-      size: layer().info.size,
-      font: layer().info.font
+      color: layer().textInfo.color,
+      alignment: layer().textInfo.alignment,
+      style: layer().textInfo.style,
+      size: layer().textInfo.size,
+      font: layer().textInfo.font
     })
   }
 
-  const fontInfo = () => fontInfoMap[layer().info.font]
+  const fontInfo = () => fontInfoMap[layer().textInfo.font]
 
   function updateBackground() {
     container.querySelector('.media-editor__text-layer-background')?.remove()
-    if(layer().info.style === 'background') return updateBackgroundStyle(container, contentEditable, layer().info)
-    if(layer().info.style === 'outline') return updateOutlineStyle(container, contentEditable, layer().info)
+    if(layer().textInfo.style === 'background') return updateBackgroundStyle(container, contentEditable, layer().textInfo)
+    if(layer().textInfo.style === 'outline') return updateOutlineStyle(container, contentEditable, layer().textInfo)
   }
 
   function selectAll() {
@@ -50,9 +50,10 @@ export default function TextLayerContent(props: ResizableLayerProps) {
   })
 
   createEffect(on(currentTextLayerInfo, () => {
+    if(selectedResizableLayer() !== layer().id) return
     setLayer(prev => ({
       ...prev,
-      info: currentTextLayerInfo()
+      textInfo: currentTextLayerInfo()
     }))
   }))
 
@@ -61,8 +62,8 @@ export default function TextLayerContent(props: ResizableLayerProps) {
   let contentEditable: HTMLDivElement
 
   const color = () => {
-    if(layer().info.style === 'normal') return layer().info.color
-    return hexaToHsla(layer().info.color).l < 80 ? '#ffffff' : '#000000'
+    if(layer().textInfo.style === 'normal') return layer().textInfo.color
+    return hexaToHsla(layer().textInfo.color).l < 80 ? '#ffffff' : '#000000'
   }
 
   return (
@@ -74,14 +75,14 @@ export default function TextLayerContent(props: ResizableLayerProps) {
         ref={container}
         class="media-editor__text-layer"
         classList={{
-          'media-editor__text-layer--with-bg': layer().info.style === 'background'
+          'media-editor__text-layer--with-bg': layer().textInfo.style === 'background'
         }}
         style={{
           'color': color(),
-          'font-size': layer().info.size + 'px',
+          'font-size': layer().textInfo.size + 'px',
           'font-family': fontInfo().fontFamily,
           'font-weight': fontInfo().fontWeight,
-          '--align-items': alignMap[layer().info.alignment]
+          '--align-items': alignMap[layer().textInfo.alignment]
         }}
       >
         <div

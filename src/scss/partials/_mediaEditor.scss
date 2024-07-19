@@ -812,6 +812,8 @@
     transform: translate(-50%, -50%) rotate(var(--rotation)) scale(var(--scale));
     padding: 10px 16px;
 
+    pointer-events: initial;
+
     border: 2px dashed transparent;
     
     &--active {
@@ -867,5 +869,11 @@
       visibility: hidden;
       pointer-events: none;
     }
+  }
+
+  &__sticker-layer-content {
+    position: relative;
+    width: 200px;
+    height: 200px;
   }
 }

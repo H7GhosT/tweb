@@ -20,6 +20,8 @@ export interface MediaEditorContextValue {
   translation: Signal<[number, number]>
   flip: Signal<[number, number]>
 
+
+  resizableLayersSeed: number
   currentTextLayerInfo: Signal<TextLayerInfo>
   resizableLayers: Signal<Signal<ResizableLayer>[]>
   selectedResizableLayer: Signal<number>

@@ -1,6 +1,5 @@
 import {createEffect, createResource, createSignal, For, onMount, Show, useContext} from 'solid-js';
 import EmoticonsSearch from '../emoticonsDropdown/search';
-import AppManagersContext from './context';
 import {Document, EmojiGroup, StickerSet} from '../../layer';
 import LazyLoadQueue from '../lazyLoadQueue';
 import wrapStickerSetThumb from '../wrappers/stickerSetThumb';
@@ -10,12 +9,18 @@ import wrapSticker from '../wrappers/sticker';
 import wrapEmojiText from '../../lib/richTextProcessor/wrapEmojiText';
 import Space from './Space';
 import {i18n} from '../../lib/langPack';
-import Scrollable, {ScrollableX} from '../scrollable';
+import {ScrollableX} from '../scrollable';
+import MediaEditorContext from './context';
+import {ResizableLayer} from './canvas/resizableLayers';
 
-// Don't forget favorites
+// TODO: Don't forget favorites
 
-export default function MediaEditorStickers(props: {}) {
-  const {managers} = useContext(AppManagersContext)
+export default function MediaEditorStickers() {
+  const context = useContext(MediaEditorContext)
+  const {managers} = context
+  const [, setLayers] = context.resizableLayers
+  const [canvasResolution] = context.canvasResolution
+  const [, setSelectedResizableLayer] = context.selectedResizableLayer
   const [search, setSearch] = createSignal('')
   const [group, setGroup] = createSignal<EmojiGroup>()
   const [recentStickers] = createResource(() => managers.appStickersManager.getRecentStickersStickers())
@@ -23,7 +28,6 @@ export default function MediaEditorStickers(props: {}) {
 
   const lazyLoadQueue = new LazyLoadQueue(1)
 
-  let containerScrollable: HTMLDivElement
   let thumbsListScrollable: HTMLDivElement
 
   function StickerSetThumb(props: {
@@ -54,11 +58,11 @@ export default function MediaEditorStickers(props: {}) {
   function Sticker(props: {
     doc: Document.document
   }) {
-    let renderContainer: HTMLDivElement
+    let container: HTMLDivElement
 
     onMount(() => {
       wrapSticker({
-        div: renderContainer,
+        div: container,
         doc: props.doc,
         group: 'none',
         width: 70,
@@ -70,8 +74,28 @@ export default function MediaEditorStickers(props: {}) {
       })
     })
 
+    function onClick() {
+      const id = context.resizableLayersSeed++
+      setLayers(prev => [
+        ...prev,
+        createSignal<ResizableLayer>({
+          id,
+          position: [canvasResolution()[0] / 2, canvasResolution()[1] / 2],
+          rotation: 0,
+          scale: 1,
+          type: 'sticker',
+          sticker: props.doc
+        })
+      ])
+      setSelectedResizableLayer(id)
+    }
+
     return (
-      <div ref={renderContainer} class='media-editor__stickers-grid-item' />
+      <div
+        ref={container}
+        class='media-editor__stickers-grid-item'
+        onClick={onClick}
+      />
     )
   }
 

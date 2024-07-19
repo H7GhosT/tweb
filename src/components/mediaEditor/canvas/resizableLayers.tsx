@@ -1,11 +1,13 @@
 import {createEffect, createSignal, For, on, onMount, ParentProps, Show, Signal, useContext} from 'solid-js'
+
+import SwipeHandler, {getEvent} from '../../swipeHandler'
+import {Document} from '../../../layer'
+
 import {withCurrentOwner} from '../utils'
 import MediaEditorContext from '../context'
-import SwipeHandler, {getEvent} from '../../swipeHandler'
+
 import TextLayerContent from './textLayerContent'
-
-let idSeed = 0
-
+import StickerLayerContent from './stickerLayerContent'
 
 export type ResizableLayer = {
   id: number
@@ -13,7 +15,8 @@ export type ResizableLayer = {
   position: [number, number]
   rotation: number
   scale: number
-  info?: TextLayerInfo
+  textInfo?: TextLayerInfo
+  sticker?: Document.document
 }
 
 export type TextLayerInfo = {
@@ -28,6 +31,10 @@ export type ResizableLayerProps = {
   layerSignal: Signal<ResizableLayer>
 }
 
+type ResizableContainerProps = {
+  layerSignal: Signal<ResizableLayer>
+  onDoubleClick?: () => void
+}
 
 export default function ResizableLayers() {
   const context = useContext(MediaEditorContext)
@@ -67,12 +74,12 @@ export default function ResizableLayers() {
     setLayers(prev => [
       ...prev,
       createSignal<ResizableLayer>({
-        id: idSeed++,
+        id: context.resizableLayersSeed++,
         position: [e.clientX - bcr.left, e.clientY - bcr.top],
         rotation: 0,
         scale: 1,
         type: 'text',
-        info: currentTextLayerInfo()
+        textInfo: currentTextLayerInfo()
       })
     ])
   }
@@ -92,17 +99,14 @@ export default function ResizableLayers() {
             <Show when={layerSignal[0]().type === 'text'}>
               <TextLayerContent layerSignal={layerSignal} />
             </Show>
+            <Show when={layerSignal[0]().type === 'sticker'}>
+              <StickerLayerContent layerSignal={layerSignal} />
+            </Show>
           </>
         )}
       </For>
     </div>
   )
-}
-
-
-type ResizableContainerProps = {
-  layerSignal: Signal<ResizableLayer>
-  onDoubleClick?: () => void
 }
 
 export function ResizableContainer(props: ParentProps<ResizableContainerProps>) {
