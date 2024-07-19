@@ -135,6 +135,7 @@ function drawLinePath(line: Line, ctx: CanvasRenderingContext2D) {
   if(!points.length) return
 
   if(points.length === 1) {
+    ctx.fillStyle = ctx.strokeStyle
     ctx.beginPath();
     ctx.arc(points[0][0], points[0][1], line.size / 2, 0, 2 * Math.PI);
     ctx.fill();
@@ -216,7 +217,7 @@ const brushes: Record<string, (line: Line, ctx: CanvasRenderingContext2D, payloa
   },
   neon: (line, ctx) => {
     ctx.strokeStyle = '#ffffff'
-    ctx.shadowBlur = line.size * 2
+    ctx.shadowBlur = line.size
     ctx.shadowColor = line.color
     drawLinePath(line, ctx)
   },
