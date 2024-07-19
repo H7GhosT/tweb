@@ -147,6 +147,7 @@ function TextLayer(props: TextLayerProps) {
       onRotationChange={(rotation) => setLayerInfo(prev => ({...prev, rotation}))}
       onScaleChange={(scale) => setLayerInfo(prev => ({...prev, scale}))}
       onDoubleClick={() => selectAll()}
+      onMoveStart={() => setSelectedTextLayer(layerInfo().id)}
     >
       <div
         ref={container}
@@ -189,6 +190,7 @@ type ResizableContainerProps = {
   onRotationChange: (value: number) => void
   onScaleChange: (value: number) => void
   onDoubleClick?: () => void
+  onMoveStart: () => void
   active: boolean
 }
 
@@ -243,17 +245,15 @@ function ResizableContainer(props: ParentProps<ResizableContainerProps>) {
       })
     })
 
-    // let selectionRemoved = false
+    let swipeStarted = false
 
     new SwipeHandler({
       element: container,
       onSwipe(xDiff, yDiff) {
-        // if(!selectionRemoved) { // onStart messes up here
-        //   container.classList.add('media-editor__resizable-container--no-selection')
-        //   selectionRemoved = true
-        //   const selection = window.getSelection();
-        //   selection.removeAllRanges();
-        // }
+        if(!swipeStarted) { // onStart messes up the typing
+          swipeStarted = true
+          props.onMoveStart()
+        }
 
         setDiff([xDiff, yDiff])
       },
@@ -263,6 +263,7 @@ function ResizableContainer(props: ParentProps<ResizableContainerProps>) {
           props.position[1] + diff()[1]
         ])
         setDiff([0, 0])
+        swipeStarted = false
       }
     })
   })
