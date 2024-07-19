@@ -48,25 +48,39 @@ export default function BrushCanvas() {
   const blurredLineCtx = blurredLineCanvas.getContext('2d')
 
 
-  const [image, setImage] = createSignal<HTMLImageElement>()
+  // const [image, setImage] = createSignal<HTMLImageElement>()
 
-  const blurredImageData = createMemo(() => {
-    if(!image()) return undefined
-    // const imgCtx = imageCanvas().getContext('2d')
-    // const imageData = imgCtx.getImageData(0, 0, w, h)
+  // const blurredImageData = createMemo(() => {
+  //   if(!imageCanvas()) return undefined
+  //   // const imgCtx = imageCanvas().getContext('2d')
+  //   // const imageData = imgCtx.getImageData(0, 0, w, h)
 
-    blurredImageCtx.clearRect(0, 0, w, h)
+  //   blurredImageCtx.clearRect(0, 0, w, h)
 
-    blurredImageCtx.filter = 'blur(20px)'
-    blurredImageCtx.drawImage(image(), 0, 0, w, h)
-    lines().forEach(line => drawLine(line, blurredImageCtx))
+  //   blurredImageCtx.filter = 'blur(20px)'
+  //   blurredImageCtx.drawImage(imageCanvas(), 0, 0, w, h)
+  //   lines().forEach(line => drawLine(line, blurredImageCtx))
 
-    return blurredImageCtx.getImageData(0, 0, w, h)
+  //   return blurredImageCtx.getImageData(0, 0, w, h)
+  // })
+
+  createEffect(() => {
+    // blurredImageCtx.filter = 'blur(20px)'
+    // blurredImageCtx.drawImage(imageCanvas(), 0, 0)
   })
 
   function drawLine(line: Line, ctx: CanvasRenderingContext2D) {
     const brushFn = brushes[line.brush]
-    brushFn(line, ctx, {blurredImageData: blurredImageData(), blurredLineCtx})
+    // blurredImageCtx.clearRect(0, 0, w, h)
+
+    // blurredImageCtx.filter = 'blur(20px)'
+    // blurredImageCtx.fillStyle = 'magenta'
+    // blurredImageCtx.fillRect(0, 0, w, h)
+    // blurredImageCtx.drawImage(imageCanvas(), 0, 0, w, h)
+
+    mainCtx.save()
+    brushFn(line, ctx, {/* blurredImageData:  *//* blurredImageData(), */ blurredLineCtx, image: blurredImageCanvas})
+    mainCtx.restore()
   }
 
   // createEffect(() => {
@@ -76,21 +90,45 @@ export default function BrushCanvas() {
   //   if(lastLine()) drawLine(lastLine(), mainCtx)
   // })
 
-  function draw(line: Line) {
-    requestAnimationFrame(() => {
-      mainCtx.clearRect(0, 0, mainCtx.canvas.width, mainCtx.canvas.height)
+  function draw(lines: Line[]) {
+    mainCtx.clearRect(0, 0, w, h)
+    blurredImageCtx.clearRect(0, 0, w, h)
+    blurredImageCtx.filter = 'blur(10px)'
+    blurredImageCtx.drawImage(imageCanvas(), 0, 0)
+
+    lines.forEach(line => {
+      drawLine(line, blurredImageCtx)
       drawLine(line, mainCtx)
     })
+    // if(lastLine()) drawLine(lastLine(), mainCtx)
   }
 
-  onMount(() => {
-    const image = new Image()
-    image.onload = () => {
-      // mainCtx.drawImage(imageCanvas(), 0, 0, w, h)
-      setImage(image)
-    }
-    image.src = 'tmp/texture3.jpg'
-  })
+  // onMount(() => {
+  //   console.log('mainCtx', mainCtx)
+  //   const image = new Image()
+  //   image.onload = () => {
+  //     // mainCtx.drawImage(imageCanvas(), 0, 0, w, h)
+  //     setImage(image)
+  //   }
+  //   image.src = 'tmp/texture3.jpg'
+
+  //   // setTimeout(() => {
+  //   //   const ctx = mainCtx
+  //   //   console.dir(mainCtx)
+  //   //   // ctx.globalCompositeOperation = 'source-over';
+  //   //   ctx.clearRect(0, 0, w, h)
+  //   //   // ctx.save()
+  //   //   ctx.fillStyle = 'blue';
+  //   //   ctx.fillRect(210, 210, 100, 100);
+  //   //   ctx.globalCompositeOperation = 'destination-in';
+  //   //   console.log('here destination-in');
+
+  //   //   ctx.fillStyle = 'red';
+  //   //   ctx.fillRect(250, 250, 100, 100);
+  //   //   // ctx.reset()
+  //   // }, 1000)
+  // })
+
 
   function resetLastLine() {
     console.log('reset last line');
@@ -110,7 +148,6 @@ export default function BrushCanvas() {
     let initialPosition: [number, number]
     let points: [number, number][] = []
 
-    // return
     new SwipeHandler({
       element: canvas,
       onSwipe: throttle((xDiff, yDiff, _e) => {
@@ -128,16 +165,13 @@ export default function BrushCanvas() {
           (initialPosition[1] + yDiff) * context.pixelRatio
         ])
 
-        // setLastLine(prev => ({...prev, points}))
-        draw(({
-          ...lastLine(),
-          points
-        }))
+        setLastLine(prev => ({...prev, points}))
+        draw([...lines(), ({...lastLine(), points})])
       }, THROTTLE_MS, true),
       onReset() {
         setTimeout(() => {
-          // setLines(prev => [...prev, lastLine()])
-          // resetLastLine()
+          setLines(prev => [...prev, lastLine()])
+          resetLastLine()
 
           points = []
           initialPosition = undefined
@@ -191,8 +225,8 @@ function drawLinePath(line: Line, ctx: CanvasRenderingContext2D) {
 }
 
 type BrushPayload = {
-  blurredImageData: ImageData
   blurredLineCtx: CanvasRenderingContext2D
+  image: HTMLCanvasElement
 }
 
 const brushes: Record<string, (line: Line, ctx: CanvasRenderingContext2D, payload: BrushPayload) => void> = {
@@ -246,22 +280,8 @@ const brushes: Record<string, (line: Line, ctx: CanvasRenderingContext2D, payloa
     drawLinePath(line, ctx)
   },
   blur: (line, ctx, payload) => {
-    const {blurredImageData, blurredLineCtx} = payload
+    const {blurredLineCtx, image} = payload
     const w = ctx.canvas.width, h = ctx.canvas.height;
-
-    blurredLineCtx.save()
-    blurredLineCtx.fillStyle = 'white'
-    blurredLineCtx.rect(200, 200, 200, 200)
-    blurredLineCtx.fill()
-    blurredLineCtx.globalCompositeOperation = 'destination-out'
-    blurredLineCtx.rect(250, 250, 200, 200)
-    blurredLineCtx.fill()
-    // blurredLineCtx.restore()
-    // blurredLineCtx.putImageData(blurredImageData, 0, 0)
-
-    ctx.putImageData(blurredLineCtx.getImageData(0, 0, w, h), 0, 0)
-
-    return
 
     blurredLineCtx.clearRect(0, 0, w, h)
 
@@ -274,23 +294,21 @@ const brushes: Record<string, (line: Line, ctx: CanvasRenderingContext2D, payloa
       minY = Math.min(...pointsY) - line.size,
       maxY = Math.max(...pointsY) + line.size;
 
-    blurredLineCtx.save()
     blurredLineCtx.strokeStyle = 'white'
     drawLinePath(line, blurredLineCtx)
     blurredLineCtx.globalCompositeOperation = 'source-in'
-    blurredLineCtx.putImageData(blurredImageData, minX, minY)
+    blurredLineCtx.drawImage(image, 0, 0)
 
-    const blurredLineImageData = blurredLineCtx.getImageData(minX, minY, maxX, maxY)
-    ctx.putImageData(blurredLineImageData, minX, minY)
-
-    blurredLineCtx.restore()
+    ctx.drawImage(blurredLineCtx.canvas, minX, minY, maxX, maxY, minX, minY, maxX, maxY)
+    blurredLineCtx.globalCompositeOperation = 'source-over'
   },
   eraser: (line, ctx) => {
-    ctx.strokeStyle = 'rgba(0,0,0,0)'
-    ctx.save()
+    ctx.strokeStyle = 'white'
+    // ctx.save()
     ctx.globalCompositeOperation = 'destination-out'
     drawLinePath(line, ctx)
     ctx.stroke()
-    ctx.restore()
+    ctx.globalCompositeOperation = 'source-over'
+    // ctx.restore()
   }
 }

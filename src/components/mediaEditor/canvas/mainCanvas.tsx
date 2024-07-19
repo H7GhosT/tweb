@@ -27,7 +27,9 @@ function ImageCanvas() {
       width={canvasResolution()[0] * context.pixelRatio}
       height={canvasResolution()[1] * context.pixelRatio}
     />) as HTMLCanvasElement
-  const gl = canvas.getContext('webgl')
+  const gl = canvas.getContext('webgl', {
+    preserveDrawingBuffer: true
+  })
 
   setImageCanvas(canvas)
 
