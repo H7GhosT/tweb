@@ -3,7 +3,7 @@ import createElementFromMarkup from '../../../helpers/createElementFromMarkup'
 import {withCurrentOwner} from '../utils'
 import MediaEditorContext from '../context'
 import {hexaToHsla} from '../../../helpers/color'
-import SwipeHandler from '../../swipeHandler'
+import SwipeHandler, {getEvent} from '../../swipeHandler'
 
 let idSeed = 0
 
@@ -299,13 +299,6 @@ type E = {
   type?: string
 };
 
-type EE = E | (Exclude<E, 'clientX' | 'clientY'> & {
-  touches: E[]
-});
-
-const getEvent = (e: EE) => {
-  return 'touches' in e ? e.touches[0] : e;
-};
 
 function updateBackgroundStyle(container: HTMLDivElement, contentEditable: HTMLDivElement, info: TextLayerInfo) {
   const children = Array.from(contentEditable.children)

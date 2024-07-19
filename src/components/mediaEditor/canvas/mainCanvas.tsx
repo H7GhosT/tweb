@@ -7,6 +7,7 @@ import {getCropOffset} from './cropOffset'
 import CropHandles from './cropHandles'
 import RotationWheel from './rotationWheel'
 import TextLayers from './textLayers'
+import BrushCanvas from './brushCanvas'
 
 
 function ImageCanvas() {
@@ -15,6 +16,7 @@ function ImageCanvas() {
   const [isCroping] = context.isCroping
   const [currentImageRatio, setCurrentImageRatio] = context.currentImageRatio
   const [, setImageSize] = context.imageSize
+  const [, setImageCanvas] = context.imageCanvas
   const [translation] = context.translation
   const [scale] = context.scale
   const [rotation] = context.rotation
@@ -26,6 +28,8 @@ function ImageCanvas() {
       height={canvasResolution()[1] * context.pixelRatio}
     />) as HTMLCanvasElement
   const gl = canvas.getContext('webgl')
+
+  setImageCanvas(canvas)
 
   const [renderingPayload, setRenderingPayload] = createSignal<RenderingPayload>()
 
@@ -119,6 +123,7 @@ export default function MainCanvas(props: {}) {
       <Show when={canvasResolution()}>
         <ImageCanvas />
         <TextLayers />
+        <BrushCanvas />
         <CropHandles />
         <RotationWheel />
       </Show>

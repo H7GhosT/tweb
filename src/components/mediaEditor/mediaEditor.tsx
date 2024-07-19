@@ -72,7 +72,14 @@ export function MediaEditor(props: MediaEditorProps) {
         font: 'roboto',
         size: 40
       }),
-      selectedTextLayer: createSignal()
+      selectedTextLayer: createSignal(),
+
+      imageCanvas: createSignal(),
+      currentBrush: createSignal({
+        brush: 'pen',
+        color: '#fe4438',
+        size: 12
+      })
     }}>
       <div ref={overlay} class="media-editor__overlay night">
         <div class="media-editor__container">

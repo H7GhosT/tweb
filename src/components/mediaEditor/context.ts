@@ -26,6 +26,13 @@ export interface MediaEditorContextValue {
     font: string
   }>
   selectedTextLayer: Signal<number>
+
+  imageCanvas: Signal<HTMLCanvasElement>
+  currentBrush: Signal<{
+    color: string
+    size: number
+    brush: string
+  }>
 }
 
 const MediaEditorContext = createContext<MediaEditorContextValue>()
