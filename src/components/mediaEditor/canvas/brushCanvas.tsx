@@ -19,6 +19,7 @@ export default function BrushCanvas() {
   const [canvasResolution] = context.canvasResolution
   const [currentBrush] = context.currentBrush
   const [currentTab] = context.currentTab
+  const [, setSelectedTextLayer] = context.selectedTextLayer
 
   const [lines, setLines] = createSignal<Line[]>([])
   const [lastLine, setLastLine] = createSignal<Line>()
@@ -51,9 +52,9 @@ export default function BrushCanvas() {
 
   function drawLine(line: Line, ctx: CanvasRenderingContext2D) {
     const brushFn = brushes[line.brush]
-    mainCtx.save()
+    ctx.save()
     brushFn(line, ctx, {blurredLineCtx, image: blurredImageCanvas})
-    mainCtx.restore()
+    ctx.restore()
   }
 
 
@@ -97,6 +98,7 @@ export default function BrushCanvas() {
             e.clientX - bcr.left,
             e.clientY - bcr.top
           ]
+          setSelectedTextLayer()
         }
 
         points.push([
