@@ -18,6 +18,8 @@ export default function BrushCanvas() {
   const [imageCanvas] = context.imageCanvas
   const [canvasResolution] = context.canvasResolution
   const [currentBrush] = context.currentBrush
+  const [currentTab] = context.currentTab
+
   const [lines, setLines] = createSignal<Line[]>([])
   const [lastLine, setLastLine] = createSignal<Line>()
 
@@ -37,7 +39,7 @@ export default function BrushCanvas() {
   const canvas = <canvas
     class="media-editor__brush-canvas"
     classList={{
-      'media-editor__brush-canvas--active': true
+      'media-editor__brush-canvas--active': currentTab() === 'brush'
     }}
     width={w}
     height={h}
@@ -47,48 +49,13 @@ export default function BrushCanvas() {
   const blurredImageCtx = blurredImageCanvas.getContext('2d')
   const blurredLineCtx = blurredLineCanvas.getContext('2d')
 
-
-  // const [image, setImage] = createSignal<HTMLImageElement>()
-
-  // const blurredImageData = createMemo(() => {
-  //   if(!imageCanvas()) return undefined
-  //   // const imgCtx = imageCanvas().getContext('2d')
-  //   // const imageData = imgCtx.getImageData(0, 0, w, h)
-
-  //   blurredImageCtx.clearRect(0, 0, w, h)
-
-  //   blurredImageCtx.filter = 'blur(20px)'
-  //   blurredImageCtx.drawImage(imageCanvas(), 0, 0, w, h)
-  //   lines().forEach(line => drawLine(line, blurredImageCtx))
-
-  //   return blurredImageCtx.getImageData(0, 0, w, h)
-  // })
-
-  createEffect(() => {
-    // blurredImageCtx.filter = 'blur(20px)'
-    // blurredImageCtx.drawImage(imageCanvas(), 0, 0)
-  })
-
   function drawLine(line: Line, ctx: CanvasRenderingContext2D) {
     const brushFn = brushes[line.brush]
-    // blurredImageCtx.clearRect(0, 0, w, h)
-
-    // blurredImageCtx.filter = 'blur(20px)'
-    // blurredImageCtx.fillStyle = 'magenta'
-    // blurredImageCtx.fillRect(0, 0, w, h)
-    // blurredImageCtx.drawImage(imageCanvas(), 0, 0, w, h)
-
     mainCtx.save()
-    brushFn(line, ctx, {/* blurredImageData:  *//* blurredImageData(), */ blurredLineCtx, image: blurredImageCanvas})
+    brushFn(line, ctx, {blurredLineCtx, image: blurredImageCanvas})
     mainCtx.restore()
   }
 
-  // createEffect(() => {
-  //   console.log('draw all lines effect');
-  //   mainCtx.clearRect(0, 0, mainCtx.canvas.width, mainCtx.canvas.height)
-  //   lines().forEach(line => drawLine(line, mainCtx))
-  //   if(lastLine()) drawLine(lastLine(), mainCtx)
-  // })
 
   function draw(lines: Line[]) {
     mainCtx.clearRect(0, 0, w, h)
@@ -100,38 +67,10 @@ export default function BrushCanvas() {
       drawLine(line, blurredImageCtx)
       drawLine(line, mainCtx)
     })
-    // if(lastLine()) drawLine(lastLine(), mainCtx)
   }
-
-  // onMount(() => {
-  //   console.log('mainCtx', mainCtx)
-  //   const image = new Image()
-  //   image.onload = () => {
-  //     // mainCtx.drawImage(imageCanvas(), 0, 0, w, h)
-  //     setImage(image)
-  //   }
-  //   image.src = 'tmp/texture3.jpg'
-
-  //   // setTimeout(() => {
-  //   //   const ctx = mainCtx
-  //   //   console.dir(mainCtx)
-  //   //   // ctx.globalCompositeOperation = 'source-over';
-  //   //   ctx.clearRect(0, 0, w, h)
-  //   //   // ctx.save()
-  //   //   ctx.fillStyle = 'blue';
-  //   //   ctx.fillRect(210, 210, 100, 100);
-  //   //   ctx.globalCompositeOperation = 'destination-in';
-  //   //   console.log('here destination-in');
-
-  //   //   ctx.fillStyle = 'red';
-  //   //   ctx.fillRect(250, 250, 100, 100);
-  //   //   // ctx.reset()
-  //   // }, 1000)
-  // })
 
 
   function resetLastLine() {
-    console.log('reset last line');
     setLastLine({
       color: currentBrush().color,
       brush: currentBrush().brush,

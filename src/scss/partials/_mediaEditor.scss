@@ -725,6 +725,11 @@
 
     cursor: text;
     overflow: hidden;
+
+    pointer-events: none;
+    &--active {
+      pointer-events: initial;
+    }
   }
 
   &__text-layer {
@@ -735,6 +740,7 @@
     line-height: 1.33em;
 
     text-wrap: nowrap;
+    pointer-events: initial;
 
     &-layout {
       display: flex;

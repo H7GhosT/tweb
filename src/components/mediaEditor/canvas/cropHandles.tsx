@@ -8,7 +8,8 @@ import {getCropOffset} from './cropOffset'
 export default function CropHandles() {
   const context = useContext(MediaEditorContext)
   const [canvasResolution] = context.canvasResolution
-  const [isCroping] = context.isCroping
+  const [currentTab] = context.currentTab
+  const isCroping = () => currentTab() === 'crop'
   const [currentImageRatio, setCurrentImageRatio] = context.currentImageRatio
   const [scale, setScale] = context.scale
   const [translation, setTranslation] = context.translation

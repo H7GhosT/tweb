@@ -9,5 +9,11 @@ Improvements
 - Mouse wheel and finger zoom scale in out
 - Deleting text layers
 - When typing too much text horizontally all text layers slide left / right
+- Cursor horizontal/vertical/diagonal for resizing
+- Crop/Resize from side
+- Text layer disable adding new types of elements (bold, italic, pasting some sh**)
+- Pen too much drawing lags
+- Drawing with blur pen on top of eraser doesn't properly work
+- Change cursor for drawing
 
 Search for TODOs

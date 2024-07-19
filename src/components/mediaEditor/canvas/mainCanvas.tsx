@@ -13,7 +13,8 @@ import BrushCanvas from './brushCanvas'
 function ImageCanvas() {
   const context = useContext(MediaEditorContext)
   const [canvasResolution] = context.canvasResolution
-  const [isCroping] = context.isCroping
+  const [currentTab] = context.currentTab
+  const isCroping = () => currentTab() === 'crop'
   const [currentImageRatio, setCurrentImageRatio] = context.currentImageRatio
   const [, setImageSize] = context.imageSize
   const [, setImageCanvas] = context.imageCanvas
@@ -124,8 +125,8 @@ export default function MainCanvas(props: {}) {
     <div ref={container} class="media-editor__main-canvas">
       <Show when={canvasResolution()}>
         <ImageCanvas />
-        <TextLayers />
         <BrushCanvas />
+        <TextLayers />
         <CropHandles />
         <RotationWheel />
       </Show>

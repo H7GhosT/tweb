@@ -26,8 +26,6 @@ type MediaEditorProps = {
 }
 
 export function MediaEditor(props: MediaEditorProps) {
-  const [tab, setTab] = createSignal('equalizer')
-
   let overlay: HTMLDivElement;
 
   onMount(async() => {
@@ -55,7 +53,7 @@ export function MediaEditor(props: MediaEditorProps) {
       pixelRatio: window.devicePixelRatio,
 
       adjustments: createAdjustmentsConfig(),
-      isCroping: createSignal(false),
+      currentTab: createSignal('adjustments'),
       imageSize: createSignal([0, 0]),
       canvasResolution: createSignal(),
       currentImageRatio: createSignal(0),
@@ -86,9 +84,9 @@ export function MediaEditor(props: MediaEditorProps) {
           <MainCanvas />
           <div class="media-editor__toolbar">
             <MediaEditorTopbar onClose={handleClose} />
-            <MediaEditorTabs tab={tab()} onTabChange={setTab} />
-            <MediaEditorTabContent activeTab={tab()} tabs={{
-              equalizer: () => <MediaEditorEqualizer />,
+            <MediaEditorTabs />
+            <MediaEditorTabContent tabs={{
+              adjustments: () => <MediaEditorEqualizer />,
               crop: () => <MediaEditorCrop />,
               text: () => <MediaEditorText />,
               brush: () => <MediaEditorBrush />,

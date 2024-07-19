@@ -10,8 +10,10 @@ let idSeed = 0
 export default function TextLayers() {
   const [layers, setLayers] = createSignal<Signal<TextLayerInfo>[]>([])
   const context = useContext(MediaEditorContext)
-  const [currentLayerInfo, setCurrentLayerInfo] = context.currentTextLayerInfo
-  const [selectedTextLayer] = context.selectedTextLayer
+  const [currentTab] = context.currentTab
+  const isTextTab = () => currentTab() === 'text'
+  const [currentLayerInfo] = context.currentTextLayerInfo
+  const [selectedTextLayer, setSelectedTextLayer] = context.selectedTextLayer
 
 
   createEffect(on(currentLayerInfo, () => {
@@ -38,10 +40,15 @@ export default function TextLayers() {
     })
   }))
 
+  createEffect(() => {
+    if(!isTextTab()) setSelectedTextLayer(undefined)
+  })
+
   let container: HTMLDivElement
 
   function addLayer(e: MouseEvent) {
     if(e.target !== container) return
+    if(!isTextTab()) return
 
     const bcr = container.getBoundingClientRect()
 
@@ -61,6 +68,9 @@ export default function TextLayers() {
     <div
       ref={container}
       class="media-editor__text-layers-container"
+      classList={{
+        'media-editor__text-layers-container--active': isTextTab()
+      }}
       onClick={withCurrentOwner(addLayer)}
     >
       <For each={layers()}>

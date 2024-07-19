@@ -8,7 +8,8 @@ export interface MediaEditorContextValue {
   imageSrc: string
   adjustments: AdjustmentsConfig
 
-  isCroping: Signal<boolean>
+  currentTab: Signal<string>
+
   imageSize: Signal<[number, number]>
   canvasResolution: Signal<[number, number]>
   currentImageRatio: Signal<number>

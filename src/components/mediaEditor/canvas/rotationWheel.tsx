@@ -10,7 +10,8 @@ const DEGREE_STEP = 15
 
 export default function RotationWheel(props: {}) {
   const context = useContext(MediaEditorContext)
-  const [isCroping] = context.isCroping
+  const [currentTab] = context.currentTab
+  const isCroping = () => currentTab() === 'crop'
   const [rotation, setRotation] = context.rotation
   const [, setScale] = context.scale
   const [, setTranslation] = context.translation

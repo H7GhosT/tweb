@@ -40,7 +40,6 @@ function Item(inProps: MediaEditorLargeButtonProps & {
 
 export default function MediaEditorCrop(props: {}) {
   const context = useContext(MediaEditorContext)
-  const [, setIsCroping] = context.isCroping
   const [, setTranslation] = context.translation
   const [, setScale] = context.scale
   const [, setRotation] = context.rotation
@@ -48,9 +47,6 @@ export default function MediaEditorCrop(props: {}) {
   const [fixedImageRatioKey, setFixedImageRatioKey] = context.fixedImageRatioKey
   const [imageSize] = context.imageSize
   const cropOffset = getCropOffset()
-
-  onMount(() => setIsCroping(true))
-  onCleanup(() => setIsCroping(false))
 
   const isActive = (what?: string) => fixedImageRatioKey() === what
 

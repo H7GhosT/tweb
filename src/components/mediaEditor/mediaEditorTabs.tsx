@@ -1,4 +1,6 @@
+import {useContext} from 'solid-js';
 import {ButtonIconTsx} from '../buttonIconTsx';
+import MediaEditorContext from './context';
 
 
 type ConfigItem = {
@@ -7,7 +9,7 @@ type ConfigItem = {
 }
 
 const config: ConfigItem[] = [
-  {icon: 'equalizer', key: 'equalizer'},
+  {icon: 'equalizer', key: 'adjustments'},
   {icon: 'crop', key: 'crop'},
   {icon: 'text', key: 'text'},
   {icon: 'brush', key: 'brush'},
@@ -16,10 +18,10 @@ const config: ConfigItem[] = [
 
 export const mediaEditorTabsOrder = config.map(item => item.key)
 
-export default function MediaEditorTabs(props: {
-  tab: string
-  onTabChange: (value: string) => void
-}) {
+export default function MediaEditorTabs() {
+  const context = useContext(MediaEditorContext)
+  const [tab, setTab] = context.currentTab
+
   let container: HTMLDivElement
   let underline: HTMLDivElement
 
@@ -28,7 +30,7 @@ export default function MediaEditorTabs(props: {
     element: (
       <div
         class="media-editor__tabs-item"
-        classList={{'media-editor__tabs-item--active': props.tab === item.key}}
+        classList={{'media-editor__tabs-item--active': tab() === item.key}}
       >
         <ButtonIconTsx icon={item.icon} onClick={() => onTabClick(item.key)} />
       </div>
@@ -42,7 +44,7 @@ export default function MediaEditorTabs(props: {
 
     underline.style.setProperty('--left', targetBR.left + targetBR.width / 2 - containerBR.left + 'px')
 
-    props.onTabChange(key)
+    setTab(key)
   }
 
 
