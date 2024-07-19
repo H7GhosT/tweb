@@ -79,7 +79,7 @@ export default function RotationWheel(props: {}) {
 
       const isReversedScale = Math.abs(Math.round(newRotation / Math.PI * 2)) & 1
 
-      const scale = cropOffset.height / width
+      const scale = Math.min(cropOffset.height / width, cropOffset.width / height)
 
       setCurrentImageRatio(isReversedScale ? 1 / imageRatio : imageRatio)
       setScale(isReversedScale ? scale : 1)
