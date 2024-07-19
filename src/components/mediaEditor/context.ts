@@ -1,6 +1,7 @@
 import {createContext, Signal} from 'solid-js';
 import {AppManagers} from '../../lib/appManagers/managers';
 import {AdjustmentsConfig} from './adjustments';
+import {ResizableLayer, TextLayerInfo} from './canvas/resizableLayers';
 
 export interface MediaEditorContextValue {
   managers: AppManagers
@@ -19,14 +20,9 @@ export interface MediaEditorContextValue {
   translation: Signal<[number, number]>
   flip: Signal<[number, number]>
 
-  currentTextLayerInfo: Signal<{
-    color: string
-    alignment: string
-    style: string
-    size: number
-    font: string
-  }>
-  selectedTextLayer: Signal<number>
+  currentTextLayerInfo: Signal<TextLayerInfo>
+  resizableLayers: Signal<Signal<ResizableLayer>[]>
+  selectedResizableLayer: Signal<number>
 
   imageCanvas: Signal<HTMLCanvasElement>
   currentBrush: Signal<{

@@ -6,7 +6,7 @@ import {AdjustmentsConfig} from '../adjustments'
 import {getCropOffset} from './cropOffset'
 import CropHandles from './cropHandles'
 import RotationWheel from './rotationWheel'
-import TextLayers from './textLayers'
+import ResizableLayers from './resizableLayers'
 import BrushCanvas from './brushCanvas'
 
 
@@ -126,7 +126,7 @@ export default function MainCanvas(props: {}) {
       <Show when={canvasResolution()}>
         <ImageCanvas />
         <BrushCanvas />
-        <TextLayers />
+        <ResizableLayers />
         <CropHandles />
         <RotationWheel />
       </Show>

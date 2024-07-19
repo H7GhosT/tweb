@@ -63,6 +63,7 @@ export function MediaEditor(props: MediaEditorProps) {
       flip: createSignal([1, 1]),
       fixedImageRatioKey: createSignal(),
 
+      resizableLayers: createSignal([]),
       currentTextLayerInfo: createSignal({
         alignment: 'left',
         style: 'outline',
@@ -70,7 +71,7 @@ export function MediaEditor(props: MediaEditorProps) {
         font: 'roboto',
         size: 40
       }),
-      selectedTextLayer: createSignal(),
+      selectedResizableLayer: createSignal(),
 
       imageCanvas: createSignal(),
       currentBrush: createSignal({

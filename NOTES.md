@@ -15,5 +15,8 @@ Improvements
 - Pen too much drawing lags
 - Drawing with blur pen on top of eraser doesn't properly work
 - Change cursor for drawing
+- Drawing with neon after blur brush
+- Deleting all content from a line from text layer
+- Firefox text layer with background when adding new line cursor position is weird
 
 Search for TODOs

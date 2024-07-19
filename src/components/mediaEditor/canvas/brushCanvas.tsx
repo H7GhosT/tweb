@@ -19,7 +19,7 @@ export default function BrushCanvas() {
   const [canvasResolution] = context.canvasResolution
   const [currentBrush] = context.currentBrush
   const [currentTab] = context.currentTab
-  const [, setSelectedTextLayer] = context.selectedTextLayer
+  const [, setSelectedTextLayer] = context.selectedResizableLayer
 
   const [lines, setLines] = createSignal<Line[]>([])
   const [lastLine, setLastLine] = createSignal<Line>()
