@@ -727,6 +727,7 @@
     overflow: hidden;
 
     pointer-events: none;
+
     &--active {
       pointer-events: initial;
     }
@@ -778,7 +779,7 @@
         flex-direction: column;
         text-wrap: nowrap;
         outline: none;
-  
+
         >div {
           position: relative;
           line-height: 1.33em;
@@ -796,13 +797,13 @@
       height: 100%;
 
       text {
-        font-style:normal;
-        fill:white;
-        fill-opacity:1;
-        stroke-linecap:butt;
-        stroke-linejoin:miter;
-        stroke-opacity:1;
-        font-family:Roboto;
+        font-style: normal;
+        fill: white;
+        fill-opacity: 1;
+        stroke-linecap: butt;
+        stroke-linejoin: miter;
+        stroke-opacity: 1;
+        font-family: Roboto;
       }
     }
   }
@@ -815,7 +816,7 @@
     pointer-events: initial;
 
     border: 2px dashed transparent;
-    
+
     &--active {
       border-color: rgba(255, 255, 255, .3);
     }
@@ -875,5 +876,30 @@
     position: relative;
     width: 200px;
     height: 200px;
+  }
+
+  &__finish-button {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    width: 54px;
+    height: 54px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    background-color: var(--primary-color);
+    box-shadow: 0px 1px 4px rgba(0, 0, 0, .25);
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    transition: .1s;
+
+    &:hover {
+      background-color: var(--dark-primary-color);
+    }
   }
 }
