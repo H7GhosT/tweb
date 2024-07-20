@@ -18,6 +18,7 @@ import MediaEditorBrush from './mediaEditorBrush';
 import MediaEditorStickers from './mediaEditorStickers';
 import MediaEditorContext from './context';
 import MainCanvas from './canvas/mainCanvas';
+import FinishButton from './finishButton';
 
 
 type MediaEditorProps = {
@@ -55,7 +56,7 @@ export function MediaEditor(props: MediaEditorProps) {
       adjustments: createAdjustmentsConfig(),
       currentTab: createSignal('adjustments'),
       imageSize: createSignal([0, 0]),
-      canvasResolution: createSignal(),
+      canvasSize: createSignal(),
       currentImageRatio: createSignal(0),
       scale: createSignal(1),
       rotation: createSignal(0),
@@ -95,6 +96,7 @@ export function MediaEditor(props: MediaEditorProps) {
               stickers: () => <MediaEditorStickers />
             }} />
           </div>
+          <FinishButton onClick={() => {}} />
         </div>
       </div>
     </MediaEditorContext.Provider>

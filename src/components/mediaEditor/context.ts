@@ -12,7 +12,7 @@ export interface MediaEditorContextValue {
   currentTab: Signal<string>
 
   imageSize: Signal<[number, number]>
-  canvasResolution: Signal<[number, number]>
+  canvasSize: Signal<[number, number]>
   currentImageRatio: Signal<number>
   fixedImageRatioKey: Signal<string>
   scale: Signal<number>

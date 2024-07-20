@@ -12,7 +12,7 @@ import BrushCanvas from './brushCanvas'
 
 function ImageCanvas() {
   const context = useContext(MediaEditorContext)
-  const [canvasResolution] = context.canvasResolution
+  const [canvasSize] = context.canvasSize
   const [currentTab] = context.currentTab
   const isCroping = () => currentTab() === 'crop'
   const [currentImageRatio, setCurrentImageRatio] = context.currentImageRatio
@@ -25,8 +25,8 @@ function ImageCanvas() {
 
   const canvas = (
     <canvas
-      width={canvasResolution()[0] * context.pixelRatio}
-      height={canvasResolution()[1] * context.pixelRatio}
+      width={canvasSize()[0] * context.pixelRatio}
+      height={canvasSize()[1] * context.pixelRatio}
     />) as HTMLCanvasElement
   const gl = canvas.getContext('webgl', {
     preserveDrawingBuffer: true
@@ -49,7 +49,7 @@ function ImageCanvas() {
 
     const cropOffset = getCropOffset()
 
-    const [w,  h] = canvasResolution()
+    const [w,  h] = canvasSize()
 
     const imageRatio = payload.image.width / payload.image.height
     let cropScale = 1
@@ -113,17 +113,17 @@ function ImageCanvas() {
 export default function MainCanvas(props: {}) {
   let container: HTMLDivElement
   const context = useContext(MediaEditorContext)
-  const [canvasResolution, setCanvasResolution] = context.canvasResolution
+  const [canvasSize, setCanvasSize] = context.canvasSize
 
   onMount(() => {
     const bcr = container.getBoundingClientRect()
-    setCanvasResolution([bcr.width, bcr.height])
+    setCanvasSize([bcr.width, bcr.height])
   })
 
 
   return (
     <div ref={container} class="media-editor__main-canvas">
-      <Show when={canvasResolution()}>
+      <Show when={canvasSize()}>
         <ImageCanvas />
         <BrushCanvas />
         <ResizableLayers />

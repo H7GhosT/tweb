@@ -19,7 +19,7 @@ export default function MediaEditorStickers() {
   const context = useContext(MediaEditorContext)
   const {managers} = context
   const [, setLayers] = context.resizableLayers
-  const [canvasResolution] = context.canvasResolution
+  const [canvasSize] = context.canvasSize
   const [, setSelectedResizableLayer] = context.selectedResizableLayer
   const [search, setSearch] = createSignal('')
   const [group, setGroup] = createSignal<EmojiGroup>()
@@ -80,7 +80,7 @@ export default function MediaEditorStickers() {
         ...prev,
         createSignal<ResizableLayer>({
           id,
-          position: [canvasResolution()[0] / 2, canvasResolution()[1] / 2],
+          position: [canvasSize()[0] / 2, canvasSize()[1] / 2],
           rotation: 0,
           scale: 1,
           type: 'sticker',

@@ -82,7 +82,7 @@ export default function TextLayerContent(props: ResizableLayerProps) {
           'font-size': layer().textInfo.size + 'px',
           'font-family': fontInfo().fontFamily,
           'font-weight': fontInfo().fontWeight,
-          '--align-items': alignMap[layer().textInfo.alignment]
+          '--align-items': flexAlignMap[layer().textInfo.alignment]
         }}
       >
         <div
@@ -214,7 +214,7 @@ function updateOutlineStyle(container: HTMLDivElement, contentEditable: HTMLDivE
 }
 
 
-const alignMap: Record<string, string> = {
+const flexAlignMap: Record<string, string> = {
   left: 'start',
   center: 'center',
   right: 'end'

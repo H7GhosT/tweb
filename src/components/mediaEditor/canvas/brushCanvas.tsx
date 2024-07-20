@@ -16,7 +16,7 @@ const THROTTLE_MS = 25
 export default function BrushCanvas() {
   const context = useContext(MediaEditorContext)
   const [imageCanvas] = context.imageCanvas
-  const [canvasResolution] = context.canvasResolution
+  const [canvasSize] = context.canvasSize
   const [currentBrush] = context.currentBrush
   const [currentTab] = context.currentTab
   const [, setSelectedTextLayer] = context.selectedResizableLayer
@@ -24,8 +24,8 @@ export default function BrushCanvas() {
   const [lines, setLines] = createSignal<Line[]>([])
   const [lastLine, setLastLine] = createSignal<Line>()
 
-  const w = canvasResolution()[0] * context.pixelRatio,
-    h = canvasResolution()[1] * context.pixelRatio;
+  const w = canvasSize()[0] * context.pixelRatio,
+    h = canvasSize()[1] * context.pixelRatio;
 
   const blurredImageCanvas = <canvas
     class="media-editor__brush-canvas media-editor__brush-canvas--invisible"
@@ -212,7 +212,7 @@ const brushes: Record<string, (line: Line, ctx: CanvasRenderingContext2D, payloa
     ctx.stroke()
   },
   brush: (line, ctx) => {
-    ctx.strokeStyle = `rgba(${hexaToRgba(line.color).join(',')},0.2)`
+    ctx.strokeStyle = `rgba(${hexaToRgba(line.color).join(',')},0.4)`
     drawLinePath(line, ctx)
   },
   neon: (line, ctx) => {
@@ -246,11 +246,9 @@ const brushes: Record<string, (line: Line, ctx: CanvasRenderingContext2D, payloa
   },
   eraser: (line, ctx) => {
     ctx.strokeStyle = 'white'
-    // ctx.save()
     ctx.globalCompositeOperation = 'destination-out'
     drawLinePath(line, ctx)
     ctx.stroke()
     ctx.globalCompositeOperation = 'source-over'
-    // ctx.restore()
   }
 }
