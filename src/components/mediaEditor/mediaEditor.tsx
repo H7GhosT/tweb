@@ -19,6 +19,7 @@ import MediaEditorStickers from './mediaEditorStickers';
 import MediaEditorContext from './context';
 import MainCanvas from './canvas/mainCanvas';
 import FinishButton from './finishButton';
+import {RenderingPayload} from './webgl/initWebGL';
 
 
 type MediaEditorProps = {
@@ -52,6 +53,7 @@ export function MediaEditor(props: MediaEditorProps) {
       managers: props.managers,
       imageSrc: 'tmp/texture2.jpg',
       pixelRatio: window.devicePixelRatio,
+      renderingPayload: createSignal<RenderingPayload>(),
 
       adjustments: createAdjustmentsConfig(),
       currentTab: createSignal('adjustments'),
