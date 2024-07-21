@@ -25,7 +25,7 @@ export type TextRenderingInfo = {
   width: number
   height: number
 
-  svgPath?: string
+  path?: (number | string)[]
   lines: TextRenderingInfoLine[]
 }
 

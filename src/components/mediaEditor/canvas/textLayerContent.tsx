@@ -36,7 +36,7 @@ export default function TextLayerContent(props: ResizableLayerProps) {
     const lines = getLinesRenderingInfo(contentEditable, layer().textInfo.alignment)
     const path = createTextBackgroundPath(lines)
 
-    if(layer().textInfo.style === 'background') updateBackgroundStyle(container, path, layer().textInfo)
+    if(layer().textInfo.style === 'background') updateBackgroundStyle(container, path.join(' '), layer().textInfo)
     if(layer().textInfo.style === 'outline') updateOutlineStyle(container, contentEditable, layer().textInfo)
 
     setTextLayersInfo(prev => ({
@@ -44,6 +44,7 @@ export default function TextLayerContent(props: ResizableLayerProps) {
       [layer().id]: {
         width: container.clientWidth,
         height: container.clientHeight,
+        path,
         lines
       }
     }))
@@ -79,7 +80,7 @@ export default function TextLayerContent(props: ResizableLayerProps) {
 
   const color = () => {
     if(layer().textInfo.style === 'normal') return layer().textInfo.color
-    return hexaToHsla(layer().textInfo.color).l < 80 ? '#ffffff' : '#000000'
+    return getContrastColor(layer().textInfo.color)
   }
 
   return (
@@ -143,12 +144,14 @@ function createTextBackgroundPath(lines: TextRenderingInfoLine[]) {
 
   const rounding = first.height * 0.3
 
-  const arcParams = (r: number, s: number = 1) => `${r} ${r} 0 0 ${s}`
+  const arcParams = (r: number, s: number = 1) => [r, r, 0, 0, s]
 
-  let path = `M ${first.left} ${rounding} `
-  path += `A ${arcParams(rounding)} ${first.left + rounding} 0 `
-  path += `L ${first.right - rounding} 0 `
-  path += `A ${arcParams(rounding)} ${first.right} ${rounding} `
+  const path = []
+  path.push('M', first.left, rounding)
+
+  path.push('A', ...arcParams(rounding), first.left + rounding, 0)
+  path.push('L', first.right - rounding, 0)
+  path.push('A', ...arcParams(rounding), first.right, rounding)
 
   let prevPosition = first
   let prevY = first.height
@@ -160,19 +163,19 @@ function createTextBackgroundPath(lines: TextRenderingInfoLine[]) {
     const diff = Math.min(Math.abs((position.right - prevPosition.right) / 2), rounding) * diffSign
     const currentRounding = Math.abs(diff)
 
-    path += `L ${prevPosition.right} ${prevY - currentRounding}`
-    path += `A ${arcParams(currentRounding, diffSign === 1 ? 0 : 1)} ${prevPosition.right + diff} ${prevY}`
-    path += `L ${position.right - diff} ${prevY}`
-    path += `A ${arcParams(currentRounding, diffSign === 1 ? 1 : 0)} ${position.right} ${prevY + currentRounding}`
+    path.push('L', prevPosition.right, prevY - currentRounding)
+    path.push('A', ...arcParams(currentRounding, diffSign === 1 ? 0 : 1), prevPosition.right + diff, prevY)
+    path.push('L', position.right - diff, prevY)
+    path.push('A', ...arcParams(currentRounding, diffSign === 1 ? 1 : 0), position.right, prevY + currentRounding)
 
     prevY += position.height
     prevPosition = position
   }
 
-  path += `L ${prevPosition.right} ${prevY - rounding} `
-  path += `A ${arcParams(rounding)} ${prevPosition.right - rounding} ${prevY} `
-  path += `L ${prevPosition.left + rounding} ${prevY} `
-  path += `A ${arcParams(rounding)} ${prevPosition.left} ${prevY - rounding} `
+  path.push('L', prevPosition.right, prevY - rounding)
+  path.push('A', ...arcParams(rounding), prevPosition.right - rounding, prevY)
+  path.push('L', prevPosition.left + rounding, prevY)
+  path.push('A', ...arcParams(rounding), prevPosition.left, prevY - rounding)
 
   const last = lines[lines.length - 1]
   prevY -= last.height
@@ -183,10 +186,10 @@ function createTextBackgroundPath(lines: TextRenderingInfoLine[]) {
     const diff = Math.min(Math.abs((position.left - prevPosition.left) / 2), rounding) * diffSign
     const currentRounding = Math.abs(diff)
 
-    path += `L ${prevPosition.left} ${prevY + currentRounding}`
-    path += `A ${arcParams(currentRounding, diffSign !== 1 ? 0 : 1)} ${prevPosition.left + diff} ${prevY}`
-    path += `L ${position.left - diff} ${prevY}`
-    path += `A ${arcParams(currentRounding, diffSign !== 1 ? 1 : 0)} ${position.left} ${prevY - currentRounding}`
+    path.push('L', prevPosition.left, prevY + currentRounding)
+    path.push('A', ...arcParams(currentRounding, diffSign !== 1 ? 0 : 1), prevPosition.left + diff, prevY)
+    path.push('L', position.left - diff, prevY)
+    path.push('A', ...arcParams(currentRounding, diffSign !== 1 ? 1 : 0), position.left, prevY - currentRounding)
 
     prevY -= position.height
     prevPosition = position
@@ -236,6 +239,10 @@ function updateOutlineStyle(container: HTMLDivElement, contentEditable: HTMLDivE
   })
 }
 
+export function getContrastColor(color: string) {
+  return hexaToHsla(color).l < 80 ? '#ffffff' : '#000000'
+}
+
 
 const flexAlignMap: Record<string, string> = {
   left: 'start',
@@ -249,7 +256,7 @@ type FontInfo = {
   baseline: number
 }
 
-const fontInfoMap: Record<string, FontInfo> = {
+export const fontInfoMap: Record<string, FontInfo> = {
   roboto: {
     fontFamily: '\'Roboto\'',
     fontWeight: 500,

@@ -7,6 +7,7 @@ import {draw} from './webgl/draw'
 import {withCurrentOwner} from './utils'
 import {initWebGL} from './webgl/initWebGL'
 import {BrushRenderer} from './canvas/brushCanvas'
+import {fontInfoMap, getContrastColor} from './canvas/textLayerContent'
 
 export default function FinishButton(props: {
   onClick: () => void
@@ -41,6 +42,8 @@ async function createResult() {
   const [scale] = context.scale
   const [rotation] = context.rotation
   const [flip] = context.flip
+  const [resizableLayers] = context.resizableLayers
+  const [textLayersInfo] = context.textLayersInfo
   // const [imageCanvas] = context.imageCanvas
   const [renderingPayload] = context.renderingPayload
   const cropOffset = getCropOffset()
@@ -132,6 +135,96 @@ async function createResult() {
   const ctx = resultCanvas.getContext('2d')
   ctx.drawImage(imageCanvas, 0, 0)
   ctx.drawImage(linesCanvas, 0, 0)
+
+  const scaledLayers = resizableLayers().map(layerSignal => {
+    const layer = {...layerSignal[0]()}
+    layer.position = [
+      (layer.position[0] - initialCanvasWidth / 2) * canvasScale + scaledWidth / 2,
+      (layer.position[1] - initialCanvasHeight / 2) * canvasScale + scaledHeight / 2
+    ]
+    if(layer.textInfo) {
+      layer.textInfo = {...layer.textInfo}
+      layer.textInfo.size *= canvasScale * layer.scale
+    }
+
+    return layer
+  })
+
+  scaledLayers.forEach(layer => {
+    if(layer.type !== 'text') return
+    const renderingInfo = {...textLayersInfo()[layer.id]}
+    renderingInfo.height *= canvasScale * layer.scale
+    renderingInfo.width *= canvasScale * layer.scale
+    renderingInfo.lines = renderingInfo.lines.map(line => ({
+      ...line,
+      height: line.height * canvasScale * layer.scale,
+      left: line.left * canvasScale * layer.scale,
+      right: line.right * canvasScale * layer.scale
+    }))
+    if(renderingInfo.path) {
+      const newPath = [...renderingInfo.path]
+      function multiply(i: number) {
+        newPath[i] = (newPath[i] as number) * canvasScale * layer.scale
+      }
+      newPath.forEach((part, i) => {
+        if(part === 'M' || part === 'L') {
+          multiply(i + 1)
+          multiply(i + 2)
+        } else if(part === 'A') {
+          multiply(i + 1)
+          multiply(i + 2)
+          multiply(i + 6)
+          multiply(i + 7)
+        }
+      })
+      renderingInfo.path = newPath
+    }
+
+    ctx.save()
+    ctx.translate(layer.position[0], layer.position[1])
+    ctx.rotate(layer.rotation)
+
+    let prevY = -renderingInfo.height / 2
+    const boxLeft = -renderingInfo.width / 2
+    const fontInfo = fontInfoMap[layer.textInfo.font]
+
+    if(layer.textInfo.style === 'background') {
+      ctx.translate(boxLeft, prevY)
+
+      ctx.fillStyle = layer.textInfo.color
+      const path = new Path2D(renderingInfo.path.join(' '))
+      console.log('renderingInfo.path', renderingInfo.path.join(' '))
+      ctx.fill(path)
+      ctx.translate(-boxLeft, -prevY)
+    }
+
+    renderingInfo.lines.forEach(line => {
+      const yOffset = line.height * fontInfo.baseline
+      let xOffset = 0.2 * layer.textInfo.size
+      if(layer.textInfo.style === 'background') xOffset = 0.3 * layer.textInfo.size
+
+      ctx.font = `${layer.textInfo.size.toFixed(0)}px ${fontInfo.fontFamily}`
+
+      const x = boxLeft + xOffset + line.left, y = prevY + yOffset
+
+      if(layer.textInfo.style === 'outline') {
+        ctx.lineWidth = layer.textInfo.size * 0.15
+        ctx.strokeStyle = layer.textInfo.color
+        ctx.strokeText(line.content, x, y)
+        ctx.fillStyle = getContrastColor(layer.textInfo.color)
+        ctx.fillText(line.content, x, y)
+      } else if(layer.textInfo.style === 'background') {
+        ctx.fillStyle = getContrastColor(layer.textInfo.color)
+        ctx.fillText(line.content, x, y)
+      } else {
+        ctx.fillStyle = layer.textInfo.color
+        ctx.fillText(line.content, x, y)
+      }
+      prevY += line.height
+    })
+
+    ctx.restore()
+  })
 
   return resultCanvas
 }
