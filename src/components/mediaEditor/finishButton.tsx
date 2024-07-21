@@ -112,12 +112,13 @@ async function createResult() {
   const [lines] = context.brushDrawnLines
 
   const canvasScale = snappedCanvasWidth / initialCanvasWidth
+  const linePointScale = canvasScale / context.pixelRatio
   const scaledLines = lines().map(({size, points, ...line}) => ({
     ...line,
-    size: size * canvasScale,
+    size: size * linePointScale,
     points: points.map(point => [
-      (point[0] - initialCanvasWidth / 2) * canvasScale + scaledWidth / 2,
-      (point[1] - initialCanvasHeight / 2) * canvasScale + scaledHeight / 2
+      (point[0] - initialCanvasWidth * context.pixelRatio / 2) * linePointScale + scaledWidth / 2,
+      (point[1] - initialCanvasHeight * context.pixelRatio / 2) * linePointScale + scaledHeight / 2
     ] as [number, number])
   }))
 

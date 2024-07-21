@@ -222,7 +222,12 @@ const brushes: Record<string, (line: BrushDrawnLine, ctx: CanvasRenderingContext
     if(points.length < 2) return
 
     const i = points.length - 1
-    const i2 = Math.max(0, points.length - 8)
+
+    let i2 = i
+    for(; i2 > 0; i2--) {
+      if(distanceBetween(points[i], points[i2]) > line.size * 1.5) break;
+    }
+
     const angle = Math.atan2(
       points[i][0] - points[i2][0],
       points[i][1] - points[i2][1]
@@ -288,4 +293,9 @@ const brushes: Record<string, (line: BrushDrawnLine, ctx: CanvasRenderingContext
     ctx.stroke()
     ctx.globalCompositeOperation = 'source-over'
   }
+}
+
+
+function distanceBetween(p1: [number, number], p2: [number, number]) {
+  return Math.hypot(p1[0] - p2[0], p1[1] - p2[1])
 }
