@@ -79,6 +79,7 @@ vec4 brightness(vec4 color, float value) {
 }
 
 vec4 contrast(vec4 color, float value) {
+  value *= .25;
   return vec4(0.5 + (1.0 + value) * (color.rgb - 0.5), color.a);
 }
 
