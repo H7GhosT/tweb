@@ -135,6 +135,9 @@ export default function MainCanvas() {
 
 function getSnappedViewportsScale(ratio: number, vw1: number, vh1: number, vw2: number, vh2: number) {
   if(vw1 / ratio > vh1) vw1 = vh1 * ratio
+  else vh1 = vw1 / ratio
   if(vw2 / ratio > vh2) vw2 = vh2 * ratio
+  else vh2 = vw2 / ratio
+
   return Math.max(vw1 / vw2, vh1 / vh2)
 }
