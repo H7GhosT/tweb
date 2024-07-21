@@ -203,7 +203,7 @@ async function createResult() {
       let xOffset = 0.2 * layer.textInfo.size
       if(layer.textInfo.style === 'background') xOffset = 0.3 * layer.textInfo.size
 
-      ctx.font = `${layer.textInfo.size.toFixed(0)}px ${fontInfo.fontFamily}`
+      ctx.font = `${fontInfo.fontWeight} ${layer.textInfo.size}px ${fontInfo.fontFamily}`
 
       const x = boxLeft + xOffset + line.left, y = prevY + yOffset
 
