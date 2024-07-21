@@ -12,6 +12,79 @@ import ResizableLayers from './resizableLayers'
 import BrushCanvas from './brushCanvas'
 
 
+function createResult() {
+  const context = useContext(MediaEditorContext)
+  const [canvasSize] = context.canvasSize
+  const [currentTab] = context.currentTab
+  const [currentImageRatio] = context.currentImageRatio
+  const [translation] = context.translation
+  const [scale] = context.scale
+  const [rotation] = context.rotation
+  const [flip] = context.flip
+  const [renderingPayload] = context.renderingPayload
+  const cropOffset = getCropOffset()
+
+  const payload = renderingPayload()
+  const imageWidth = payload.image.width
+  const imageRatio = payload.image.width / payload.image.height
+  const newRatio = currentImageRatio()
+
+
+  const SIDE_MAX = 2560;
+  const SIDE_MIN = 100;
+  let scaledWidth = imageWidth / scale(), scaledHeight = scaledWidth / newRatio
+
+  if(Math.max(scaledWidth, scaledHeight) > SIDE_MAX) {
+    [scaledWidth, scaledHeight] = snapToViewport(newRatio, SIDE_MAX, SIDE_MAX)
+  }
+  if(Math.max(scaledWidth, scaledHeight) < SIDE_MIN) {
+    [scaledWidth, scaledHeight] = snapToViewport(newRatio, SIDE_MIN, SIDE_MIN)
+  }
+
+  const canvasRatio = canvasSize()[0] / canvasSize()[1]
+  let snappedCanvasWidth = scaledWidth, snappedCanvasHeight = scaledHeight
+  if(scaledWidth / canvasRatio < scaledHeight) snappedCanvasWidth = scaledHeight * canvasRatio
+  else snappedCanvasHeight = scaledWidth / canvasRatio
+
+  const canvas = document.createElement('canvas')
+  canvas.width = scaledWidth
+  canvas.height = scaledHeight
+  const gl = canvas.getContext('webgl')
+
+  const canvasScale = snappedCanvasWidth / canvasSize()[0]
+  const scaledTranslation = translation().map(x => x * canvasScale)
+
+  let toCropScale = getSnappedViewportsScale(imageRatio, cropOffset.width, cropOffset.height, snappedCanvasWidth, snappedCanvasHeight)
+  const fromCroppedScale = 1 / getSnappedViewportsScale(currentImageRatio(), cropOffset.width, cropOffset.height, snappedCanvasWidth, snappedCanvasHeight)
+
+  toCropScale *= fromCroppedScale
+
+  const snappedImageScale = Math.min(snappedCanvasWidth / payload.image.width, snappedCanvasHeight / payload.image.height)
+
+  const cropTranslation = scaledTranslation.map(x => (x * fromCroppedScale - x))
+
+  draw(gl, payload, {
+    flip: flip(),
+    rotation: rotation(),
+    scale: scale() * snappedImageScale * toCropScale,
+    translation: [
+      cropTranslation[0] + scaledTranslation[0],
+      cropTranslation[1] + scaledTranslation[1]
+    ],
+    imageSize: [payload.image.width, payload.image.height],
+    ...(
+      Object.fromEntries(
+        context.adjustments.map(({key, signal, to100}) => {
+          const value = signal[0]()
+          return [key, value / (to100 ? 100 : 50)]
+        })
+      ) as Record<AdjustmentsConfig[number]['key'], number>
+    )
+  })
+
+  return canvas
+}
+
 export function drawAdjustedImage(gl: WebGLRenderingContext, size?: [number, number]) {
   const context = useContext(MediaEditorContext)
   const [canvasSize] = context.canvasSize
@@ -131,6 +204,13 @@ export default function MainCanvas() {
       </Show>
     </div>
   )
+}
+
+function snapToViewport(ratio: number, vw: number, vh: number) {
+  if(vw / ratio > vh) vw = vh * ratio
+  else vh = vw / ratio
+
+  return [vw, vh]
 }
 
 function getSnappedViewportsScale(ratio: number, vw1: number, vh1: number, vw2: number, vh2: number) {
