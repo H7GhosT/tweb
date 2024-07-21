@@ -34,8 +34,8 @@ export default function MediaEditorBrush(props: {}) {
       <Space amount="16px" />
       <MediaEditorRangeInput
         label={i18n('MediaEditor.Size')}
-        min={8}
-        max={40}
+        min={2}
+        max={32}
         value={currentBrush().size}
         onChange={size => setCurrentBrush(prev => ({...prev, size}))}
         passiveLabel

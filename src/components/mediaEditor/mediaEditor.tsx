@@ -19,7 +19,6 @@ import MediaEditorStickers from './mediaEditorStickers';
 import MediaEditorContext from './context';
 import MainCanvas from './canvas/mainCanvas';
 import FinishButton from './finishButton';
-import {RenderingPayload} from './webgl/initWebGL';
 
 
 type MediaEditorProps = {
@@ -51,9 +50,9 @@ export function MediaEditor(props: MediaEditorProps) {
   return (
     <MediaEditorContext.Provider value={{
       managers: props.managers,
-      imageSrc: 'tmp/texture2.jpg',
+      imageSrc: 'tmp/texture.png',
       pixelRatio: window.devicePixelRatio,
-      renderingPayload: createSignal<RenderingPayload>(),
+      renderingPayload: createSignal(),
 
       adjustments: createAdjustmentsConfig(),
       currentTab: createSignal('adjustments'),
@@ -76,12 +75,14 @@ export function MediaEditor(props: MediaEditorProps) {
         size: 40
       }),
       selectedResizableLayer: createSignal(),
+      textLayersInfo: createSignal({}),
 
+      brushDrawnLines: createSignal([]),
       imageCanvas: createSignal(),
       currentBrush: createSignal({
         brush: 'pen',
         color: '#fe4438',
-        size: 12
+        size: 18
       })
     }}>
       <div ref={overlay} class="media-editor__overlay night">

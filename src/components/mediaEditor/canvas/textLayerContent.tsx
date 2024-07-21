@@ -1,14 +1,18 @@
 import {createEffect, on, onMount, useContext} from 'solid-js'
+
 import createElementFromMarkup from '../../../helpers/createElementFromMarkup'
-import MediaEditorContext from '../context'
 import {hexaToHsla} from '../../../helpers/color'
-import {ResizableContainer, ResizableLayerProps, TextLayerInfo} from './resizableLayers'
+
+import MediaEditorContext from '../context'
+
+import {ResizableContainer, ResizableLayerProps, TextLayerInfo, TextRenderingInfoLine} from './resizableLayers'
 
 
 export default function TextLayerContent(props: ResizableLayerProps) {
   const context = useContext(MediaEditorContext)
   const [selectedResizableLayer, setSelectedResizableLayer] = context.selectedResizableLayer
   const [currentTextLayerInfo, setCurrentTextLayerInfo] = context.currentTextLayerInfo
+  const [, setTextLayersInfo] = context.textLayersInfo
 
   const [layer, setLayer] = props.layerSignal
 
@@ -29,8 +33,20 @@ export default function TextLayerContent(props: ResizableLayerProps) {
 
   function updateBackground() {
     container.querySelector('.media-editor__text-layer-background')?.remove()
-    if(layer().textInfo.style === 'background') return updateBackgroundStyle(container, contentEditable, layer().textInfo)
-    if(layer().textInfo.style === 'outline') return updateOutlineStyle(container, contentEditable, layer().textInfo)
+    const lines = getLinesRenderingInfo(contentEditable, layer().textInfo.alignment)
+    const path = createTextBackgroundPath(lines)
+
+    if(layer().textInfo.style === 'background') updateBackgroundStyle(container, path, layer().textInfo)
+    if(layer().textInfo.style === 'outline') updateOutlineStyle(container, contentEditable, layer().textInfo)
+
+    setTextLayersInfo(prev => ({
+      ...prev,
+      [layer().id]: {
+        width: container.clientWidth,
+        height: container.clientHeight,
+        lines
+      }
+    }))
   }
 
   function selectAll() {
@@ -102,78 +118,85 @@ export default function TextLayerContent(props: ResizableLayerProps) {
 }
 
 
-function updateBackgroundStyle(container: HTMLDivElement, contentEditable: HTMLDivElement, info: TextLayerInfo) {
-  const children = Array.from(contentEditable.children)
-
-  const first = children[0] as HTMLDivElement
-
-  const rounding = first.clientHeight * 0.3
-
-  function getChildX(child: Element) {
+function getLinesRenderingInfo(linesContainer: HTMLDivElement, alignment: string): TextRenderingInfoLine[] {
+  return Array.from(linesContainer.children).map((_child) => {
+    const child = _child as HTMLElement
     let offset = 0
-    if(info.alignment === 'left') {
+    if(alignment === 'left') {
       offset = 0
-    } else if(info.alignment === 'center') {
-      offset = (container.clientWidth - child.clientWidth) / 2
+    } else if(alignment === 'center') {
+      offset = (linesContainer.clientWidth - child.clientWidth) / 2
     } else {
-      offset = container.clientWidth - child.clientWidth
+      offset = linesContainer.clientWidth - child.clientWidth
     }
-    return [offset, offset + child.clientWidth]
-  }
+    return {
+      left: offset,
+      right: offset + child.clientWidth,
+      content: child.innerText,
+      height: child.clientHeight
+    }
+  })
+}
 
-  const firstX = getChildX(first)
+function createTextBackgroundPath(lines: TextRenderingInfoLine[]) {
+  const first = lines[0]
+
+  const rounding = first.height * 0.3
 
   const arcParams = (r: number, s: number = 1) => `${r} ${r} 0 0 ${s}`
 
-  let path = `M ${firstX[0]} ${rounding} `
-  path += `A ${arcParams(rounding)} ${firstX[0] + rounding} 0 `
-  path += `L ${firstX[1] - rounding} 0 `
-  path += `A ${arcParams(rounding)} ${firstX[1]} ${rounding} `
+  let path = `M ${first.left} ${rounding} `
+  path += `A ${arcParams(rounding)} ${first.left + rounding} 0 `
+  path += `L ${first.right - rounding} 0 `
+  path += `A ${arcParams(rounding)} ${first.right} ${rounding} `
 
-  let prevX = firstX
-  let prevY = first.clientHeight
+  let prevPosition = first
+  let prevY = first.height
 
-  for(let i = 1; i < children.length; i++) {
-    const child = children[i]
+  for(let i = 1; i < lines.length; i++) {
+    const position = lines[i]
 
-    const x = getChildX(child)
-    const diffSign = x[1] > prevX[1] ? 1 : -1
-    const diff = Math.min(Math.abs((x[1] - prevX[1]) / 2), rounding) * diffSign
+    const diffSign = position.right > prevPosition.right ? 1 : -1
+    const diff = Math.min(Math.abs((position.right - prevPosition.right) / 2), rounding) * diffSign
     const currentRounding = Math.abs(diff)
 
-    path += `L ${prevX[1]} ${prevY - currentRounding}`
-    path += `A ${arcParams(currentRounding, diffSign === 1 ? 0 : 1)} ${prevX[1] + diff} ${prevY}`
-    path += `L ${x[1] - diff} ${prevY}`
-    path += `A ${arcParams(currentRounding, diffSign === 1 ? 1 : 0)} ${x[1]} ${prevY + currentRounding}`
+    path += `L ${prevPosition.right} ${prevY - currentRounding}`
+    path += `A ${arcParams(currentRounding, diffSign === 1 ? 0 : 1)} ${prevPosition.right + diff} ${prevY}`
+    path += `L ${position.right - diff} ${prevY}`
+    path += `A ${arcParams(currentRounding, diffSign === 1 ? 1 : 0)} ${position.right} ${prevY + currentRounding}`
 
-    prevY += child.clientHeight
-    prevX = x
+    prevY += position.height
+    prevPosition = position
   }
 
-  const last = children[children.length - 1]
-  path += `L ${prevX[1]} ${prevY - rounding} `
-  path += `A ${arcParams(rounding)} ${prevX[1] - rounding} ${prevY} `
-  path += `L ${prevX[0] + rounding} ${prevY} `
-  path += `A ${arcParams(rounding)} ${prevX[0]} ${prevY - rounding} `
+  path += `L ${prevPosition.right} ${prevY - rounding} `
+  path += `A ${arcParams(rounding)} ${prevPosition.right - rounding} ${prevY} `
+  path += `L ${prevPosition.left + rounding} ${prevY} `
+  path += `A ${arcParams(rounding)} ${prevPosition.left} ${prevY - rounding} `
 
-  prevY -= last.clientHeight
-  for(let i = children.length - 2; i >= 0; i--) {
-    const child = children[i]
+  const last = lines[lines.length - 1]
+  prevY -= last.height
+  for(let i = lines.length - 2; i >= 0; i--) {
+    const position = lines[i]
 
-    const x = getChildX(child)
-    const diffSign = x[0] > prevX[0] ? 1 : -1
-    const diff = Math.min(Math.abs((x[0] - prevX[0]) / 2), rounding) * diffSign
+    const diffSign = position.left > prevPosition.left ? 1 : -1
+    const diff = Math.min(Math.abs((position.left - prevPosition.left) / 2), rounding) * diffSign
     const currentRounding = Math.abs(diff)
 
-    path += `L ${prevX[0]} ${prevY + currentRounding}`
-    path += `A ${arcParams(currentRounding, diffSign !== 1 ? 0 : 1)} ${prevX[0] + diff} ${prevY}`
-    path += `L ${x[0] - diff} ${prevY}`
-    path += `A ${arcParams(currentRounding, diffSign !== 1 ? 1 : 0)} ${x[0]} ${prevY - currentRounding}`
+    path += `L ${prevPosition.left} ${prevY + currentRounding}`
+    path += `A ${arcParams(currentRounding, diffSign !== 1 ? 0 : 1)} ${prevPosition.left + diff} ${prevY}`
+    path += `L ${position.left - diff} ${prevY}`
+    path += `A ${arcParams(currentRounding, diffSign !== 1 ? 1 : 0)} ${position.left} ${prevY - currentRounding}`
 
-    prevY -= child.clientHeight
-    prevX = x
+    prevY -= position.height
+    prevPosition = position
   }
 
+  return path
+}
+
+
+function updateBackgroundStyle(container: HTMLDivElement, path: string, info: TextLayerInfo) {
   const svg = createElementFromMarkup(`
     <svg width="${container.clientWidth}" height="${container.clientHeight}" viewBox="0 0 ${container.clientWidth} ${container.clientHeight}">
       <path d="${path}" fill="${info.color}" />
@@ -182,7 +205,7 @@ function updateBackgroundStyle(container: HTMLDivElement, contentEditable: HTMLD
   svg.classList.add('media-editor__text-layer-background')
   container.prepend(svg)
 
-  return svg
+  return path
 }
 
 function updateOutlineStyle(container: HTMLDivElement, contentEditable: HTMLDivElement, info: TextLayerInfo) {

@@ -1,10 +1,10 @@
-import {createEffect, createMemo, createSignal, onMount, useContext} from 'solid-js'
+import {createEffect, createSignal, onMount, useContext} from 'solid-js'
 import MediaEditorContext from '../context'
 import SwipeHandler, {getEvent} from '../../swipeHandler'
 import throttle from '../../../helpers/schedulers/throttle'
 import {hexaToRgba} from '../../../helpers/color'
 
-type Line = {
+export type BrushDrawnLine = {
   color: string
   brush: string
   size: number
@@ -20,9 +20,9 @@ export default function BrushCanvas() {
   const [currentBrush] = context.currentBrush
   const [currentTab] = context.currentTab
   const [, setSelectedTextLayer] = context.selectedResizableLayer
+  const [lines, setLines] = context.brushDrawnLines
 
-  const [lines, setLines] = createSignal<Line[]>([])
-  const [lastLine, setLastLine] = createSignal<Line>()
+  const [lastLine, setLastLine] = createSignal<BrushDrawnLine>()
 
   const w = canvasSize()[0] * context.pixelRatio,
     h = canvasSize()[1] * context.pixelRatio;
@@ -50,7 +50,7 @@ export default function BrushCanvas() {
   const blurredImageCtx = blurredImageCanvas.getContext('2d')
   const blurredLineCtx = blurredLineCanvas.getContext('2d')
 
-  function drawLine(line: Line, ctx: CanvasRenderingContext2D) {
+  function drawLine(line: BrushDrawnLine, ctx: CanvasRenderingContext2D) {
     const brushFn = brushes[line.brush]
     ctx.save()
     brushFn(line, ctx, {blurredLineCtx, image: blurredImageCanvas})
@@ -58,7 +58,7 @@ export default function BrushCanvas() {
   }
 
 
-  function draw(lines: Line[]) {
+  function draw(lines: BrushDrawnLine[]) {
     mainCtx.clearRect(0, 0, w, h)
     blurredImageCtx.clearRect(0, 0, w, h)
     blurredImageCtx.filter = 'blur(10px)'
@@ -130,7 +130,7 @@ export default function BrushCanvas() {
   )
 }
 
-function drawLinePath(line: Line, ctx: CanvasRenderingContext2D) {
+function drawLinePath(line: BrushDrawnLine, ctx: CanvasRenderingContext2D) {
   const {points} = line
   if(!points.length) return
 
@@ -171,7 +171,7 @@ type BrushPayload = {
   image: HTMLCanvasElement
 }
 
-const brushes: Record<string, (line: Line, ctx: CanvasRenderingContext2D, payload: BrushPayload) => void> = {
+const brushes: Record<string, (line: BrushDrawnLine, ctx: CanvasRenderingContext2D, payload: BrushPayload) => void> = {
   pen: (line, ctx) => {
     ctx.strokeStyle = line.color
     drawLinePath(line, ctx)

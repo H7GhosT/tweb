@@ -1,13 +1,16 @@
 import {createContext, Signal} from 'solid-js';
 import {AppManagers} from '../../lib/appManagers/managers';
 import {AdjustmentsConfig} from './adjustments';
-import {ResizableLayer, TextLayerInfo} from './canvas/resizableLayers';
+import {ResizableLayer, TextLayerInfo, TextRenderingInfo} from './canvas/resizableLayers';
+import {RenderingPayload} from './webgl/initWebGL';
+import {BrushDrawnLine} from './canvas/brushCanvas';
 
 export interface MediaEditorContextValue {
   managers: AppManagers
   pixelRatio: number
   imageSrc: string
   adjustments: AdjustmentsConfig
+  renderingPayload: Signal<RenderingPayload>
 
   currentTab: Signal<string>
 
@@ -25,6 +28,7 @@ export interface MediaEditorContextValue {
   currentTextLayerInfo: Signal<TextLayerInfo>
   resizableLayers: Signal<Signal<ResizableLayer>[]>
   selectedResizableLayer: Signal<number>
+  textLayersInfo: Signal<Record<number, TextRenderingInfo>>
 
   imageCanvas: Signal<HTMLCanvasElement>
   currentBrush: Signal<{
@@ -32,6 +36,7 @@ export interface MediaEditorContextValue {
     size: number
     brush: string
   }>
+  brushDrawnLines: Signal<BrushDrawnLine[]>
 }
 
 const MediaEditorContext = createContext<MediaEditorContextValue>()

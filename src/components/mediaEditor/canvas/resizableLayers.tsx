@@ -15,8 +15,25 @@ export type ResizableLayer = {
   position: [number, number]
   rotation: number
   scale: number
-  textInfo?: TextLayerInfo
+
   sticker?: Document.document
+
+  textInfo?: TextLayerInfo
+}
+
+export type TextRenderingInfo = {
+  width: number
+  height: number
+
+  svgPath?: string
+  lines: TextRenderingInfoLine[]
+}
+
+export type TextRenderingInfoLine = {
+  left: number
+  right: number
+  height: number
+  content: string
 }
 
 export type TextLayerInfo = {

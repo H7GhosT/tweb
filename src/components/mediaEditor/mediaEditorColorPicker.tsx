@@ -88,7 +88,6 @@ export default function MediaEditorColorPicker(props: {
   })
 
   createEffect(() => {
-    console.log('props.value', props.value)
     colorPicker.setColor(props.value)
   })
 
