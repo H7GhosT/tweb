@@ -13,6 +13,69 @@ export type BrushDrawnLine = {
 
 const THROTTLE_MS = 25
 
+
+type BrushRendererOptions = {
+  targetCanvas: HTMLCanvasElement
+  imageCanvas: HTMLCanvasElement
+}
+
+export class BrushRenderer {
+  private imageCanvas: HTMLCanvasElement
+  private cacheCanvas: HTMLCanvasElement
+  private blurredImageCanvas: HTMLCanvasElement
+  private blurredLineCanvas: HTMLCanvasElement
+  private targetCtx: CanvasRenderingContext2D
+  private cacheCtx: CanvasRenderingContext2D
+  private blurredImageCtx: CanvasRenderingContext2D
+  private blurredLineCtx: CanvasRenderingContext2D
+
+  private width: number
+  private height: number
+
+  constructor({targetCanvas, imageCanvas}: BrushRendererOptions) {
+    this.targetCtx = targetCanvas.getContext('2d')
+    this.imageCanvas = imageCanvas
+
+    this.cacheCanvas = document.createElement('canvas')
+    this.blurredImageCanvas = document.createElement('canvas')
+    this.blurredLineCanvas = document.createElement('canvas')
+
+    this.width = this.cacheCanvas.width = this.blurredImageCanvas.width = this.blurredLineCanvas.width = targetCanvas.width
+    this.height = this.cacheCanvas.height = this.blurredImageCanvas.height = this.blurredLineCanvas.height = targetCanvas.height
+
+    this.cacheCtx = this.cacheCanvas.getContext('2d')
+    this.blurredImageCtx = this.blurredImageCanvas.getContext('2d')
+    this.blurredLineCtx = this.blurredLineCanvas.getContext('2d')
+  }
+
+  previewLine(line: BrushDrawnLine) {
+    this.targetCtx.clearRect(0, 0, this.width, this.height)
+
+    if(line.brush === 'blur') {
+      this.blurredImageCtx.clearRect(0, 0, this.width, this.height)
+      this.blurredImageCtx.filter = 'blur(10px)'
+      this.blurredImageCtx.drawImage(this.imageCanvas, 0, 0)
+      this.blurredImageCtx.drawImage(this.cacheCanvas, 0, 0)
+    }
+
+    this.targetCtx.drawImage(this.cacheCanvas, 0, 0)
+    const brushFn = brushes[line.brush]
+    this.targetCtx.save()
+    brushFn(line, this.targetCtx, {blurredLineCtx: this.blurredLineCtx, image: this.blurredImageCanvas})
+    this.targetCtx.restore()
+  }
+
+  saveLastLine() {
+    this.cacheCtx.clearRect(0, 0, this.width, this.height)
+    this.cacheCtx.drawImage(this.targetCtx.canvas, 0, 0)
+  }
+
+  drawLine(line: BrushDrawnLine) {
+    this.previewLine(line)
+    this.saveLastLine()
+  }
+}
+
 export default function BrushCanvas() {
   const context = useContext(MediaEditorContext)
   const [imageCanvas] = context.imageCanvas
@@ -20,23 +83,14 @@ export default function BrushCanvas() {
   const [currentBrush] = context.currentBrush
   const [currentTab] = context.currentTab
   const [, setSelectedTextLayer] = context.selectedResizableLayer
-  const [lines, setLines] = context.brushDrawnLines
+  const [, setLines] = context.brushDrawnLines
+
 
   const [lastLine, setLastLine] = createSignal<BrushDrawnLine>()
 
   const w = canvasSize()[0] * context.pixelRatio,
     h = canvasSize()[1] * context.pixelRatio;
 
-  const blurredImageCanvas = <canvas
-    class="media-editor__brush-canvas media-editor__brush-canvas--invisible"
-    width={w}
-    height={h}
-  ></canvas> as HTMLCanvasElement
-  const blurredLineCanvas = <canvas
-    class="media-editor__brush-canvas media-editor__brush-canvas--invisible"
-    width={w}
-    height={h}
-  ></canvas> as HTMLCanvasElement
   const canvas = <canvas
     class="media-editor__brush-canvas"
     classList={{
@@ -46,29 +100,10 @@ export default function BrushCanvas() {
     height={h}
   ></canvas> as HTMLCanvasElement
 
-  const mainCtx = canvas.getContext('2d')
-  const blurredImageCtx = blurredImageCanvas.getContext('2d')
-  const blurredLineCtx = blurredLineCanvas.getContext('2d')
-
-  function drawLine(line: BrushDrawnLine, ctx: CanvasRenderingContext2D) {
-    const brushFn = brushes[line.brush]
-    ctx.save()
-    brushFn(line, ctx, {blurredLineCtx, image: blurredImageCanvas})
-    ctx.restore()
-  }
-
-
-  function draw(lines: BrushDrawnLine[]) {
-    mainCtx.clearRect(0, 0, w, h)
-    blurredImageCtx.clearRect(0, 0, w, h)
-    blurredImageCtx.filter = 'blur(10px)'
-    blurredImageCtx.drawImage(imageCanvas(), 0, 0)
-
-    lines.forEach(line => {
-      drawLine(line, blurredImageCtx)
-      drawLine(line, mainCtx)
-    })
-  }
+  const brushRenderer = new BrushRenderer({
+    imageCanvas: imageCanvas(),
+    targetCanvas: canvas
+  })
 
 
   function resetLastLine() {
@@ -107,12 +142,14 @@ export default function BrushCanvas() {
         ])
 
         setLastLine(prev => ({...prev, points}))
-        draw([...lines(), ({...lastLine(), points})])
+        brushRenderer.previewLine({...lastLine(), points})
+        // draw([...lines(), ({...lastLine(), points})])
       }, THROTTLE_MS, true),
       onReset() {
         setTimeout(() => {
           setLines(prev => [...prev, lastLine()])
           resetLastLine()
+          brushRenderer.saveLastLine()
 
           points = []
           initialPosition = undefined
@@ -123,8 +160,8 @@ export default function BrushCanvas() {
 
   return (
     <>
-      {blurredImageCanvas}
-      {blurredLineCanvas}
+      {/* {blurredImageCanvas} */}
+      {/* {blurredLineCanvas} */}
       {canvas}
     </>
   )
@@ -191,7 +228,7 @@ const brushes: Record<string, (line: BrushDrawnLine, ctx: CanvasRenderingContext
       points[i][1] - points[i2][1]
     ) + Math.PI
 
-    const arrowLen = 32 + line.size
+    const arrowLen = line.size * 5
     const angle1 = angle + Math.PI / 4
     const angle2 = angle - Math.PI / 4
 

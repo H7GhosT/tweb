@@ -6,6 +6,7 @@ import {AdjustmentsConfig} from './adjustments'
 import {draw} from './webgl/draw'
 import {withCurrentOwner} from './utils'
 import {initWebGL} from './webgl/initWebGL'
+import {BrushRenderer} from './canvas/brushCanvas'
 
 export default function FinishButton(props: {
   onClick: () => void
@@ -35,14 +36,17 @@ export default function FinishButton(props: {
 async function createResult() {
   const context = useContext(MediaEditorContext)
   const [canvasSize] = context.canvasSize
-  const [currentTab] = context.currentTab
   const [currentImageRatio] = context.currentImageRatio
   const [translation] = context.translation
   const [scale] = context.scale
   const [rotation] = context.rotation
   const [flip] = context.flip
+  // const [imageCanvas] = context.imageCanvas
   const [renderingPayload] = context.renderingPayload
   const cropOffset = getCropOffset()
+
+  const initialCanvasWidth = canvasSize()[0]
+  const initialCanvasHeight = canvasSize()[1]
 
   const imageWidth = renderingPayload().image.width
   const imageRatio = renderingPayload().image.width / renderingPayload().image.height
@@ -61,15 +65,15 @@ async function createResult() {
     [scaledWidth, scaledHeight] = snapToViewport(newRatio, SIDE_MIN, SIDE_MIN)
   }
 
-  const canvasRatio = canvasSize()[0] / canvasSize()[1]
+  const canvasRatio = initialCanvasWidth / initialCanvasHeight
   let snappedCanvasWidth = scaledWidth, snappedCanvasHeight = scaledHeight
   if(scaledWidth / canvasRatio < scaledHeight) snappedCanvasWidth = scaledHeight * canvasRatio
   else snappedCanvasHeight = scaledWidth / canvasRatio
 
-  const canvas = document.createElement('canvas')
-  canvas.width = scaledWidth
-  canvas.height = scaledHeight
-  const gl = canvas.getContext('webgl')
+  const imageCanvas = document.createElement('canvas')
+  imageCanvas.width = scaledWidth
+  imageCanvas.height = scaledHeight
+  const gl = imageCanvas.getContext('webgl')
 
   const payload = await initWebGL(gl, context)
 
@@ -102,7 +106,34 @@ async function createResult() {
     )
   })
 
-  return canvas
+  const [lines] = context.brushDrawnLines
+
+  const canvasScale = snappedCanvasWidth / initialCanvasWidth
+  const scaledLines = lines().map(({size, points, ...line}) => ({
+    ...line,
+    size: size * canvasScale,
+    points: points.map(point => [
+      (point[0] - initialCanvasWidth / 2) * canvasScale + scaledWidth / 2,
+      (point[1] - initialCanvasHeight / 2) * canvasScale + scaledHeight / 2
+    ] as [number, number])
+  }))
+
+  const linesCanvas = document.createElement('canvas')
+  linesCanvas.width = scaledWidth
+  linesCanvas.height = scaledHeight
+  console.log('lines()', lines())
+  const brushRenderer = new BrushRenderer({targetCanvas: linesCanvas, imageCanvas})
+  scaledLines.forEach(line => brushRenderer.drawLine(line))
+
+  const resultCanvas = document.createElement('canvas')
+  resultCanvas.width = scaledWidth
+  resultCanvas.height = scaledHeight
+
+  const ctx = resultCanvas.getContext('2d')
+  ctx.drawImage(imageCanvas, 0, 0)
+  ctx.drawImage(linesCanvas, 0, 0)
+
+  return resultCanvas
 }
 
 
