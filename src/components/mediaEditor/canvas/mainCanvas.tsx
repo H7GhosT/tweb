@@ -52,27 +52,14 @@ function ImageCanvas() {
     const [w,  h] = canvasSize()
 
     const imageRatio = payload.image.width / payload.image.height
-    let cropScale = 1
 
-    let _cropScale: number
-    if(cropOffset.width / imageRatio > cropOffset.height) _cropScale = cropOffset.height / h
-    else _cropScale = cropOffset.width / w
-
-
-    let cropSnappedWidth = cropOffset.width, cropSnappedHeight = cropOffset.height
-
-    if(cropOffset.width / currentImageRatio() > cropOffset.height) cropSnappedWidth = cropOffset.height * currentImageRatio()
-    else cropSnappedHeight = cropOffset.width / currentImageRatio()
-
-    const fromCroppedScale = Math.min(w / cropSnappedWidth, h / cropSnappedHeight)
-
+    let cropScale = getSnappedViewportsScale(imageRatio, cropOffset.width, cropOffset.height, w, h)
+    const fromCroppedScale = 1 / getSnappedViewportsScale(currentImageRatio(), cropOffset.width, cropOffset.height, w, h)
 
     const imageScale = Math.min(w / payload.image.width, h / payload.image.height)
 
-    if(isCroping()) {
-      cropScale = _cropScale
-    } else {
-      cropScale = fromCroppedScale * _cropScale
+    if(!isCroping()) {
+      cropScale *= fromCroppedScale
     }
 
     let cropTranslation = [0, 0]
@@ -132,4 +119,10 @@ export default function MainCanvas(props: {}) {
       </Show>
     </div>
   )
+}
+
+function getSnappedViewportsScale(ratio: number, vw1: number, vh1: number, vw2: number, vh2: number) {
+  if(vw1 / ratio > vh1) vw1 = vh1 * ratio
+  if(vw2 / ratio > vh2) vw2 = vh2 * ratio
+  return Math.max(vw1 / vw2, vh1 / vh2)
 }
