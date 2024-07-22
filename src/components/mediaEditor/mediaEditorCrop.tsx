@@ -1,4 +1,4 @@
-import {createEffect, createSignal, JSX, onCleanup, onMount, splitProps, useContext} from 'solid-js';
+import {batch, createEffect, JSX, on, splitProps, useContext} from 'solid-js';
 
 import {i18n} from '../../lib/langPack';
 import {IconTsx} from '../iconTsx';
@@ -6,6 +6,7 @@ import {IconTsx} from '../iconTsx';
 import MediaEditorLargeButton, {MediaEditorLargeButtonProps} from './mediaEditorLargeButton';
 import MediaEditorContext from './context';
 import {getCropOffset} from './canvas/cropOffset';
+import {snapToViewport} from './math/viewports';
 
 const ratioRects = {
   '1x1': () => <rect x="4" y="4" width="16" height="16" rx="2" stroke="white" stroke-width="1.66"/>,
@@ -38,51 +39,55 @@ function Item(inProps: MediaEditorLargeButtonProps & {
   );
 }
 
-export default function MediaEditorCrop(props: {}) {
+export function applyCurrentFixedRatio() {
   const context = useContext(MediaEditorContext)
   const [, setTranslation] = context.translation
   const [, setScale] = context.scale
-  const [, setRotation] = context.rotation
+  const [rotation, setRotation] = context.rotation
   const [, setCurrentImageRatio] = context.currentImageRatio
-  const [fixedImageRatioKey, setFixedImageRatioKey] = context.fixedImageRatioKey
+  const [fixedImageRatioKey] = context.fixedImageRatioKey
   const [imageSize] = context.imageSize
   const cropOffset = getCropOffset()
 
-  const isActive = (what?: string) => fixedImageRatioKey() === what
+  const [w, h] = imageSize()
 
-  createEffect(() => {
-    const [w, h] = imageSize()
+  const snappedRotation90 = Math.round(rotation() / Math.PI * 2)
+  const isReversedRatio = Math.abs(snappedRotation90) & 1
+  const snappedRotation = snappedRotation90 * Math.PI / 2
 
-    if(fixedImageRatioKey() === 'original') {
-      setScale(1)
-      setTranslation([0, 0])
-      setCurrentImageRatio(w / h)
-      setRotation(0)
-      return
-    }
 
-    if(!fixedImageRatioKey()?.includes('x')) return
-
+  let ratio: number
+  if(fixedImageRatioKey()?.includes('x')) {
     const parts = fixedImageRatioKey().split('x')
-    const ratio = parseInt(parts[0]) / parseInt(parts[1])
-    const originalRatio = w / h
+    ratio = parseInt(parts[0]) / parseInt(parts[1])
+  } else {
+    ratio = isReversedRatio ? h / w : w / h
+  }
 
-    let initialWidth = cropOffset.width, initialHeight = cropOffset.height
+  const originalRatio = w / h
 
-    if(cropOffset.width / originalRatio > cropOffset.height) initialWidth = cropOffset.height * originalRatio
-    else initialHeight = cropOffset.width / originalRatio
+  const [w1, h1] = snapToViewport(originalRatio, cropOffset.width, cropOffset.height)
+  const [w2, h2] = snapToViewport(ratio, cropOffset.width, cropOffset.height)
 
-
-    let width = cropOffset.width, height = cropOffset.height
-
-    if(cropOffset.width / ratio > cropOffset.height) width = cropOffset.height * ratio
-    else height = cropOffset.width / ratio
-
-    setScale(Math.max(width / initialWidth, height / initialHeight))
+  batch(() => {
+    if(isReversedRatio) {
+      setScale(Math.max(w2 / h1, h2 / w1))
+    } else {
+      setScale(Math.max(w2 / w1, h2 / h1))
+    }
     setCurrentImageRatio(ratio)
     setTranslation([0, 0])
-    setRotation(0)
+    setRotation(snappedRotation)
   })
+}
+
+export default function MediaEditorCrop(props: {}) {
+  const context = useContext(MediaEditorContext)
+  const [fixedImageRatioKey, setFixedImageRatioKey] = context.fixedImageRatioKey
+
+  const isActive = (what?: string) => fixedImageRatioKey() === what
+
+  createEffect(on(fixedImageRatioKey, applyCurrentFixedRatio))
 
   return (
     <>

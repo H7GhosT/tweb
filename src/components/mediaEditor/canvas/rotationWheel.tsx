@@ -1,9 +1,9 @@
-import {batch, createEffect, createSignal, getOwner, onMount, runWithOwner, useContext} from 'solid-js'
+import {batch, createEffect, createSignal, on, onMount, useContext} from 'solid-js'
 import {ButtonIconTsx} from '../../buttonIconTsx'
 import SwipeHandler from '../../swipeHandler'
 import MediaEditorContext from '../context'
-import {getCropOffset} from './cropOffset'
 import {withCurrentOwner} from '../utils'
+import {applyCurrentFixedRatio} from '../mediaEditorCrop'
 
 const DEGREE_DIST_PX = 42
 const DEGREE_STEP = 15
@@ -13,28 +13,17 @@ export default function RotationWheel(props: {}) {
   const [currentTab] = context.currentTab
   const isCroping = () => currentTab() === 'crop'
   const [rotation, setRotation] = context.rotation
-  const [, setScale] = context.scale
   const [, setTranslation] = context.translation
-  const [, setCurrentImageRatio] = context.currentImageRatio
-  const [imageSize] = context.imageSize
   const [, setFlip] = context.flip
+  const [fixedImageRatioKey] = context.fixedImageRatioKey
   const [moved, setMoved] = createSignal(0)
   const [movedDiff, setMovedDiff] = createSignal(0);
-
-  // TODO: When resetting rotation from somewhere else the slider is not reset
 
   let swiperEl: HTMLDivElement
 
   onMount(() => {
-    // let initialRotation = 0
-    // let initialTranslation = [0, 0]
-
     new SwipeHandler({
       element: swiperEl,
-      onStart() {
-        // initialRotation = rotation()
-        // initialTranslation = translation()
-      },
       onSwipe(xDiff) {
         setMovedDiff(xDiff)
       },
@@ -62,36 +51,29 @@ export default function RotationWheel(props: {}) {
     prevRotation = rotationFromSiper
   })
 
-  function rotateLeft() {
-    const cropOffset = getCropOffset()
+  createEffect(on(fixedImageRatioKey, () => {
     batch(() => {
-      const newRotation = Math.round(rotation() / Math.PI * 2) * Math.PI / 2 - Math.PI / 2
-      setRotation(newRotation)
-      setTranslation([0, 0])
-      const [w, h] = imageSize()
-
-      const imageRatio = w / h
-      let width = cropOffset.width, height = cropOffset.height
-
-      if(cropOffset.width / imageRatio > cropOffset.height) width = cropOffset.height * imageRatio
-      else height = cropOffset.width / imageRatio
-
-
-      const isReversedScale = Math.abs(Math.round(newRotation / Math.PI * 2)) & 1
-
-      const scale = Math.min(cropOffset.height / width, cropOffset.width / height)
-
-      setCurrentImageRatio(isReversedScale ? 1 / imageRatio : imageRatio)
-      setScale(isReversedScale ? scale : 1)
-
       setMoved(0)
       setMovedDiff(0)
-      prevRotation = 0
     })
+  }))
+
+  function rotateLeft() {
+    const newRotation = Math.round(rotation() / Math.PI * 2) * Math.PI / 2 - Math.PI / 2
+    setRotation(newRotation)
+
+    applyCurrentFixedRatio()
+
+    batch(() => {
+      setMoved(0)
+      setMovedDiff(0)
+    })
+    prevRotation = 0
   }
 
   function flipImage() {
-    setFlip(flip => [flip[0] * -1, flip[1]])
+    const isReversedRatio = Math.abs(Math.round(rotation() / Math.PI * 2)) & 1
+    setFlip(flip => [flip[0] * (isReversedRatio ? 1 : -1), flip[1] * (isReversedRatio ? -1 : 1)])
   }
 
   return (
