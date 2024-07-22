@@ -13,14 +13,14 @@ import MediaEditorContext from './context';
 import {createStoredColor} from './createStoredColor';
 
 
-export default function MediaEditorText(props: {}) {
+export default function MediaEditorText() {
   const context = useContext(MediaEditorContext)
   const [layerInfo, setLayerInfo] = context.currentTextLayerInfo
 
-  const [currentColor, setCurrentColor] = createStoredColor('media-editor-text-color', '#ffffff')
+  const [savedColor, setSavedColor] = createStoredColor('media-editor-text-color', '#ffffff')
 
   createEffect(() => {
-    setLayerInfo(prev => ({...prev, color: currentColor().value}))
+    setLayerInfo(prev => ({...prev, color: savedColor().value}))
   })
 
   function setSize(value: number) {
@@ -64,8 +64,8 @@ export default function MediaEditorText(props: {}) {
     <>
       <MediaEditorColorPicker
         value={layerInfo()?.color}
-        onChange={setCurrentColor}
-        previousColor={currentColor().previous}
+        onChange={setSavedColor}
+        previousColor={savedColor().previous}
       />
 
       <div class="media-editor__toggle-group-row">
