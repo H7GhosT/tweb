@@ -2,6 +2,7 @@ import {createEffect, createSignal, onMount, Show, useContext} from 'solid-js'
 
 import SwipeHandler from '../../swipeHandler'
 import MediaEditorContext from '../context'
+
 import {getCropOffset} from './cropOffset'
 
 
@@ -180,10 +181,10 @@ export default function CropHandles() {
         <div class="media-editor__crop-handles-line-v" style={{left: '33%'}} />
         <div class="media-editor__crop-handles-line-v" style={{left: '66%'}} />
 
-        <div ref={leftTopEl} class="media-editor__crop-handles-circle" style={{left: circleOffset, top: circleOffset}} />
-        <div ref={rightTopEl} class="media-editor__crop-handles-circle" style={{right: circleOffset, top: circleOffset}} />
-        <div ref={leftBottomEl} class="media-editor__crop-handles-circle" style={{left: circleOffset, bottom: circleOffset}} />
-        <div ref={rightBottomEl} class="media-editor__crop-handles-circle" style={{right: circleOffset, bottom: circleOffset}} />
+        <div ref={leftTopEl} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--nw" />
+        <div ref={rightTopEl} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--ne" />
+        <div ref={leftBottomEl} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--sw" />
+        <div ref={rightBottomEl} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--se" />
       </div>
     </>
   )

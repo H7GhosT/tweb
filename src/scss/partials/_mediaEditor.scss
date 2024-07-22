@@ -585,6 +585,28 @@
       height: 8px;
       border-radius: 50%;
 
+      --offset: -4px;
+      &--nw {
+        cursor: nw-resize;
+        left: var(--offset);
+        top: var(--offset);
+      }
+      &--ne {
+        cursor: ne-resize;
+        right: var(--offset);
+        top: var(--offset);
+      }
+      &--sw {
+        cursor: sw-resize;
+        left: var(--offset);
+        bottom: var(--offset);
+      }
+      &--se {
+        cursor: se-resize;
+        right: var(--offset);
+        bottom: var(--offset);
+      }
+
       &--anti-flicker::before {
         cursor: grabbing;
         content: '';
@@ -742,6 +764,7 @@
 
     text-wrap: nowrap;
     pointer-events: initial;
+    cursor: text;
 
     &-layout {
       display: flex;
@@ -817,6 +840,7 @@
     padding: 10px 16px;
 
     pointer-events: initial;
+    cursor: grab;
 
     &--active {
       border-color: rgba(255, 255, 255, .3);
@@ -832,6 +856,8 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
+
+      cursor: pointer;
 
       opacity: var(--opacity);
       pointer-events: var(--pointer-events);

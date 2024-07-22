@@ -1,12 +1,15 @@
 import {onMount, useContext} from 'solid-js'
+
 import ripple from '../ripple'
+
 import MediaEditorContext from './context'
-import {getCropOffset} from './canvas/cropOffset'
-import {AdjustmentsConfig} from './adjustments'
-import {draw} from './webgl/draw'
 import {withCurrentOwner} from './utils'
+import {AdjustmentsConfig} from './adjustments'
+import {getSnappedViewportsScale, snapToViewport} from './math/viewports'
+import {draw} from './webgl/draw'
 import {initWebGL} from './webgl/initWebGL'
-import {BrushRenderer} from './canvas/brushCanvas'
+import BrushPainter from './canvas/brushPainter'
+import {getCropOffset} from './canvas/cropOffset'
 import {fontInfoMap, getContrastColor} from './canvas/textLayerContent'
 
 export default function FinishButton(props: {
@@ -44,8 +47,8 @@ async function createResult() {
   const [flip] = context.flip
   const [resizableLayers] = context.resizableLayers
   const [textLayersInfo] = context.textLayersInfo
-  // const [imageCanvas] = context.imageCanvas
   const [renderingPayload] = context.renderingPayload
+
   const cropOffset = getCropOffset()
 
   const initialCanvasWidth = canvasSize()[0]
@@ -122,12 +125,12 @@ async function createResult() {
     ] as [number, number])
   }))
 
-  const linesCanvas = document.createElement('canvas')
-  linesCanvas.width = scaledWidth
-  linesCanvas.height = scaledHeight
-  console.log('lines()', lines())
-  const brushRenderer = new BrushRenderer({targetCanvas: linesCanvas, imageCanvas})
-  scaledLines.forEach(line => brushRenderer.drawLine(line))
+  const brushCanvas = document.createElement('canvas')
+  brushCanvas.width = scaledWidth
+  brushCanvas.height = scaledHeight
+
+  const brushPainter = new BrushPainter({targetCanvas: brushCanvas, imageCanvas})
+  scaledLines.forEach(line => brushPainter.drawLine(line))
 
   const resultCanvas = document.createElement('canvas')
   resultCanvas.width = scaledWidth
@@ -135,7 +138,7 @@ async function createResult() {
 
   const ctx = resultCanvas.getContext('2d')
   ctx.drawImage(imageCanvas, 0, 0)
-  ctx.drawImage(linesCanvas, 0, 0)
+  ctx.drawImage(brushCanvas, 0, 0)
 
   const scaledLayers = resizableLayers().map(layerSignal => {
     const layer = {...layerSignal[0]()}
@@ -162,6 +165,7 @@ async function createResult() {
       left: line.left * canvasScale * layer.scale,
       right: line.right * canvasScale * layer.scale
     }))
+
     if(renderingInfo.path) {
       const newPath = [...renderingInfo.path]
       function multiply(i: number) {
@@ -194,7 +198,7 @@ async function createResult() {
 
       ctx.fillStyle = layer.textInfo.color
       const path = new Path2D(renderingInfo.path.join(' '))
-      console.log('renderingInfo.path', renderingInfo.path.join(' '))
+
       ctx.fill(path)
       ctx.translate(-boxLeft, -prevY)
     }
@@ -228,21 +232,4 @@ async function createResult() {
   })
 
   return resultCanvas
-}
-
-
-function snapToViewport(ratio: number, vw: number, vh: number) {
-  if(vw / ratio > vh) vw = vh * ratio
-  else vh = vw / ratio
-
-  return [vw, vh]
-}
-
-function getSnappedViewportsScale(ratio: number, vw1: number, vh1: number, vw2: number, vh2: number) {
-  if(vw1 / ratio > vh1) vw1 = vh1 * ratio
-  else vh1 = vw1 / ratio
-  if(vw2 / ratio > vh2) vw2 = vh2 * ratio
-  else vh2 = vw2 / ratio
-
-  return Math.max(vw1 / vw2, vh1 / vh2)
 }

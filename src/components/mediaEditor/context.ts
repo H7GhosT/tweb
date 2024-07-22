@@ -3,7 +3,7 @@ import {AppManagers} from '../../lib/appManagers/managers';
 import {AdjustmentsConfig} from './adjustments';
 import {ResizableLayer, TextLayerInfo, TextRenderingInfo} from './canvas/resizableLayers';
 import {RenderingPayload} from './webgl/initWebGL';
-import {BrushDrawnLine} from './canvas/brushCanvas';
+import {BrushDrawnLine} from './canvas/brushPainter';
 
 export interface MediaEditorContextValue {
   managers: AppManagers
