@@ -279,49 +279,17 @@ export function BlurBrush() {
   return (
     <svg width="120" height="48" viewBox="0 0 120 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <g clip-path="url(#clip0_6102_2545)">
-        <g filter="url(#filter0_f_6102_2545)">
-          <ellipse cx="104" cy="24" rx="6" ry="5" fill="url(#paint0_angular_6102_2545)" />
-          <ellipse cx="104" cy="24" rx="6" ry="5" fill="url(#paint1_radial_6102_2545)" />
-        </g>
-        <g filter="url(#filter1_f_6102_2545)">
-          <ellipse cx="104" cy="24" rx="6" ry="5" fill="url(#paint2_angular_6102_2545)" />
-          <ellipse cx="104" cy="24" rx="6" ry="5" fill="url(#paint3_radial_6102_2545)" />
-        </g>
-        <g filter="url(#filter2_f_6102_2545)">
-          <ellipse cx="104" cy="24" rx="6" ry="5" fill="url(#paint4_angular_6102_2545)" />
-          <ellipse cx="104" cy="24" rx="6" ry="5" fill="url(#paint5_radial_6102_2545)" />
-        </g>
+        <image href="assets/img/media-editor-blurred-color-wheel.png" x="91" y="12" width="26" height="24" />
+        <image href="assets/img/media-editor-blurred-color-wheel.png" x="91" y="12" width="26" height="24" />
         <g filter="url(#filter3_iiii_6102_2545)">
           <path d="M-2 15H75.441C75.7836 15 76.0968 15.1936 76.25 15.5V15.5C76.4032 15.8064 76.7164 16 77.059 16H92.941C93.2836 16 93.5968 15.8064 93.75 15.5V15.5C93.9032 15.1936 94.2164 15 94.559 15H98C99.1046 15 100 15.8954 100 17V31C100 32.1046 99.1046 33 98 33H94.559C94.2164 33 93.9032 32.8064 93.75 32.5V32.5C93.5968 32.1936 93.2836 32 92.941 32H77.059C76.7164 32 76.4032 32.1936 76.25 32.5V32.5C76.0968 32.8064 75.7836 33 75.441 33H-2V15Z" fill="#3E3F3F" />
-        </g>
-        <g filter="url(#filter4_f_6102_2545)">
-          <ellipse cx="104" cy="24" rx="6" ry="5" fill="url(#paint6_angular_6102_2545)" />
-          <ellipse cx="104" cy="24" rx="6" ry="5" fill="url(#paint7_radial_6102_2545)" />
         </g>
         <mask id="mask0_6102_2545" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="0" y="15" width="100" height="18">
           <path d="M0 15H75.441C75.7836 15 76.0968 15.1936 76.25 15.5V15.5C76.4032 15.8064 76.7164 16 77.059 16H92.941C93.2836 16 93.5968 15.8064 93.75 15.5V15.5C93.9032 15.1936 94.2164 15 94.559 15H98C99.1046 15 100 15.8954 100 17V31C100 32.1046 99.1046 33 98 33H94.559C94.2164 33 93.9032 32.8064 93.75 32.5V32.5C93.5968 32.1936 93.2836 32 92.941 32H77.059C76.7164 32 76.4032 32.1936 76.25 32.5V32.5C76.0968 32.8064 75.7836 33 75.441 33H0V15Z" fill="#3E3F3F" />
         </mask>
-        <g mask="url(#mask0_6102_2545)">
-          <path d="M77 33V15H76V33H77Z" fill="black" fill-opacity="0.33" />
-          <path d="M94 33V15H93V33H94Z" fill="black" fill-opacity="0.33" />
-        </g>
+        <image opacity="1" href="assets/img/media-editor-blurred-color-wheel.png" x="91" y="12" width="26" height="24" />
       </g>
       <defs>
-        <filter id="filter0_f_6102_2545" x="91" y="12" width="26" height="24" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
-          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-          <feGaussianBlur stdDeviation="3.5" result="effect1_foregroundBlur_6102_2545" />
-        </filter>
-        <filter id="filter1_f_6102_2545" x="91" y="12" width="26" height="24" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
-          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-          <feGaussianBlur stdDeviation="3.5" result="effect1_foregroundBlur_6102_2545" />
-        </filter>
-        <filter id="filter2_f_6102_2545" x="91" y="12" width="26" height="24" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
-          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-          <feGaussianBlur stdDeviation="3.5" result="effect1_foregroundBlur_6102_2545" />
-        </filter>
         <filter id="filter3_iiii_6102_2545" x="-2" y="10" width="105" height="28" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
           <feFlood flood-opacity="0" result="BackgroundImageFix" />
           <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
@@ -350,67 +318,6 @@ export function BlurBrush() {
           <feColorMatrix type="matrix" values="0 0 0 0 0.242217 0 0 0 0 0.247242 0 0 0 0 0.247101 0 0 0 1 0" />
           <feBlend mode="normal" in2="effect3_innerShadow_6102_2545" result="effect4_innerShadow_6102_2545" />
         </filter>
-        <filter id="filter4_f_6102_2545" x="91" y="12" width="26" height="24" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-          <feFlood flood-opacity="0" result="BackgroundImageFix" />
-          <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape" />
-          <feGaussianBlur stdDeviation="3.5" result="effect1_foregroundBlur_6102_2545" />
-        </filter>
-        <radialGradient id="paint0_angular_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0.01" stop-color="#FFBF00" />
-          <stop offset="0.17" stop-color="#7FFF00" />
-          <stop offset="0.365" stop-color="#00FF40" />
-          <stop offset="0.55" stop-color="#00FFFF" />
-          <stop offset="0.65" stop-color="#0040FF" />
-          <stop offset="0.785" stop-color="#8000FF" />
-          <stop offset="0.875" stop-color="#FF00BF" />
-          <stop offset="1" stop-color="#FFBF00" />
-        </radialGradient>
-        <radialGradient id="paint1_radial_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0.12" stop-color="white" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
-        </radialGradient>
-        <radialGradient id="paint2_angular_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0" stop-color="#FFBF00" />
-          <stop offset="0.17" stop-color="#7FFF00" />
-          <stop offset="0.365" stop-color="#00FF40" />
-          <stop offset="0.55" stop-color="#00FFFF" />
-          <stop offset="0.65" stop-color="#0040FF" />
-          <stop offset="0.785" stop-color="#8000FF" />
-          <stop offset="0.875" stop-color="#FF00BF" />
-          <stop offset="1" stop-color="#FFBF00" />
-        </radialGradient>
-        <radialGradient id="paint3_radial_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0.12" stop-color="white" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
-        </radialGradient>
-        <radialGradient id="paint4_angular_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0" stop-color="#FFBF00" />
-          <stop offset="0.17" stop-color="#7FFF00" />
-          <stop offset="0.365" stop-color="#00FF40" />
-          <stop offset="0.55" stop-color="#00FFFF" />
-          <stop offset="0.65" stop-color="#0040FF" />
-          <stop offset="0.785" stop-color="#8000FF" />
-          <stop offset="0.875" stop-color="#FF00BF" />
-          <stop offset="1" stop-color="#FFBF00" />
-        </radialGradient>
-        <radialGradient id="paint5_radial_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0.12" stop-color="white" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
-        </radialGradient>
-        <radialGradient id="paint6_angular_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0" stop-color="#FFBF00" />
-          <stop offset="0.17" stop-color="#7FFF00" />
-          <stop offset="0.365" stop-color="#00FF40" />
-          <stop offset="0.55" stop-color="#00FFFF" />
-          <stop offset="0.65" stop-color="#0040FF" />
-          <stop offset="0.785" stop-color="#8000FF" />
-          <stop offset="0.875" stop-color="#FF00BF" />
-          <stop offset="1" stop-color="#FFBF00" />
-        </radialGradient>
-        <radialGradient id="paint7_radial_6102_2545" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(104 24) rotate(90) scale(5 6)">
-          <stop offset="0.12" stop-color="white" />
-          <stop offset="1" stop-color="white" stop-opacity="0" />
-        </radialGradient>
         <clipPath id="clip0_6102_2545">
           <rect width="120" height="48" fill="white" />
         </clipPath>
