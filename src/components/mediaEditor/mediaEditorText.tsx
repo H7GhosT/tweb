@@ -1,6 +1,7 @@
-import {onMount, createSignal, Accessor, JSX, useContext} from 'solid-js';
+import {onMount, Accessor, JSX, useContext, createEffect} from 'solid-js';
 
 import {i18n} from '../../lib/langPack';
+
 import ripple from '../ripple';
 import {IconTsx} from '../iconTsx';
 
@@ -9,11 +10,18 @@ import MediaEditorRangeInput from './mediaEditorRangeInput';
 import MediaEditorLargeButton from './mediaEditorLargeButton';
 import Space from './Space';
 import MediaEditorContext from './context';
+import {createStoredColor} from './createStoredColor';
+
 
 export default function MediaEditorText(props: {}) {
   const context = useContext(MediaEditorContext)
   const [layerInfo, setLayerInfo] = context.currentTextLayerInfo
 
+  const [currentColor, setCurrentColor] = createStoredColor('media-editor-text-color', '#ffffff')
+
+  createEffect(() => {
+    setLayerInfo(prev => ({...prev, color: currentColor().value}))
+  })
 
   function setSize(value: number) {
     setLayerInfo(prev => ({...prev, size: value}))
@@ -26,9 +34,6 @@ export default function MediaEditorText(props: {}) {
   }
   function setFont(value: string) {
     setLayerInfo(prev => ({...prev, font: value}))
-  }
-  function setColor(value: string) {
-    setLayerInfo(prev => ({...prev, color: value}))
   }
 
   const toggleButton = (icon: Icon, value: string, currentValue: Accessor<string>, setValue: (value: string) => void) =>
@@ -57,7 +62,11 @@ export default function MediaEditorText(props: {}) {
 
   return (
     <>
-      <MediaEditorColorPicker value={layerInfo()?.color} onChange={setColor} />
+      <MediaEditorColorPicker
+        value={layerInfo()?.color}
+        onChange={setCurrentColor}
+        previousColor={currentColor().previous}
+      />
 
       <div class="media-editor__toggle-group-row">
         <div class="media-editor__toggle-group">
@@ -73,7 +82,15 @@ export default function MediaEditorText(props: {}) {
         </div>
       </div>
 
-      <MediaEditorRangeInput label={i18n('MediaEditor.Size')} min={16} max={64} value={layerInfo()?.size} onChange={setSize} passiveLabel />
+      <MediaEditorRangeInput
+        label={i18n('MediaEditor.Size')}
+        min={16}
+        max={64}
+        value={layerInfo()?.size}
+        onChange={setSize}
+        passiveLabel
+        color={layerInfo()?.color}
+      />
 
       <Space amount="16px" />
 

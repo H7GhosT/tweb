@@ -1,26 +1,33 @@
-import {createEffect, createSignal, onMount} from 'solid-js';
+import {createEffect, createReaction, createSignal, on, onMount} from 'solid-js';
 
 import {hexToRgb} from '../../helpers/color';
 import ColorPicker from '../colorPicker';
 import ripple from '../ripple';
 import {delay} from './utils';
 
-const colors = [
-  '#FFFFFF',
-  '#FE4438',
-  '#FF8901',
-  '#FFD60A',
-  '#33C759',
-  '#62E5E0',
-  '#0A84FF',
-  '#BD5CF3'
-].map(color => color.toLowerCase())
+export const colorPickerSwatches = [
+  '#ffffff',
+  '#fe4438',
+  '#ff8901',
+  '#ffd60a',
+  '#33c759',
+  '#62e5e0',
+  '#0a84ff',
+  '#bd5cf3'
+]
+
+const PICKER_WIDTH_PX = 200
+const PICKER_HEIGHT_PX = 120
+const SLIDER_WIDTH_PX = 304
 
 export default function MediaEditorColorPicker(props: {
   value: string
   onChange: (value: string) => void
+  colorKey?: string // Just for reaction, not used to access anything
+  previousColor?: string
 }) {
-  const [collapsed, setCollapsed] = createSignal(true);
+  const [collapsed, setCollapsed] = createSignal(colorPickerSwatches.includes(props.value));
+  const [collapsing, setCollapsing] = createSignal(false);
 
   const swatch = (hexColor: string, i: number) =>
     <div
@@ -36,11 +43,12 @@ export default function MediaEditorColorPicker(props: {
     </div>
 
   const onCollapseToggle = async() => {
-    const willCollapse = !collapsed()
     setCollapsed(prev => !prev)
-    if(willCollapse) {
+    if(collapsed()) {
+      setCollapsing(true)
+      props.onChange(props.previousColor || colorPickerSwatches[0])
       await delay(200)
-      props.onChange(colors[0])
+      setCollapsing(false)
     }
   }
 
@@ -50,10 +58,10 @@ export default function MediaEditorColorPicker(props: {
         <div
           class="media-editor__color-picker"
           classList={{'media-editor__color-picker--collapsed': collapsed()}}
-          style={{'--picker-height': '120px'}}
+          style={{'--picker-height': PICKER_HEIGHT_PX + 'px'}}
         >
           <div class="media-editor__color-picker-swatches">
-            {colors.map(swatch)}
+            {colorPickerSwatches.map(swatch)}
             <div
               class='media-editor__color-picker-swatch media-editor__color-picker-swatch--gradient'
               classList={{'media-editor__color-picker-swatch--active': !collapsed()}}
@@ -81,14 +89,24 @@ export default function MediaEditorColorPicker(props: {
         </div>
       ) as HTMLDivElement
     },
-    pickerBoxWidth: 200,
-    pickerBoxHeight: 120,
-    sliderWidth: 304,
+    pickerBoxWidth: PICKER_WIDTH_PX,
+    pickerBoxHeight: PICKER_HEIGHT_PX,
+    sliderWidth: SLIDER_WIDTH_PX,
     thickSlider: true
   })
 
+  createEffect(on(() => props.colorKey, () => {
+    const newCollapsed = colorPickerSwatches.includes(props.value)
+    if(newCollapsed !== collapsed()) setCollapsed(newCollapsed)
+  }))
+
   createEffect(() => {
-    colorPicker.setColor(props.value)
+    if(!collapsing()) {
+      colorPicker.setColor(props.value)
+    } else {
+      const track = createReaction(() => colorPicker.setColor(props.value))
+      track(collapsing)
+    }
   })
 
   onMount(() => {
