@@ -1,6 +1,8 @@
 import {createEffect, createSignal, onMount, Show, useContext} from 'solid-js'
 
 import SwipeHandler from '../../swipeHandler'
+import {snapToViewport} from '../math/viewports'
+
 import MediaEditorContext from '../context'
 
 import {getCropOffset} from './cropOffset'
@@ -23,11 +25,7 @@ export default function CropHandles() {
   const [diff, setDiff] = createSignal([0, 0])
 
   const resetSize = () => {
-    const imageRatio = currentImageRatio()
-    let width = cropOffset.width, height = cropOffset.height
-
-    if(cropOffset.width / imageRatio > cropOffset.height) width = cropOffset.height * imageRatio
-    else height = cropOffset.width / imageRatio
+    const [width, height] = snapToViewport(currentImageRatio(), cropOffset.width, cropOffset.height)
 
     setLeftTop([
       cropOffset.left + (cropOffset.width - width) / 2,

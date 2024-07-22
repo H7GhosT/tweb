@@ -58,6 +58,7 @@ export default function BrushCanvas() {
 
     new SwipeHandler({
       element: canvas,
+      cursor: '',
       onSwipe: throttle((xDiff, yDiff, _e) => {
         if(!initialPosition) {
           const e = getEvent(_e)

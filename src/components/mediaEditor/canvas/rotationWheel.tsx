@@ -1,9 +1,12 @@
 import {batch, createEffect, createSignal, on, onMount, useContext} from 'solid-js'
+
 import {ButtonIconTsx} from '../../buttonIconTsx'
 import SwipeHandler from '../../swipeHandler'
+
 import MediaEditorContext from '../context'
 import {withCurrentOwner} from '../utils'
-import {applyCurrentFixedRatio} from '../mediaEditorCrop'
+
+import {applyCurrentFixedRatio} from './applyCurrentFixedRatio'
 
 const DEGREE_DIST_PX = 42
 const DEGREE_STEP = 15
@@ -57,6 +60,8 @@ export default function RotationWheel(props: {}) {
       setMovedDiff(0)
     })
   }))
+
+  createEffect(on(fixedImageRatioKey, applyCurrentFixedRatio))
 
   function rotateLeft() {
     const newRotation = Math.round(rotation() / Math.PI * 2) * Math.PI / 2 - Math.PI / 2
