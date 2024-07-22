@@ -40,8 +40,8 @@ export default function RotationWheel(props: {}) {
   let prevRotation = 0
 
   createEffect(() => {
-    const rotationFromSiper = (moved() + movedDiff()) / DEGREE_DIST_PX * DEGREE_STEP * Math.PI / 180
-    const rotationDiff = rotationFromSiper - prevRotation
+    const rotationFromSwiper = (moved() + movedDiff()) / DEGREE_DIST_PX * DEGREE_STEP * Math.PI / 180
+    const rotationDiff = rotationFromSwiper - prevRotation
     setRotation(prev => {
       return prev - rotationDiff
     })
@@ -51,10 +51,11 @@ export default function RotationWheel(props: {}) {
       translation[0] * r[0] + translation[1] * r[1],
       translation[1] * r[0] - translation[0] * r[1]
     ])
-    prevRotation = rotationFromSiper
+    prevRotation = rotationFromSwiper
   })
 
   createEffect(on(fixedImageRatioKey, () => {
+    prevRotation = 0
     batch(() => {
       setMoved(0)
       setMovedDiff(0)
@@ -69,11 +70,11 @@ export default function RotationWheel(props: {}) {
 
     applyCurrentFixedRatio()
 
+    prevRotation = 0
     batch(() => {
       setMoved(0)
       setMovedDiff(0)
     })
-    prevRotation = 0
   }
 
   function flipImage() {

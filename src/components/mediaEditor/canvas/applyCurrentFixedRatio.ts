@@ -16,6 +16,7 @@ export function applyCurrentFixedRatio() {
   const cropOffset = getCropOffset()
 
   const [w, h] = imageSize()
+  if(!w || !h) return
 
   const snappedRotation90 = Math.round(rotation() / Math.PI * 2)
   const isReversedRatio = Math.abs(snappedRotation90) & 1
