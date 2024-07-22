@@ -40,37 +40,54 @@ export default function CropHandles() {
     resetSize()
   })
 
-  const circleOffset = '-5px'
-
-  let cropAreaEl: HTMLDivElement
-  let leftTopEl: HTMLDivElement
-  let rightTopEl: HTMLDivElement
-  let leftBottomEl: HTMLDivElement
-  let rightBottomEl: HTMLDivElement
 
   onMount(() => {
     const multipliers = [
-      {el: leftTopEl, left: 1, top: 1},
-      {el: rightTopEl, left: 0, top: 1},
-      {el: leftBottomEl, left: 1, top: 0},
-      {el: rightBottomEl, left: 0, top: 0}
+      {el: leftTopHandle, left: -1, top: -1},
+      {el: rightTopHandle, left: 1, top: -1},
+      {el: leftBottomHandle, left: -1, top: 1},
+      {el: rightBottomHandle, left: 1, top: 1},
+
+      {el: leftHandle, left: -1, top: 0},
+      {el: topHandle, left: 0, top: -1},
+      {el: rightHandle, left: 1, top: 0},
+      {el: bottomHandle, left: 0, top: 1}
     ]
 
     multipliers.forEach(({el, left, top}) => {
       new SwipeHandler({
         element: el,
         onSwipe(xDiff, yDiff) {
-          if(fixedImageRatioKey()) {
+          const fixed = fixedImageRatioKey()
+          if(fixed) {
             let ratio = currentImageRatio()
-            if(left !== top) {
+            if(left < 0) {
               ratio = -ratio
             }
-            const x = xDiff
-            xDiff = (xDiff + yDiff * ratio) / 2
-            yDiff = (x / ratio + yDiff) / 2
+            if(top < 0) {
+              ratio = -ratio
+            }
+
+            if(top === 0) {
+              yDiff = xDiff / ratio
+              setDiff([left * xDiff, yDiff])
+            } else if(left === 0) {
+              xDiff = yDiff * ratio
+              setDiff([xDiff, top * yDiff])
+            } else {
+              const xd = xDiff
+              xDiff = (xDiff + yDiff * ratio) / 2
+              yDiff = (xd / ratio + yDiff) / 2
+              setDiff([xDiff * left, yDiff * top])
+            }
+          } else {
+            setDiff([xDiff * left, yDiff * top])
           }
-          setDiff([xDiff * (left ? -1 : 1), yDiff * (top ? -1 : 1)])
-          setLeftTopDiff([xDiff * left, yDiff * top])
+
+          setLeftTopDiff([
+            fixed && left === 0 ? - xDiff / 2 : Number(left < 0) * xDiff,
+            fixed && top === 0 ? - yDiff / 2 : Number(top < 0) * yDiff
+          ])
         },
         onStart() {
           el.classList.add('media-editor__crop-handles-circle--anti-flicker')
@@ -89,8 +106,8 @@ export default function CropHandles() {
           setCurrentImageRatio(newRatio)
 
           setTranslation(translation => [
-            upScale * (translation[0] + (-diff()[0] * (left ? -1 : 1)) * 0.5),
-            upScale * (translation[1] + (-diff()[1] * (top ? -1 : 1)) * 0.5)
+            upScale * (translation[0] + (-diff()[0] * left) * 0.5),
+            upScale * (translation[1] + (-diff()[1] * top) * 0.5)
           ])
 
           resetSize()
@@ -105,7 +122,7 @@ export default function CropHandles() {
     let initialTranslation: [number, number] = [0, 0]
 
     new SwipeHandler({
-      element: cropAreaEl,
+      element: cropArea,
       onStart() {
         initialTranslation = translation()
       },
@@ -133,6 +150,17 @@ export default function CropHandles() {
     return [(cw - w) / 2, (ch - h) / 2]
   }
 
+  let cropArea: HTMLDivElement
+
+  let leftTopHandle: HTMLDivElement
+  let rightTopHandle: HTMLDivElement
+  let leftBottomHandle: HTMLDivElement
+  let rightBottomHandle: HTMLDivElement
+
+  let leftHandle: HTMLDivElement
+  let topHandle: HTMLDivElement
+  let rightHandle: HTMLDivElement
+  let bottomHandle: HTMLDivElement
 
   return (
     <>
@@ -166,7 +194,7 @@ export default function CropHandles() {
         }}
       />
       <div
-        ref={cropAreaEl}
+        ref={cropArea}
         class="media-editor__crop-handles"
         style={{
           display: isCroping() ? undefined : 'none',
@@ -181,10 +209,15 @@ export default function CropHandles() {
         <div class="media-editor__crop-handles-line-v" style={{left: '33%'}} />
         <div class="media-editor__crop-handles-line-v" style={{left: '66%'}} />
 
-        <div ref={leftTopEl} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--nw" />
-        <div ref={rightTopEl} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--ne" />
-        <div ref={leftBottomEl} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--sw" />
-        <div ref={rightBottomEl} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--se" />
+        <div ref={leftHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--w" />
+        <div ref={topHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--n" />
+        <div ref={rightHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--e" />
+        <div ref={bottomHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--s" />
+
+        <div ref={leftTopHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--nw" />
+        <div ref={rightTopHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--ne" />
+        <div ref={leftBottomHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--sw" />
+        <div ref={rightBottomHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--se" />
       </div>
     </>
   )

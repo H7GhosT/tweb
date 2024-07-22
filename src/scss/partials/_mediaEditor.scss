@@ -585,7 +585,7 @@
       height: 8px;
       border-radius: 50%;
 
-      --offset: -4px;
+      --offset: -5px;
       &--nw {
         cursor: nw-resize;
         left: var(--offset);
@@ -617,6 +617,38 @@
         height: 12px;
         width: 12px;
         transform: translate(-50%, -50%);
+      }
+    }
+
+    &-side {
+      position: absolute;
+      background-color: transparent;
+
+      &--w, &--e {
+        width: 8px;
+        height: 100%;
+        top: 0;
+      }
+      &--w {
+        cursor: w-resize;
+        left: -4px;
+      }
+      &--e {
+        cursor: e-resize;
+        right: -4px;
+      }
+      &--n, &--s {
+        height: 8px;
+        width: 100%;
+        left: 0;
+      }
+      &--n {
+        cursor: n-resize;
+        top: -4px;
+      }
+      &--s {
+        cursor: s-resize;
+        bottom: -4px;
       }
     }
 
