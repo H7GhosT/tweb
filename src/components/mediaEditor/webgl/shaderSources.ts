@@ -156,13 +156,13 @@ void main(void) {
 
   color = sharpen(uSharpen + uEnhance * .35);
   color = grain(color, uGrain);
-  color = saturation(color, uSaturation + uEnhance * .1);
+  color = saturation(color, uSaturation + uEnhance * .2);
   color = warmth(color, uWarmth);
   color = fade(color, uFade);
   
-  color = shadows(color, uShadows - uEnhance * .1);
-  color = highlights(color, uHighlights + uEnhance * .2);
-  color = contrast(color, uContrast + uEnhance * .25);
+  color = shadows(color, uShadows - uEnhance * .2);
+  color = highlights(color, uHighlights + uEnhance * .25);
+  color = contrast(color, uContrast + uEnhance);
 
   color = brightness(color, uBrightness + uEnhance * .3);
   color = vignette(color, uVignette);

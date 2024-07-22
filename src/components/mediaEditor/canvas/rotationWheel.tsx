@@ -1,5 +1,7 @@
 import {batch, createEffect, createSignal, on, onMount, useContext} from 'solid-js'
 
+import clamp from '../../../helpers/number/clamp'
+
 import {ButtonIconTsx} from '../../buttonIconTsx'
 import SwipeHandler from '../../swipeHandler'
 
@@ -10,8 +12,14 @@ import {applyCurrentFixedRatio} from './applyCurrentFixedRatio'
 
 const DEGREE_DIST_PX = 42
 const DEGREE_STEP = 15
+const TOTAL_DEGREES_SIDE = 90
+const MAX_DEGREES_DIST_PX = TOTAL_DEGREES_SIDE / DEGREE_STEP * DEGREE_DIST_PX
 
-export default function RotationWheel(props: {}) {
+function rotationFromMove(amount: number) {
+  return amount / DEGREE_DIST_PX * DEGREE_STEP * Math.PI / 180
+}
+
+export default function RotationWheel() {
   const context = useContext(MediaEditorContext)
   const [currentTab] = context.currentTab
   const isCroping = () => currentTab() === 'crop'
@@ -28,10 +36,15 @@ export default function RotationWheel(props: {}) {
     new SwipeHandler({
       element: swiperEl,
       onSwipe(xDiff) {
-        setMovedDiff(xDiff)
+        setMovedDiff(clamp(moved() + xDiff, -MAX_DEGREES_DIST_PX, MAX_DEGREES_DIST_PX) - moved())
       },
       onReset() {
-        setMoved(moved() + movedDiff())
+        let newMoved = moved() + movedDiff()
+        if(Math.abs(newMoved) === MAX_DEGREES_DIST_PX) {
+          newMoved = 0
+          prevRotation = 0
+        }
+        setMoved(newMoved)
         setMovedDiff(0)
       }
     })
@@ -40,7 +53,7 @@ export default function RotationWheel(props: {}) {
   let prevRotation = 0
 
   createEffect(() => {
-    const rotationFromSwiper = (moved() + movedDiff()) / DEGREE_DIST_PX * DEGREE_STEP * Math.PI / 180
+    const rotationFromSwiper = rotationFromMove(moved() + movedDiff())
     const rotationDiff = rotationFromSwiper - prevRotation
     setRotation(prev => {
       return prev - rotationDiff
@@ -82,6 +95,8 @@ export default function RotationWheel(props: {}) {
     setFlip(flip => [flip[0] * (isReversedRatio ? 1 : -1), flip[1] * (isReversedRatio ? -1 : 1)])
   }
 
+  const value = () => ((moved() + movedDiff()) / DEGREE_DIST_PX * DEGREE_STEP).toFixed(1).replace(/\.0$/, '')
+
   return (
     <div class="media-editor__rotation-wheel" style={{display: isCroping() ? undefined : 'none'}}>
       <ButtonIconTsx onClick={withCurrentOwner(rotateLeft)} class="media-editor__rotation-wheel-button" icon='rotate' />
@@ -90,7 +105,7 @@ export default function RotationWheel(props: {}) {
           <div class="media-editor__rotation-wheel-labels">
             {new Array(13).fill(null).map((_, i) => (
               <div class="media-editor__rotation-wheel-label">
-                <div class="media-editor__rotation-wheel-label-text">
+                <div class="media-editor__rotation-wheel-label-number">
                   {i * 15 - 90}
                 </div>
               </div>
@@ -102,8 +117,13 @@ export default function RotationWheel(props: {}) {
             ))}
           </div>
         </div>
-        <ArrowUp />
       </div>
+      <div class="media-editor__rotation-wheel-value">
+        <div class="media-editor__rotation-wheel-value-number">
+          {value()}
+        </div>
+      </div>
+      <ArrowUp />
       <ButtonIconTsx onClick={flipImage} class="media-editor__rotation-wheel-button" icon='flip_image_horizontal' />
     </div>
   )
