@@ -130,6 +130,12 @@
     &-scrollable-content {
       height: 100%;
       padding: 8px;
+
+      &::after {
+        content: '';
+        display: block;
+        padding-top: 60px;
+      }
     }
 
     &--exit {
