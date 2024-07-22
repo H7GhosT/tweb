@@ -809,13 +809,14 @@
   }
 
   &__resizable-container {
+    --opacity: 0;
+    --pointer-events: none;
+
     position: absolute;
     transform: translate(-50%, -50%) rotate(var(--rotation)) scale(var(--scale));
     padding: 10px 16px;
 
     pointer-events: initial;
-
-    border: 2px dashed transparent;
 
     &--active {
       border-color: rgba(255, 255, 255, .3);
@@ -832,8 +833,8 @@
       height: 8px;
       border-radius: 50%;
 
-      opacity: 0;
-      pointer-events: none;
+      opacity: var(--opacity);
+      pointer-events: var(--pointer-events);
 
       &--anti-flicker::before {
         cursor: grabbing;
@@ -846,11 +847,36 @@
         width: 12px;
         transform: translate(-50%, -50%);
       }
+
+    }
+    
+    &-border {
+      position: absolute;
+      background-repeat: repeat;
+      background-position: center;
+
+      opacity: var(--opacity);
+      
+      &--vertical {
+        background-size: 1px 9px;
+        background-image: url(assets/img/border-part-vertical.svg);
+        top: 0;
+        width: 1px;
+        height: 100%;
+      }
+      
+      &--horizontal {
+        background-size: 9px 1px;
+        background-image: url(assets/img/border-part.svg);
+        left: 0;
+        height: 1px;
+        width: 100%;
+      }
     }
 
-    &--active &-circle {
-      opacity: 1;
-      pointer-events: initial;
+    &--active {
+      --opacity: 1;
+      --pointer-events: initial;
     }
   }
 
@@ -901,5 +927,18 @@
     &:hover {
       background-color: var(--dark-primary-color);
     }
+  }
+}
+
+.center-absolute-canvas {
+  position: fixed;
+  top: 50vh;
+  left: 50vw;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+
+  canvas {
+    max-width: 1000px;
+    max-height: 1000px;
   }
 }

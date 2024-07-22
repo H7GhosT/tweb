@@ -140,8 +140,6 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
   let leftBottomEl: HTMLDivElement
   let rightBottomEl: HTMLDivElement
 
-  const circleOffset = '-5px'
-
 
   onMount(() => {
     const multipliers = [
@@ -208,6 +206,8 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
     })
   })
 
+  const circleOffset = '-4px'
+
   return (
     <div
       class="media-editor__resizable-container"
@@ -223,6 +223,10 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
       ref={container}
     >
       {props.children}
+      <div class="media-editor__resizable-container-border media-editor__resizable-container-border--vertical" style={{left: 0}} />
+      <div class="media-editor__resizable-container-border media-editor__resizable-container-border--vertical" style={{right: 0}} />
+      <div class="media-editor__resizable-container-border media-editor__resizable-container-border--horizontal" style={{top: 0}} />
+      <div class="media-editor__resizable-container-border media-editor__resizable-container-border--horizontal" style={{bottom: 0}} />
       <div ref={leftTopEl} class="media-editor__resizable-container-circle" style={{left: circleOffset, top: circleOffset}} />
       <div ref={rightTopEl} class="media-editor__resizable-container-circle" style={{right: circleOffset, top: circleOffset}} />
       <div ref={leftBottomEl} class="media-editor__resizable-container-circle" style={{left: circleOffset, bottom: circleOffset}} />
