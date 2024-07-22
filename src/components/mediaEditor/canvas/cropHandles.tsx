@@ -6,6 +6,7 @@ import {snapToViewport} from '../math/viewports'
 import MediaEditorContext from '../context'
 
 import {getCropOffset} from './cropOffset'
+import {linesIntersection} from '../math/linesIntersection'
 
 
 export default function CropHandles() {
@@ -15,8 +16,11 @@ export default function CropHandles() {
   const isCroping = () => currentTab() === 'crop'
   const [currentImageRatio, setCurrentImageRatio] = context.currentImageRatio
   const [scale, setScale] = context.scale
+  const [rotation] = context.rotation
   const [translation, setTranslation] = context.translation
   const [fixedImageRatioKey] = context.fixedImageRatioKey
+  const [imageSize] = context.imageSize
+
   const cropOffset = getCropOffset()
 
   const [leftTop, setLeftTop] = createSignal([0, 0])
@@ -125,6 +129,78 @@ export default function CropHandles() {
         initialTranslation = translation()
       },
       onSwipe(xDiff, yDiff) {
+        const [w, h] = imageSize()
+        const [imageWidth, imageHeight] = snapToViewport(w / h, cropOffset.width, cropOffset.height)
+
+        const imageLeftTop = [
+          -imageWidth / 2,
+          -imageHeight / 2
+        ]
+
+        const imagePoints = [
+          [imageLeftTop[0], imageLeftTop[1]],
+          [imageLeftTop[0] + imageWidth, imageLeftTop[1]],
+          [imageLeftTop[0] + imageWidth, imageLeftTop[1] + imageHeight],
+          [imageLeftTop[0], imageLeftTop[1] + imageHeight]
+        ].map(point => {
+          const r = [Math.sin(rotation()), Math.cos(rotation())]
+          point = [
+            point[0] * r[0] + point[1] * r[1],
+            point[1] * r[0] - point[0] * r[1]
+          ].map(x => x * scale())
+          point = [
+            point[0] + initialTranslation[0],
+            point[1] + initialTranslation[1]
+          ]
+
+          return point
+        })
+
+        const [cropWidth, cropHeight] = snapToViewport(currentImageRatio(), cropOffset.width, cropOffset.height)
+
+        const cropLeftTop = [
+          -cropWidth / 2,
+          -cropHeight / 2
+        ]
+        const cropPoints = [
+          [cropLeftTop[0], cropLeftTop[1]],
+          [cropLeftTop[0] + cropWidth, cropLeftTop[1]],
+          [cropLeftTop[0] + cropWidth, cropLeftTop[1] + cropHeight],
+          [cropLeftTop[0], cropLeftTop[1] + cropHeight]
+        ]
+
+        const vec = [
+          -xDiff,
+          -yDiff
+        ]
+
+        for(let i = 0; i < 4; i++) {
+          const cropPoint = cropPoints[i]
+          for(let i = 0; i < 4; i++) {
+            const translatedPoint = [
+              cropPoint[0] + vec[0],
+              cropPoint[1] + vec[1]
+            ]
+            const imageSide = [
+              imagePoints[i],
+              imagePoints[(i + 1) % 4]
+            ]
+            const intersectionPoint = linesIntersection(
+              cropPoint[0], cropPoint[1], translatedPoint[0], translatedPoint[1],
+              imageSide[0][0], imageSide[0][1], imageSide[1][0], imageSide[1][1]
+            )
+            if(!intersectionPoint) return
+            const boundVector = [
+              intersectionPoint[0] - cropPoint[0],
+              intersectionPoint[1] - cropPoint[1]
+            ]
+            if(-boundVector[0] < xDiff || -boundVector[1] < yDiff) {
+              xDiff = -boundVector[0]
+              yDiff = -boundVector[1]
+            }
+          }
+        }
+
         setTranslation([initialTranslation[0] + xDiff, initialTranslation[1] + yDiff])
       }
     })

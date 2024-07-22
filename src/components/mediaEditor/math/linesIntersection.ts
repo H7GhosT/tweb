@@ -25,5 +25,5 @@ export function linesIntersection(x1: number, y1: number, x2: number, y2: number
   const x = x1 + ua * (x2 - x1)
   const y = y1 + ua * (y2 - y1)
 
-  return {x, y}
+  return [x, y]
 }
