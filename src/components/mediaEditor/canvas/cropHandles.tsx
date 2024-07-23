@@ -6,8 +6,6 @@ import {snapToViewport} from '../math/viewports'
 import MediaEditorContext from '../context'
 
 import {getCropOffset} from './cropOffset'
-import {linesIntersection} from '../math/linesIntersection'
-
 
 export default function CropHandles() {
   const context = useContext(MediaEditorContext)
@@ -122,6 +120,7 @@ export default function CropHandles() {
     })
 
     let initialTranslation: [number, number] = [0, 0]
+    let boundDiff: [number, number] = [0, 0]
 
     new SwipeHandler({
       element: cropArea,
@@ -134,25 +133,29 @@ export default function CropHandles() {
 
         const imageLeftTop = [
           -imageWidth / 2,
-          -imageHeight / 2
+          imageHeight / 2
         ]
 
         const imagePoints = [
           [imageLeftTop[0], imageLeftTop[1]],
           [imageLeftTop[0] + imageWidth, imageLeftTop[1]],
-          [imageLeftTop[0] + imageWidth, imageLeftTop[1] + imageHeight],
-          [imageLeftTop[0], imageLeftTop[1] + imageHeight]
+          [imageLeftTop[0] + imageWidth, imageLeftTop[1] - imageHeight],
+          [imageLeftTop[0], imageLeftTop[1] - imageHeight]
         ].map(point => {
           const r = [Math.sin(rotation()), Math.cos(rotation())]
           point = [
-            point[0] * r[0] + point[1] * r[1],
-            point[1] * r[0] - point[0] * r[1]
+            point[0] * r[1] - point[1] * r[0],
+            point[1] * r[1] + point[0] * r[0]
           ].map(x => x * scale())
           point = [
-            point[0] + initialTranslation[0],
-            point[1] + initialTranslation[1]
+            point[0] + initialTranslation[0] + xDiff,
+            point[1] + initialTranslation[1] + yDiff
           ]
-
+          const r2 = [Math.sin(-rotation()), Math.cos(-rotation())]
+          point = [
+            point[0] * r2[1] - point[1] * r2[0],
+            point[1] * r2[1] + point[0] * r2[0]
+          ]
           return point
         })
 
@@ -160,48 +163,58 @@ export default function CropHandles() {
 
         const cropLeftTop = [
           -cropWidth / 2,
-          -cropHeight / 2
+          cropHeight / 2
         ]
         const cropPoints = [
           [cropLeftTop[0], cropLeftTop[1]],
           [cropLeftTop[0] + cropWidth, cropLeftTop[1]],
-          [cropLeftTop[0] + cropWidth, cropLeftTop[1] + cropHeight],
-          [cropLeftTop[0], cropLeftTop[1] + cropHeight]
+          [cropLeftTop[0] + cropWidth, cropLeftTop[1] - cropHeight],
+          [cropLeftTop[0], cropLeftTop[1] - cropHeight]
+        ].map(point => {
+          const r = [Math.sin(-rotation()), Math.cos(-rotation())]
+          return [
+            point[0] * r[1] - point[1] * r[0],
+            point[1] * r[1] + point[0] * r[0]
+          ]
+        })
+        const cropPointsX = cropPoints.map(p => p[0])
+        const cropPointsY = cropPoints.map(p => p[1])
+        const
+          cropMinX = Math.min(...cropPointsX),
+          cropMaxX = Math.max(...cropPointsX),
+          cropMinY = Math.min(...cropPointsY),
+          cropMaxY = Math.max(...cropPointsY);
+
+        const
+          imageMinX = imagePoints[0][0],
+          imageMaxX = imagePoints[2][0],
+          imageMinY = imagePoints[2][1],
+          imageMaxY = imagePoints[0][1];
+
+        boundDiff = [0, 0];
+
+        if(imageMinX > cropMinX) boundDiff[0] = imageMinX - cropMinX
+        if(imageMaxX < cropMaxX) boundDiff[0] = imageMaxX - cropMaxX
+        if(imageMinY > cropMinY) boundDiff[1] = imageMinY - cropMinY
+        if(imageMaxY < cropMaxY) boundDiff[1] = imageMaxY - cropMaxY
+
+        const r = [Math.sin(rotation()), Math.cos(rotation())]
+
+        boundDiff = [
+          boundDiff[0] * r[1] - boundDiff[1] * r[0],
+          boundDiff[1] * r[1] + boundDiff[0] * r[0]
         ]
 
-        const vec = [
-          -xDiff,
-          -yDiff
-        ]
-
-        for(let i = 0; i < 4; i++) {
-          const cropPoint = cropPoints[i]
-          for(let i = 0; i < 4; i++) {
-            const translatedPoint = [
-              cropPoint[0] + vec[0],
-              cropPoint[1] + vec[1]
-            ]
-            const imageSide = [
-              imagePoints[i],
-              imagePoints[(i + 1) % 4]
-            ]
-            const intersectionPoint = linesIntersection(
-              cropPoint[0], cropPoint[1], translatedPoint[0], translatedPoint[1],
-              imageSide[0][0], imageSide[0][1], imageSide[1][0], imageSide[1][1]
-            )
-            if(!intersectionPoint) return
-            const boundVector = [
-              intersectionPoint[0] - cropPoint[0],
-              intersectionPoint[1] - cropPoint[1]
-            ]
-            if(-boundVector[0] < xDiff || -boundVector[1] < yDiff) {
-              xDiff = -boundVector[0]
-              yDiff = -boundVector[1]
-            }
-          }
-        }
-
-        setTranslation([initialTranslation[0] + xDiff, initialTranslation[1] + yDiff])
+        setTranslation([
+          initialTranslation[0] + xDiff,
+          initialTranslation[1] + yDiff
+        ])
+      },
+      onReset() {
+        setTranslation(prev => [
+          prev[0] - boundDiff[0],
+          prev[1] - boundDiff[1]
+        ])
       }
     })
   })
