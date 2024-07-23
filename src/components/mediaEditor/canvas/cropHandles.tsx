@@ -1,11 +1,13 @@
 import {createEffect, createSignal, onMount, Show, useContext} from 'solid-js'
 
 import SwipeHandler from '../../swipeHandler'
-import {snapToViewport} from '../math/viewports'
 
+import {snapToViewport} from '../math/viewports'
 import MediaEditorContext from '../context'
+import {withCurrentOwner} from '../utils'
 
 import {getCropOffset} from './cropOffset'
+import _getConvenientPositioning from './getConvenientPositioning'
 
 export default function CropHandles() {
   const context = useContext(MediaEditorContext)
@@ -17,7 +19,6 @@ export default function CropHandles() {
   const [rotation] = context.rotation
   const [translation, setTranslation] = context.translation
   const [fixedImageRatioKey] = context.fixedImageRatioKey
-  const [imageSize] = context.imageSize
 
   const cropOffset = getCropOffset()
 
@@ -25,6 +26,8 @@ export default function CropHandles() {
   const [leftTopDiff, setLeftTopDiff] = createSignal([0, 0])
   const [size, setSize] = createSignal([0, 0])
   const [diff, setDiff] = createSignal([0, 0])
+
+  const getConvenientPositioning = withCurrentOwner(_getConvenientPositioning)
 
   const resetSize = () => {
     const [width, height] = snapToViewport(currentImageRatio(), cropOffset.width, cropOffset.height)
@@ -114,6 +117,8 @@ export default function CropHandles() {
           setDiff([0, 0])
           setLeftTopDiff([0, 0])
 
+          adjustScaleAfterResize()
+
           el.classList.remove('media-editor__crop-handles-circle--anti-flicker')
         }
       })
@@ -128,68 +133,23 @@ export default function CropHandles() {
         initialTranslation = translation()
       },
       onSwipe(xDiff, yDiff) {
-        const [w, h] = imageSize()
-        const [imageWidth, imageHeight] = snapToViewport(w / h, cropOffset.width, cropOffset.height)
-
-        const imageLeftTop = [
-          -imageWidth / 2,
-          imageHeight / 2
-        ]
-
-        const imagePoints = [
-          [imageLeftTop[0], imageLeftTop[1]],
-          [imageLeftTop[0] + imageWidth, imageLeftTop[1]],
-          [imageLeftTop[0] + imageWidth, imageLeftTop[1] - imageHeight],
-          [imageLeftTop[0], imageLeftTop[1] - imageHeight]
-        ].map(point => {
-          const r = [Math.sin(rotation()), Math.cos(rotation())]
-          point = [
-            point[0] * r[1] - point[1] * r[0],
-            point[1] * r[1] + point[0] * r[0]
-          ].map(x => x * scale())
-          point = [
-            point[0] + initialTranslation[0] + xDiff,
-            point[1] + initialTranslation[1] + yDiff
-          ]
-          const r2 = [Math.sin(-rotation()), Math.cos(-rotation())]
-          point = [
-            point[0] * r2[1] - point[1] * r2[0],
-            point[1] * r2[1] + point[0] * r2[0]
-          ]
-          return point
-        })
-
-        const [cropWidth, cropHeight] = snapToViewport(currentImageRatio(), cropOffset.width, cropOffset.height)
-
-        const cropLeftTop = [
-          -cropWidth / 2,
-          cropHeight / 2
-        ]
-        const cropPoints = [
-          [cropLeftTop[0], cropLeftTop[1]],
-          [cropLeftTop[0] + cropWidth, cropLeftTop[1]],
-          [cropLeftTop[0] + cropWidth, cropLeftTop[1] - cropHeight],
-          [cropLeftTop[0], cropLeftTop[1] - cropHeight]
-        ].map(point => {
-          const r = [Math.sin(-rotation()), Math.cos(-rotation())]
-          return [
-            point[0] * r[1] - point[1] * r[0],
-            point[1] * r[1] + point[0] * r[0]
+        const {
+          cropMinX,
+          cropMaxX,
+          cropMinY,
+          cropMaxY,
+          imageMinX,
+          imageMaxX,
+          imageMinY,
+          imageMaxY
+        } = getConvenientPositioning({
+          scale: scale(),
+          rotation: rotation(),
+          translation: [
+            initialTranslation[0] + xDiff,
+            initialTranslation[1] + yDiff
           ]
         })
-        const cropPointsX = cropPoints.map(p => p[0])
-        const cropPointsY = cropPoints.map(p => p[1])
-        const
-          cropMinX = Math.min(...cropPointsX),
-          cropMaxX = Math.max(...cropPointsX),
-          cropMinY = Math.min(...cropPointsY),
-          cropMaxY = Math.max(...cropPointsY);
-
-        const
-          imageMinX = imagePoints[0][0],
-          imageMaxX = imagePoints[2][0],
-          imageMinY = imagePoints[2][1],
-          imageMaxY = imagePoints[0][1];
 
         boundDiff = [0, 0];
 
@@ -218,6 +178,41 @@ export default function CropHandles() {
       }
     })
   })
+
+  function adjustScaleAfterResize() {
+    const {
+      cropMinX,
+      cropMaxX,
+      cropMinY,
+      cropMaxY,
+      imageMinX,
+      imageMaxX,
+      imageMinY,
+      imageMaxY
+    } = getConvenientPositioning({
+      scale: scale(),
+      rotation: rotation(),
+      translation: translation()
+    })
+
+    const halfImageWidth = (imageMaxX - imageMinX) / 2,
+      halfImageHeight = (imageMaxY - imageMinY) / 2
+    const imageCenter = [
+      imageMinX + halfImageWidth,
+      imageMinY + halfImageHeight
+    ]
+
+    let additionalScale = 1
+
+    if(imageMinX > cropMinX) additionalScale = Math.max((imageCenter[0] - cropMinX) / halfImageWidth, additionalScale)
+    if(imageMaxX < cropMaxX) additionalScale = Math.max((cropMaxX - imageCenter[0]) / halfImageWidth, additionalScale)
+    if(imageMinY > cropMinY) additionalScale = Math.max((imageCenter[1] - cropMinY) / halfImageHeight, additionalScale)
+    if(imageMaxY < cropMaxY) additionalScale = Math.max((cropMaxY - imageCenter[1]) / halfImageHeight, additionalScale)
+
+    if(additionalScale > 1) {
+      setScale(prev => prev * additionalScale)
+    }
+  }
 
   const left = () => leftTop()[0] + leftTopDiff()[0]
   const top = () => leftTop()[1] + leftTopDiff()[1]

@@ -9,6 +9,7 @@ import MediaEditorContext from '../context'
 import {withCurrentOwner} from '../utils'
 
 import {applyCurrentFixedRatio} from './applyCurrentFixedRatio'
+import getConvenientPositioning from './getConvenientPositioning'
 
 const DEGREE_DIST_PX = 42
 const DEGREE_STEP = 15
@@ -24,17 +25,22 @@ export default function RotationWheel() {
   const [currentTab] = context.currentTab
   const isCroping = () => currentTab() === 'crop'
   const [rotation, setRotation] = context.rotation
-  const [, setTranslation] = context.translation
   const [, setFlip] = context.flip
   const [fixedImageRatioKey] = context.fixedImageRatioKey
   const [moved, setMoved] = createSignal(0)
   const [movedDiff, setMovedDiff] = createSignal(0);
+  const [scale, setScale] = context.scale
+  const [translation, setTranslation] = context.translation
+
 
   let swiperEl: HTMLDivElement
 
   onMount(() => {
     new SwipeHandler({
       element: swiperEl,
+      onStart() {
+        initialScale = scale()
+      },
       onSwipe(xDiff) {
         setMovedDiff(clamp(moved() + xDiff, -MAX_DEGREES_DIST_PX, MAX_DEGREES_DIST_PX) - moved())
       },
@@ -51,8 +57,9 @@ export default function RotationWheel() {
   })
 
   let prevRotation = 0
+  let initialScale = 0
 
-  createEffect(() => {
+  createEffect(on(movedDiff, () => {
     const rotationFromSwiper = rotationFromMove(moved() + movedDiff())
     const rotationDiff = rotationFromSwiper - prevRotation
     setRotation(prev => {
@@ -65,7 +72,41 @@ export default function RotationWheel() {
       translation[1] * r[0] - translation[0] * r[1]
     ])
     prevRotation = rotationFromSwiper
-  })
+
+    if(!initialScale) return
+    const {
+      cropMinX,
+      cropMaxX,
+      cropMinY,
+      cropMaxY,
+      imageMinX,
+      imageMaxX,
+      imageMinY,
+      imageMaxY
+    } = getConvenientPositioning({
+      scale: initialScale,
+      rotation: rotation(),
+      translation: translation()
+    })
+
+    const halfImageWidth = (imageMaxX - imageMinX) / 2,
+      halfImageHeight = (imageMaxY - imageMinY) / 2
+    const imageCenter = [
+      imageMinX + halfImageWidth,
+      imageMinY + halfImageHeight
+    ]
+
+    let additionalScale = 1
+
+    if(imageMinX > cropMinX) additionalScale = Math.max((imageCenter[0] - cropMinX) / halfImageWidth, additionalScale)
+    if(imageMaxX < cropMaxX) additionalScale = Math.max((cropMaxX - imageCenter[0]) / halfImageWidth, additionalScale)
+    if(imageMinY > cropMinY) additionalScale = Math.max((imageCenter[1] - cropMinY) / halfImageHeight, additionalScale)
+    if(imageMaxY < cropMaxY) additionalScale = Math.max((cropMaxY - imageCenter[1]) / halfImageHeight, additionalScale)
+
+    if(additionalScale > 1) {
+      setScale(initialScale * additionalScale)
+    }
+  }));
 
   createEffect(on(fixedImageRatioKey, () => {
     prevRotation = 0
