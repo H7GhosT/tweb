@@ -95,7 +95,7 @@ export default function RotationWheel() {
     setFlip(flip => [flip[0] * (isReversedRatio ? 1 : -1), flip[1] * (isReversedRatio ? -1 : 1)])
   }
 
-  const value = () => ((moved() + movedDiff()) / DEGREE_DIST_PX * DEGREE_STEP).toFixed(1).replace(/\.0$/, '')
+  const value = () => (-(moved() + movedDiff()) / DEGREE_DIST_PX * DEGREE_STEP).toFixed(1).replace(/\.0$/, '')
 
   return (
     <div class="media-editor__rotation-wheel" style={{display: isCroping() ? undefined : 'none'}}>
