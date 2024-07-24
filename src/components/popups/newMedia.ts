@@ -708,12 +708,15 @@ export default class PopupNewMedia extends PopupElement {
       }
 
       const d: SendFileDetails[] = sendFileParams.map((params) => {
+        params.editResult?.standaloneContext?.dispose()
+
         return {
           ...params,
           file: params.editResult?.blob || params.scaledBlob || params.file,
           width: params.editResult?.width || params.width,
           height: params.editResult?.height || params.height,
-          spoiler: !!params.mediaSpoiler
+          spoiler: !!params.mediaSpoiler,
+          editResult: undefined
         };
       });
 
@@ -872,6 +875,7 @@ export default class PopupNewMedia extends PopupElement {
               params.editResult = result
               this.attachFiles()
             },
+            standaloneContext: params.editResult?.standaloneContext,
             onClose: () => {}
           })
         })

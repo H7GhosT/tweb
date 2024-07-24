@@ -9,6 +9,8 @@ import BrushPainter, {BrushDrawnLine} from './brushPainter'
 
 const THROTTLE_MS = 25
 
+let currentReDraw: () => void
+
 export default function BrushCanvas() {
   const context = useContext(MediaEditorContext)
   const [imageCanvas] = context.imageCanvas
@@ -56,6 +58,11 @@ export default function BrushCanvas() {
     brushPainter.clear()
     lines().forEach(line => brushPainter.drawLine(line))
   }
+  currentReDraw = reDraw
+
+  onMount(() => {
+    reDraw()
+  })
 
   onMount(() => {
     let initialPosition: [number, number]
@@ -94,11 +101,11 @@ export default function BrushCanvas() {
           context.pushToHistory({
             undo() {
               setLines(prevLines)
-              reDraw()
+              currentReDraw()
             },
             redo() {
               setLines(newLines)
-              reDraw()
+              currentReDraw()
             }
           })
 

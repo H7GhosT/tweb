@@ -1,9 +1,10 @@
-import {createContext, Signal} from 'solid-js';
+import {createContext, createRoot, createSignal, Signal} from 'solid-js';
 import {AppManagers} from '../../lib/appManagers/managers';
-import {AdjustmentsConfig} from './adjustments';
+import {AdjustmentsConfig, createAdjustmentsConfig} from './adjustments';
 import {ResizableLayer, StickerRenderingInfo, TextLayerInfo, TextRenderingInfo} from './canvas/resizableLayers';
 import {RenderingPayload} from './webgl/initWebGL';
 import {BrushDrawnLine} from './canvas/brushPainter';
+import {MediaEditorProps} from './mediaEditor';
 
 export interface MediaEditorContextValue {
   managers: AppManagers
@@ -50,4 +51,75 @@ export type HistoryItem = {
 }
 
 const MediaEditorContext = createContext<MediaEditorContextValue>()
+
+
+function createContextValue(props: MediaEditorProps): MediaEditorContextValue {
+  const history = createSignal<HistoryItem[]>([])
+  const redoHistory = createSignal<HistoryItem[]>([])
+
+  function pushToHistory(item: HistoryItem) {
+    const [, setHistory] = history
+    const [, setRedoHistory] = redoHistory
+    setHistory(prev => [...prev, item])
+    setRedoHistory([])
+  }
+
+  return {
+    managers: props.managers,
+    imageSrc: props.imageURL,
+    pixelRatio: window.devicePixelRatio,
+    renderingPayload: createSignal(),
+
+    adjustments: createAdjustmentsConfig(),
+    currentTab: createSignal('adjustments'),
+    imageSize: createSignal([0, 0]),
+    canvasSize: createSignal(),
+    currentImageRatio: createSignal(0),
+    scale: createSignal(1),
+    rotation: createSignal(0),
+    translation: createSignal([0, 0]),
+    flip: createSignal([1, 1]),
+    fixedImageRatioKey: createSignal(),
+
+    resizableLayersSeed: 1,
+    resizableLayers: createSignal([]),
+    currentTextLayerInfo: createSignal<TextLayerInfo>({
+      alignment: 'left',
+      style: 'outline',
+      color: '#ffffff',
+      font: 'roboto',
+      size: 40
+    }),
+    selectedResizableLayer: createSignal(),
+    textLayersInfo: createSignal({}),
+    stickersLayersInfo: createSignal({}),
+
+    brushDrawnLines: createSignal([]),
+    imageCanvas: createSignal(),
+    currentBrush: createSignal({
+      brush: 'pen',
+      color: '#fe4438',
+      size: 18
+    }),
+
+    history,
+    redoHistory,
+    pushToHistory
+  }
+}
+
+export type StandaloneContext = ReturnType<typeof createStandaloneContextValue>
+
+export function createStandaloneContextValue(props: MediaEditorProps) {
+  let dispose: () => void
+  const value = createRoot((_dispose) => {
+    dispose = _dispose
+    return createContextValue(props)
+  })
+  return {
+    value,
+    dispose
+  }
+}
+
 export default MediaEditorContext

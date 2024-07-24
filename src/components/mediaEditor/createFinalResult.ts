@@ -1,6 +1,6 @@
 import {useContext} from 'solid-js'
 
-import MediaEditorContext from './context'
+import MediaEditorContext, {StandaloneContext} from './context'
 import {AdjustmentsConfig} from './adjustments'
 import {getSnappedViewportsScale, snapToViewport} from './math/viewports'
 import {draw} from './webgl/draw'
@@ -15,9 +15,10 @@ export type MediaEditorFinalResult = {
   width: number
   height: number
   originalSrc: string
+  standaloneContext: StandaloneContext
 }
 
-export async function createFinalResult() {
+export async function createFinalResult(standaloneContext: StandaloneContext) {
   const context = useContext(MediaEditorContext)
   const [canvasSize] = context.canvasSize
   const [currentImageRatio] = context.currentImageRatio
@@ -238,7 +239,8 @@ export async function createFinalResult() {
       blob,
       width: scaledWidth,
       height: scaledHeight,
-      originalSrc: context.imageSrc
+      originalSrc: context.imageSrc,
+      standaloneContext
     }))
   })
 }

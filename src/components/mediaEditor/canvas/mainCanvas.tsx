@@ -77,7 +77,7 @@ export function drawAdjustedImage(gl: WebGLRenderingContext, size?: [number, num
 function ImageCanvas() {
   const context = useContext(MediaEditorContext)
   const [canvasSize] = context.canvasSize
-  const [, setCurrentImageRatio] = context.currentImageRatio
+  const [currentImageRatio, setCurrentImageRatio] = context.currentImageRatio
   const [, setImageSize] = context.imageSize
   const [, setImageCanvas] = context.imageCanvas
   const [, setRenderingPayload] = context.renderingPayload
@@ -97,8 +97,8 @@ function ImageCanvas() {
   onMount(async() => {
     const payload = await initWebGL(gl, context)
     setRenderingPayload(payload)
-    setCurrentImageRatio(payload.image.width / payload.image.height)
     setImageSize([payload.image.width, payload.image.height])
+    if(!currentImageRatio()) setCurrentImageRatio(payload.image.width / payload.image.height)
   })
 
   createEffect(() => {

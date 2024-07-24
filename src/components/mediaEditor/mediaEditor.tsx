@@ -1,4 +1,4 @@
-import {createSignal, onCleanup, onMount} from 'solid-js';
+import {createRoot, createSignal, onCleanup, onMount} from 'solid-js';
 import {render} from 'solid-js/web';
 
 import {NoneToVoidFunction} from '../../types';
@@ -7,7 +7,6 @@ import {AppManagers} from '../../lib/appManagers/managers';
 
 import {delay} from './utils';
 import {injectMediaEditorLangPack} from './langPack';
-import {createAdjustmentsConfig} from './adjustments';
 import MediaEditorTabs from './mediaEditorTabs';
 import MediaEditorTopbar from './mediaEditorTopbar';
 import MediaEditorTabContent from './mediaEditorTabContent';
@@ -16,24 +15,31 @@ import MediaEditorCrop from './mediaEditorCrop';
 import MediaEditorText from './mediaEditorText';
 import MediaEditorBrush from './mediaEditorBrush';
 import MediaEditorStickers from './mediaEditorStickers';
-import MediaEditorContext, {HistoryItem} from './context';
+import MediaEditorContext, {createStandaloneContextValue, HistoryItem, MediaEditorContextValue, StandaloneContext} from './context';
 import MainCanvas from './canvas/mainCanvas';
 import FinishButton from './finishButton';
-import {TextLayerInfo} from './canvas/resizableLayers';
 import {withCurrentOwner} from './utils'
 import {createFinalResult, MediaEditorFinalResult} from './createFinalResult';
 
 
-type MediaEditorProps = {
+export type MediaEditorProps = {
   onClose: NoneToVoidFunction
   managers: AppManagers
   onEditFinish: (result: MediaEditorFinalResult) => void
   imageURL: string
+  standaloneContext?: StandaloneContext
 }
 
+
 export function MediaEditor(props: MediaEditorProps) {
-  const history = createSignal<HistoryItem[]>([])
-  const redoHistory = createSignal<HistoryItem[]>([])
+  const standaloneContext = props.standaloneContext || createStandaloneContextValue(props)
+
+  const [, setRenderingPayload] = standaloneContext.value.renderingPayload
+  const [, setCanvasSize] = standaloneContext.value.canvasSize
+  const [, setCurretTab] = standaloneContext.value.currentTab
+  setRenderingPayload()
+  setCanvasSize()
+  setCurretTab('adjustments')
 
   let overlay: HTMLDivElement;
 
@@ -54,58 +60,9 @@ export function MediaEditor(props: MediaEditorProps) {
     props.onClose()
   }
 
-  function pushToHistory(item: HistoryItem) {
-    const [, setHistory] = history
-    const [, setRedoHistory] = redoHistory
-    setHistory(prev => [...prev, item])
-    setRedoHistory([])
-  }
 
   return (
-    <MediaEditorContext.Provider value={{
-      managers: props.managers,
-      // imageSrc: 'tmp/texture4.png',
-      // imageSrc: 'tmp/texture3.jpg',
-      imageSrc: props.imageURL,
-      pixelRatio: window.devicePixelRatio,
-      renderingPayload: createSignal(),
-
-      adjustments: createAdjustmentsConfig(),
-      currentTab: createSignal('adjustments'),
-      imageSize: createSignal([0, 0]),
-      canvasSize: createSignal(),
-      currentImageRatio: createSignal(0),
-      scale: createSignal(1),
-      rotation: createSignal(0),
-      translation: createSignal([0, 0]),
-      flip: createSignal([1, 1]),
-      fixedImageRatioKey: createSignal(),
-
-      resizableLayersSeed: 1,
-      resizableLayers: createSignal([]),
-      currentTextLayerInfo: createSignal<TextLayerInfo>({
-        alignment: 'left',
-        style: 'outline',
-        color: '#ffffff',
-        font: 'roboto',
-        size: 40
-      }),
-      selectedResizableLayer: createSignal(),
-      textLayersInfo: createSignal({}),
-      stickersLayersInfo: createSignal({}),
-
-      brushDrawnLines: createSignal([]),
-      imageCanvas: createSignal(),
-      currentBrush: createSignal({
-        brush: 'pen',
-        color: '#fe4438',
-        size: 18
-      }),
-
-      history,
-      redoHistory,
-      pushToHistory
-    }}>
+    <MediaEditorContext.Provider value={standaloneContext.value}>
       <div ref={overlay} class="media-editor__overlay night">
         <div class="media-editor__container">
           <MainCanvas />
@@ -121,7 +78,7 @@ export function MediaEditor(props: MediaEditorProps) {
             }} />
           </div>
           <FinishButton onClick={withCurrentOwner(async() => {
-            const result = await createFinalResult()
+            const result = await createFinalResult(standaloneContext)
             props.onEditFinish(result)
             props.onClose()
           })} />

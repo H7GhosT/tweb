@@ -36,6 +36,10 @@ export default function RotationWheel() {
   let swiperEl: HTMLDivElement
 
   onMount(() => {
+    const snappedRotation = Math.round(rotation() / Math.PI * 2) * Math.PI / 2
+    setMoved((snappedRotation - rotation()) * 180 / Math.PI / DEGREE_STEP * DEGREE_DIST_PX)
+    prevRotation = rotationFromMove(moved())
+
     new SwipeHandler({
       element: swiperEl,
       onStart() {
@@ -43,6 +47,7 @@ export default function RotationWheel() {
       },
       onSwipe(xDiff) {
         setMovedDiff(clamp(moved() + xDiff, -MAX_DEGREES_DIST_PX, MAX_DEGREES_DIST_PX) - moved())
+        onSwipe()
       },
       onReset() {
         let newMoved = moved() + movedDiff()
@@ -59,7 +64,7 @@ export default function RotationWheel() {
   let prevRotation = 0
   let initialScale = 0
 
-  createEffect(on(movedDiff, () => {
+  const onSwipe = withCurrentOwner(() => {
     const rotationFromSwiper = rotationFromMove(moved() + movedDiff())
     const rotationDiff = rotationFromSwiper - prevRotation
     setRotation(prev => {
@@ -106,17 +111,20 @@ export default function RotationWheel() {
     if(additionalScale > 1) {
       setScale(initialScale * additionalScale)
     }
-  }));
+  });
 
+  let isFirstEffect = true
   createEffect(on(fixedImageRatioKey, () => {
+    if(isFirstEffect) {
+      isFirstEffect = false
+      return
+    }
     prevRotation = 0
     batch(() => {
       setMoved(0)
       setMovedDiff(0)
     })
   }))
-
-  createEffect(on(fixedImageRatioKey, applyCurrentFixedRatio))
 
   function rotateLeft() {
     const newRotation = Math.round(rotation() / Math.PI * 2) * Math.PI / 2 - Math.PI / 2
