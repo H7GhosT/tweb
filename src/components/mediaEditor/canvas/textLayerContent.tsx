@@ -32,6 +32,22 @@ export default function TextLayerContent(props: ResizableLayerProps) {
   const fontInfo = () => fontInfoMap[layer().textInfo.font]
 
   function updateBackground() {
+    contentEditable.childNodes.forEach(childNode => {
+      if(childNode instanceof HTMLDivElement && !childNode.hasAttributes()) {
+        childNode.querySelectorAll('*').forEach(element => {
+          const node = document.createTextNode(element.textContent)
+          element.replaceWith(node)
+        })
+      } else {
+        const div = document.createElement('div')
+        div.textContent = childNode.textContent
+        childNode.replaceWith(div)
+      }
+    })
+    if(!contentEditable.textContent) {
+      contentEditable.innerHTML = '<div></div>'
+    }
+
     container.querySelector('.media-editor__text-layer-background')?.remove()
     const lines = getLinesRenderingInfo(contentEditable, layer().textInfo.alignment)
     const path = createTextBackgroundPath(lines)
