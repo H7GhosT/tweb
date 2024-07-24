@@ -1,4 +1,4 @@
-import {createEffect, createResource, createSignal, For, onMount, Show, useContext} from 'solid-js';
+import {createEffect, createResource, createSignal, For, onCleanup, onMount, Show, useContext} from 'solid-js';
 import EmoticonsSearch from '../emoticonsDropdown/search';
 import {Document, EmojiGroup, StickerSet} from '../../layer';
 import LazyLoadQueue from '../lazyLoadQueue';
@@ -12,11 +12,14 @@ import {i18n} from '../../lib/langPack';
 import {ScrollableX} from '../scrollable';
 import MediaEditorContext from './context';
 import {ResizableLayer} from './canvas/resizableLayers';
+import {TabContentContext} from './mediaEditorTabContent';
+import {delay} from './utils';
 
 // TODO: Don't forget favorites
 
 export default function MediaEditorStickers() {
   const context = useContext(MediaEditorContext)
+  const {container} = useContext(TabContentContext)
   const {managers} = context
   const [, setLayers] = context.resizableLayers
   const [canvasSize] = context.canvasSize
@@ -25,10 +28,24 @@ export default function MediaEditorStickers() {
   const [group, setGroup] = createSignal<EmojiGroup>()
   const [recentStickers] = createResource(() => managers.appStickersManager.getRecentStickersStickers())
   const [stickerSets] = createResource(() => managers.appStickersManager.getAllStickers())
+  const [intersectionObserver, setIntersectionObserver] = createSignal<IntersectionObserver>()
+  const [activeSet, setActiveSet] = createSignal('recent')
+  const [recentLabel, setRecentLabel] = createSignal<HTMLDivElement>()
+  const [scrolling, setScrolling] = createSignal(false)
 
   const lazyLoadQueue = new LazyLoadQueue(1)
 
   let thumbsListScrollable: HTMLDivElement
+
+  async function onStickerSetThumbClick(id: string) {
+    setActiveSet(String(id))
+    setScrolling(true)
+    container()?.querySelector(`[data-set-id="${id}"]`).scrollIntoView({
+      behavior: 'smooth', block: 'start'
+    })
+    await delay(1000)
+    setScrolling(false)
+  }
 
   function StickerSetThumb(props: {
     set: StickerSet.stickerSet
@@ -50,8 +67,17 @@ export default function MediaEditorStickers() {
       })
     })
 
+    const isActive = () => String(props.set.id) === activeSet()
+
     return (
-      <div ref={renderContainer} class='media-editor__stickers-set-thumb' />
+      <div
+        ref={renderContainer}
+        class='media-editor__stickers-set-thumb'
+        classList={{
+          'media-editor__stickers-set-thumb--active': isActive()
+        }}
+        onClick={() => onStickerSetThumbClick(String(props.set.id))}
+      />
     )
   }
 
@@ -102,8 +128,25 @@ export default function MediaEditorStickers() {
   function StickerSetLabel(props: {
     set: StickerSet.stickerSet
   }) {
+    let label: HTMLDivElement
+
+    createEffect(() => {
+      if(intersectionObserver()) {
+        intersectionObserver().observe(label)
+        onCleanup(() => {
+          intersectionObserver()?.unobserve(label)
+        })
+      }
+    })
+
     return (
-      <div class='media-editor__label'>{wrapEmojiText(props.set.title)}</div>
+      <div
+        ref={label}
+        data-set-id={props.set.id}
+        class='media-editor__label'
+      >
+        {wrapEmojiText(props.set.title)}
+      </div>
     )
   }
 
@@ -130,24 +173,36 @@ export default function MediaEditorStickers() {
     new ScrollableX(thumbsListScrollable)
   })
 
+  createEffect(() => {
+    setIntersectionObserver(new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(!scrolling() && entry.isIntersecting) {
+          const id = (entry.target as HTMLDivElement).dataset.setId
+          if(id) setActiveSet(id)
+        }
+      })
+    }, {
+      root: container(),
+      rootMargin: `0px 0px -${container().clientHeight - 100}px 0px`
+    }))
+    console.log('recentButton', recentLabel())
+    onCleanup(() => {
+      intersectionObserver()?.disconnect()
+    })
+  })
+
+  createEffect(() => {
+    if(intersectionObserver() && recentLabel()) {
+      intersectionObserver().observe(recentLabel())
+      onCleanup(() => {
+        intersectionObserver()?.unobserve(recentLabel())
+      })
+    }
+  })
+
   return (
     <>
-      <div class='media-editor__stickers-thumb-list-scrollable' ref={thumbsListScrollable}>
-        <div class='media-editor__stickers-thumb-list'>
-          <Show when={stickerSets()}>
-            <Show when={recentStickers()?.length}>
-              <div class='media-editor__stickers-recent-button'>
-                <IconTsx icon='recent' />
-              </div>
-            </Show>
-            <For each={stickerSets().sets}>
-              {set => <StickerSetThumb set={set} />}
-            </For>
-          </Show>
-        </div>
-      </div>
-
-      <Space amount="8px" />
+      <Space amount="56px" />
 
       <div class='media-editor__sticker-search'>
         <EmoticonsSearch type="stickers" onValue={(value) => {
@@ -163,7 +218,11 @@ export default function MediaEditorStickers() {
 
       <Show when={recentStickers()?.length > 0}>
         <Space amount="16px" />
-        <div class='media-editor__label'>{i18n('MediaEditor.RecentlyUsed')}</div>
+        <div
+          ref={setRecentLabel}
+          class='media-editor__label'
+          data-set-id="recent"
+        >{i18n('MediaEditor.RecentlyUsed')}</div>
 
         <div class='media-editor__stickers-grid'>
           <For each={recentStickers()}>
@@ -177,6 +236,27 @@ export default function MediaEditorStickers() {
           {set => <StickerSetSection set={set} />}
         </For>
       </Show>
+
+      <div class='media-editor__stickers-thumb-list-scrollable' ref={thumbsListScrollable}>
+        <div class='media-editor__stickers-thumb-list'>
+          <Show when={stickerSets()}>
+            <Show when={recentStickers()?.length}>
+              <div
+                class='media-editor__stickers-recent-button'
+                classList={{
+                  'media-editor__stickers-recent-button--active': activeSet() === 'recent'
+                }}
+                onClick={() => onStickerSetThumbClick('recent')}
+              >
+                <IconTsx icon='recent' />
+              </div>
+            </Show>
+            <For each={stickerSets().sets}>
+              {set => <StickerSetThumb set={set} />}
+            </For>
+          </Show>
+        </div>
+      </div>
     </>
   )
 }

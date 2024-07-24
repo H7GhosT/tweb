@@ -1,4 +1,4 @@
-import {createEffect, JSX, onCleanup, onMount} from 'solid-js'
+import {Accessor, createContext, createEffect, createSignal, JSX, onCleanup, onMount} from 'solid-js'
 
 import {useContext} from 'solid-js';
 import {doubleRaf} from '../../helpers/schedulers'
@@ -8,13 +8,19 @@ import {delay} from './utils'
 import {mediaEditorTabsOrder} from './mediaEditorTabs'
 import MediaEditorContext from './context';
 
+type TabContentContextValue = {
+  container: Accessor<HTMLDivElement>
+}
+export const TabContentContext = createContext<TabContentContextValue>()
+
 export default function MediaEditorTabContent(props: {
   tabs: Record<string, () => JSX.Element>
 }) {
   const context = useContext(MediaEditorContext)
   const [tab] = context.currentTab
 
-  let container: HTMLDivElement
+  const [container, setContainer] = createSignal<HTMLDivElement>()
+
   let prevElement: HTMLDivElement
   let prevTab = tab()
   let scrollable: Scrollable
@@ -29,11 +35,14 @@ export default function MediaEditorTabContent(props: {
     scrollable.destroy()
     const newElement = (
       <div>
-        <div class="media-editor__tab-content-scrollable-content">{props.tabs[tab()]()}</div>
+        <div class="media-editor__tab-content-scrollable-content">
+          <TabContentContext.Provider value={{container}}>
+            {props.tabs[tab()]()}
+          </TabContentContext.Provider>
+        </div>
       </div>
      ) as HTMLDivElement
-    scrollable = new Scrollable(newElement)
-    scrollable.setListeners()
+    setScrollable(newElement)
 
     const cls = (element: HTMLElement, action: 'add' | 'remove', modifier: string) =>
       element.classList[action]('media-editor__tab-content--' + modifier)
@@ -42,13 +51,13 @@ export default function MediaEditorTabContent(props: {
 
     if(toRight) {
       cls(newElement, 'add', 'go-right')
-      container.append(newElement)
+      container().append(newElement)
       await doubleRaf()
       cls(prevElement, 'add', 'go-left')
       cls(newElement, 'remove', 'go-right')
     } else {
       cls(newElement, 'add', 'go-left')
-      container.append(newElement)
+      container().append(newElement)
       await doubleRaf()
       cls(prevElement, 'add', 'go-right')
       cls(newElement, 'remove', 'go-left')
@@ -62,10 +71,18 @@ export default function MediaEditorTabContent(props: {
 
   const initialTab = props.tabs[tab()]()
 
-  onMount(() => {
+  function setScrollable(element: HTMLElement) {
     // TODO: Scrollable thumb not showing
-    scrollable = new Scrollable(prevElement)
+    scrollable = new Scrollable(element)
     scrollable.setListeners()
+    scrollable.container.addEventListener('scroll', (e) => {
+      element.style.setProperty('--current-scroll-top', Math.max(scrollable.container.scrollTop, 8) + 'px')
+      element.dataset.hasScroll = String(scrollable.container.scrollTop > 0)
+    })
+  }
+
+  onMount(() => {
+    setScrollable(prevElement)
   })
 
   onCleanup(() => {
@@ -73,10 +90,12 @@ export default function MediaEditorTabContent(props: {
   })
 
   return (
-    <div ref={container} class="media-editor__tab-content">
+    <div ref={setContainer} class="media-editor__tab-content">
       <div ref={prevElement}>
         <div class="media-editor__tab-content-scrollable-content">
-          {initialTab}
+          <TabContentContext.Provider value={{container}}>
+            {initialTab}
+          </TabContentContext.Provider>
         </div>
       </div>
     </div>

@@ -50,6 +50,8 @@
   }
 
   &__toolbar {
+    --current-scroll-top: 8px;
+
     background-color: #212121;
     flex: 400px 0 0;
     display: flex;
@@ -519,8 +521,19 @@
 
   &__stickers-thumb-list-scrollable {
     height: 48px;
-    position: relative;
-    margin: 0 -8px;
+
+    position: absolute;
+    top: var(--current-scroll-top);
+    left: 0;
+    width: 100%;
+
+    background-color: #212121;
+
+    z-index: 1;
+  }
+
+  [data-has-scroll="true"] &__stickers-thumb-list-scrollable {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
   }
 
   &__stickers-thumb-list {
@@ -536,6 +549,7 @@
   }
 
   &__stickers-recent-button {
+    position: relative;
     width: 30px;
     height: 30px;
     border-radius: 50%;
@@ -546,8 +560,31 @@
 
     font-size: 24px;
 
+    cursor: pointer;
+
+    transition: .1s;
+
+    >span {
+      z-index: 0;
+    }
+
     &--active {
       background-color: #2b2b2b;
+    }
+
+    &::before {
+      position: absolute;
+      content: '';
+      display: block;
+      left: -4px;
+      right: -4px;
+      bottom: -4px;
+      top: -4px;
+      border-radius: 8px;
+    }
+
+    &--active::before, &:hover::before {
+      background-color: #262626;
     }
   }
 
@@ -561,9 +598,23 @@
     position: relative;
     width: 30px;
     height: 30px;
-    border-radius: 4px;
+    padding: 1px;
 
-    &:hover {
+    transition: .1s;
+    cursor: pointer;
+
+    &::before {
+      position: absolute;
+      content: '';
+      display: block;
+      left: -4px;
+      right: -4px;
+      bottom: -4px;
+      top: -4px;
+      border-radius: 8px;
+    }
+
+    &--active::before, &:hover::before {
       background-color: #262626;
     }
   }
@@ -580,6 +631,13 @@
     position: relative;
     width: 70px;
     height: 70px;
+
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #262626;
+    }
   }
 
   &__crop-handles {
