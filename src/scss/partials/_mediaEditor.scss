@@ -1091,6 +1091,12 @@
 
     transition: .1s;
 
+    &--hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(4px, 4px);
+    }
+
     &:hover {
       background-color: var(--dark-primary-color);
     }

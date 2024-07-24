@@ -55,6 +55,8 @@ import pause from '../../helpers/schedulers/pause';
 import {Accessor, createRoot, createSignal, Setter} from 'solid-js';
 import SelectedEffect from '../chat/selectedEffect';
 import Icon from '../icon';
+import {openMediaEditor} from '../mediaEditor/mediaEditor';
+import {MediaEditorFinalResult} from '../mediaEditor/createFinalResult';
 
 type SendFileParams = SendFileDetails & {
   file?: File,
@@ -62,8 +64,8 @@ type SendFileParams = SendFileDetails & {
   noSound?: boolean,
   itemDiv: HTMLElement,
   mediaSpoiler?: HTMLElement,
-  middlewareHelper: MiddlewareHelper
-  // strippedBytes?: PhotoSize.photoStrippedSize['bytes']
+  middlewareHelper: MiddlewareHelper,
+  editResult?: MediaEditorFinalResult
 };
 
 let currentPopup: PopupNewMedia;
@@ -708,7 +710,9 @@ export default class PopupNewMedia extends PopupElement {
       const d: SendFileDetails[] = sendFileParams.map((params) => {
         return {
           ...params,
-          file: params.scaledBlob || params.file,
+          file: params.editResult?.blob || params.scaledBlob || params.file,
+          width: params.editResult?.width || params.width,
+          height: params.editResult?.height || params.height,
           spoiler: !!params.mediaSpoiler
         };
       });
@@ -775,6 +779,7 @@ export default class PopupNewMedia extends PopupElement {
     const file = params.file;
     const isVideo = file.type.startsWith('video/');
 
+    let promise: Promise<void>
 
     if(isVideo) {
       const video = createVideo({middleware: params.middlewareHelper.get()});
@@ -818,14 +823,17 @@ export default class PopupNewMedia extends PopupElement {
     } else {
       const img = new Image();
       itemDiv.append(img);
-      const url = params.objectURL = await apiManagerProxy.invoke('createObjectURL', file);
 
+      const url = params.objectURL = await apiManagerProxy.invoke('createObjectURL', params.editResult?.blob || file);
       await renderImageFromUrlPromise(img, url);
-      const mimeType = params.file.type as MTMimeType;
-      const scaled = await this.scaleImageForTelegram(img, mimeType, true);
-      if(scaled) {
-        params.objectURL = scaled.url;
-        params.scaledBlob = scaled.blob;
+
+      if(!params.editResult) {
+        const mimeType = params.file.type as MTMimeType;
+        const scaled = await this.scaleImageForTelegram(img, mimeType, true);
+        if(scaled) {
+          params.objectURL = scaled.url;
+          params.scaledBlob = scaled.blob;
+        }
       }
 
       params.width = img.naturalWidth;
@@ -834,7 +842,7 @@ export default class PopupNewMedia extends PopupElement {
       if(file.type === 'image/gif') {
         params.noSound = true;
 
-        return Promise.all([
+        promise = Promise.all([
           getGifDuration(img).then((duration) => {
             params.duration = Math.ceil(duration);
           }),
@@ -857,7 +865,15 @@ export default class PopupNewMedia extends PopupElement {
       if(!isVideo && file.type !== 'image/gif') {
         equalizeIcon = Icon('equalizer', itemCls)
         equalizeIcon.addEventListener('click', () => {
-          // empty
+          openMediaEditor({
+            imageURL: params.editResult?.originalSrc || params.objectURL,
+            managers: this.managers,
+            onEditFinish: (result) => {
+              params.editResult = result
+              this.attachFiles()
+            },
+            onClose: () => {}
+          })
         })
       }
 
@@ -888,6 +904,8 @@ export default class PopupNewMedia extends PopupElement {
 
       itemDiv.append(actions)
     }
+
+    return promise
   }
 
   private async attachDocument(params: SendFileParams): ReturnType<PopupNewMedia['attachMedia']> {
@@ -981,7 +999,7 @@ export default class PopupNewMedia extends PopupElement {
     itemDiv.append(docDiv);
   }
 
-  private attachFile = (file: File) => {
+  private attachFile = (file: File, oldParams?: Partial<SendFileParams>) => {
     const willAttach = this.willAttach;
     const shouldCompress = this.shouldCompress(file.type);
 
@@ -989,7 +1007,8 @@ export default class PopupNewMedia extends PopupElement {
     itemDiv.classList.add('popup-item');
 
     const params: SendFileParams = {
-      file
+      file,
+      ...(oldParams || {})
     } as any;
 
     // do not pass these properties to worker
@@ -1111,7 +1130,15 @@ export default class PopupNewMedia extends PopupElement {
       params.middlewareHelper.destroy();
     });
 
-    const promises = files.map((file) => this.attachFile(file));
+    const promises = files.map((file) => {
+      const oldParams = oldSendFileDetails.find((o) => o.file === file);
+      return this.attachFile(
+        file,
+        oldParams?.editResult ? {
+          editResult: oldParams.editResult
+        } : undefined
+      )
+    });
 
     Promise.all(promises).then(() => {
       mediaContainer.replaceChildren();

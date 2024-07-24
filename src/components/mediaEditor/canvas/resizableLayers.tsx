@@ -92,17 +92,38 @@ export default function ResizableLayers() {
 
     const bcr = container.getBoundingClientRect()
 
+    const newResizableLayer = {
+      id: context.resizableLayersSeed++,
+      position: [e.clientX - bcr.left, e.clientY - bcr.top],
+      rotation: 0,
+      scale: 1,
+      type: 'text',
+      textInfo: currentTextLayerInfo()
+    } as ResizableLayer
     setLayers(prev => [
       ...prev,
-      createSignal<ResizableLayer>({
-        id: context.resizableLayersSeed++,
-        position: [e.clientX - bcr.left, e.clientY - bcr.top],
-        rotation: 0,
-        scale: 1,
-        type: 'text',
-        textInfo: currentTextLayerInfo()
-      })
+      createSignal<ResizableLayer>({...newResizableLayer})
     ])
+
+    let position = -1
+    let deletedLayer: ResizableLayer
+    context.pushToHistory({
+      undo() {
+        setLayers(prev => {
+          prev = [...prev]
+          position = prev.findIndex(layer => layer[0]().id === newResizableLayer.id)
+          if(position > -1) deletedLayer = prev.splice(position, 1)[0]?.[0]()
+          return prev
+        })
+      },
+      redo() {
+        setLayers(prev => {
+          prev = [...prev]
+          if(position > -1) prev.splice(position, 0, createSignal({...deletedLayer}))
+          return prev
+        })
+      }
+    })
   }
 
   return (

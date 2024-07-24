@@ -57,32 +57,90 @@ export default function CropHandles() {
       {el: bottomHandle, left: 0, top: 1}
     ]
 
+    let boundDiff: [number, number] = [0, 0]
+
     multipliers.forEach(({el, left, top}) => {
       new SwipeHandler({
         element: el,
         onSwipe(xDiff, yDiff) {
           const fixed = fixedImageRatioKey()
-          if(fixed) {
-            let ratio = currentImageRatio()
-            if(left < 0) {
-              ratio = -ratio
-            }
-            if(top < 0) {
-              ratio = -ratio
-            }
+          let ratio = currentImageRatio()
+          if(left < 0) {
+            ratio = -ratio
+          }
+          if(top < 0) {
+            ratio = -ratio
+          }
 
+          if(fixed) {
             if(top === 0) {
               yDiff = xDiff / ratio
-              setDiff([left * xDiff, yDiff])
             } else if(left === 0) {
               xDiff = yDiff * ratio
-              setDiff([xDiff, top * yDiff])
             } else {
               const xd = xDiff
               xDiff = (xDiff + yDiff * ratio) / 2
               yDiff = (xd / ratio + yDiff) / 2
-              setDiff([xDiff * left, yDiff * top])
             }
+          }
+
+          const {
+            cropMinX,
+            cropMaxX,
+            cropMinY,
+            cropMaxY,
+            imageMinX,
+            imageMaxX,
+            imageMinY,
+            imageMaxY
+          } = getConvenientPositioning({
+            scale: scale(),
+            rotation: rotation(),
+            translation: translation(),
+            extendCrop: [
+              [left === -1 ? xDiff : 0, top === 1 ? yDiff : 0],
+              [left === 1 ? xDiff : 0, top === -1 ? yDiff : 0]
+            ]
+          })
+
+          function maxAbs(x: number, y: number) {
+            if(Math.abs(x) > Math.abs(y)) return x
+            return y
+          }
+
+          boundDiff = [0, 0];
+
+          if(imageMinX > cropMinX) boundDiff[0] = maxAbs(boundDiff[0], imageMinX - cropMinX)
+          if(imageMaxX < cropMaxX) boundDiff[0] = maxAbs(boundDiff[0], imageMaxX - cropMaxX)
+          if(imageMinY > cropMinY) boundDiff[1] = maxAbs(boundDiff[1], imageMinY - cropMinY)
+          if(imageMaxY < cropMaxY) boundDiff[1] = maxAbs(boundDiff[1], imageMaxY - cropMaxY)
+
+          const r = [Math.sin(rotation()), Math.cos(rotation())]
+
+          boundDiff = [
+            boundDiff[0] * r[1] - boundDiff[1] * r[0],
+            boundDiff[1] * r[1] + boundDiff[0] * r[0]
+          ]
+
+          if(fixed) {
+            const d = [...boundDiff]
+            if(top === 1) {
+              if(boundDiff[0] / ratio < boundDiff[1]) boundDiff = [d[0], d[0] / ratio]
+              else boundDiff = [d[1] * ratio, d[1]]
+            } else {
+              if(boundDiff[0] / ratio > boundDiff[1]) boundDiff = [d[0], d[0] / ratio]
+              else boundDiff = [d[1] * ratio, d[1]]
+            }
+          }
+
+
+          xDiff += boundDiff[0]
+          yDiff += boundDiff[1]
+
+          if(fixed && top === 0) {
+            setDiff([left * xDiff, yDiff])
+          } else if(fixed && left === 0) {
+            setDiff([xDiff, top * yDiff])
           } else {
             setDiff([xDiff * left, yDiff * top])
           }
@@ -117,7 +175,7 @@ export default function CropHandles() {
           setDiff([0, 0])
           setLeftTopDiff([0, 0])
 
-          adjustScaleAfterResize()
+          // adjustScaleAfterResize()
 
           el.classList.remove('media-editor__crop-handles-circle--anti-flicker')
         }
@@ -125,7 +183,6 @@ export default function CropHandles() {
     })
 
     let initialTranslation: [number, number] = [0, 0]
-    let boundDiff: [number, number] = [0, 0]
 
     new SwipeHandler({
       element: cropArea,
@@ -183,41 +240,6 @@ export default function CropHandles() {
       }
     })
   })
-
-  function adjustScaleAfterResize() {
-    const {
-      cropMinX,
-      cropMaxX,
-      cropMinY,
-      cropMaxY,
-      imageMinX,
-      imageMaxX,
-      imageMinY,
-      imageMaxY
-    } = getConvenientPositioning({
-      scale: scale(),
-      rotation: rotation(),
-      translation: translation()
-    })
-
-    const halfImageWidth = (imageMaxX - imageMinX) / 2,
-      halfImageHeight = (imageMaxY - imageMinY) / 2
-    const imageCenter = [
-      imageMinX + halfImageWidth,
-      imageMinY + halfImageHeight
-    ]
-
-    let additionalScale = 1
-
-    if(imageMinX > cropMinX) additionalScale = Math.max((imageCenter[0] - cropMinX) / halfImageWidth, additionalScale)
-    if(imageMaxX < cropMaxX) additionalScale = Math.max((cropMaxX - imageCenter[0]) / halfImageWidth, additionalScale)
-    if(imageMinY > cropMinY) additionalScale = Math.max((imageCenter[1] - cropMinY) / halfImageHeight, additionalScale)
-    if(imageMaxY < cropMaxY) additionalScale = Math.max((cropMaxY - imageCenter[1]) / halfImageHeight, additionalScale)
-
-    if(additionalScale > 1) {
-      setScale(prev => prev * additionalScale)
-    }
-  }
 
   const left = () => leftTop()[0] + leftTopDiff()[0]
   const top = () => leftTop()[1] + leftTopDiff()[1]
@@ -309,3 +331,28 @@ export default function CropHandles() {
     </>
   )
 }
+
+/*
+Inside
+cropMinX -311.85549895734096
+cropMaxX 461.07635503101756
+cropMinY -291.45355711770003
+cropMaxY 441.1503710872668
+imageMinX -461.07635503101767
+imageMaxX 1157.5085780359236
+imageMinY -396.458813185701
+imageMaxY 513.9952116644536
+-------------
+
+Outside
+cropMinX -538.9217193971135
+cropMaxX 499.5335267050044
+cropMinY -537.3235922847837
+cropMaxY 415.1001482306691
+imageMinX -599.2131867685351
+imageMaxX 1430.7206088272542
+imageMinY -448.737610059076
+imageMaxY 693.1001499635556
+-------------
+
+*/

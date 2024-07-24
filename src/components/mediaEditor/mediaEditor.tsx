@@ -20,11 +20,15 @@ import MediaEditorContext, {HistoryItem} from './context';
 import MainCanvas from './canvas/mainCanvas';
 import FinishButton from './finishButton';
 import {TextLayerInfo} from './canvas/resizableLayers';
+import {withCurrentOwner} from './utils'
+import {createFinalResult, MediaEditorFinalResult} from './createFinalResult';
 
 
 type MediaEditorProps = {
   onClose: NoneToVoidFunction
   managers: AppManagers
+  onEditFinish: (result: MediaEditorFinalResult) => void
+  imageURL: string
 }
 
 export function MediaEditor(props: MediaEditorProps) {
@@ -61,7 +65,8 @@ export function MediaEditor(props: MediaEditorProps) {
     <MediaEditorContext.Provider value={{
       managers: props.managers,
       // imageSrc: 'tmp/texture4.png',
-      imageSrc: 'tmp/texture3.jpg',
+      // imageSrc: 'tmp/texture3.jpg',
+      imageSrc: props.imageURL,
       pixelRatio: window.devicePixelRatio,
       renderingPayload: createSignal(),
 
@@ -115,7 +120,11 @@ export function MediaEditor(props: MediaEditorProps) {
               stickers: () => <MediaEditorStickers />
             }} />
           </div>
-          <FinishButton onClick={() => {}} />
+          <FinishButton onClick={withCurrentOwner(async() => {
+            const result = await createFinalResult()
+            props.onEditFinish(result)
+            props.onClose()
+          })} />
         </div>
       </div>
     </MediaEditorContext.Provider>

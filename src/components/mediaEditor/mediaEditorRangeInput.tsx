@@ -61,7 +61,7 @@ export default function MediaEditorRangeInput(props: {
             props.onChange(newValue)
           }}
           onChange={() => {
-            props.onChangeFinish(prevValue, props.value)
+            props.onChangeFinish?.(prevValue, props.value)
             prevValue = null
           }}
         />
