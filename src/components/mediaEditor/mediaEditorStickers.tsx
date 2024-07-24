@@ -31,11 +31,13 @@ export default function MediaEditorStickers() {
   const [intersectionObserver, setIntersectionObserver] = createSignal<IntersectionObserver>()
   const [activeSet, setActiveSet] = createSignal('recent')
   const [recentLabel, setRecentLabel] = createSignal<HTMLDivElement>()
+  const [thumbsListScrollable, setThumbsListScrollable] = createSignal<HTMLDivElement>()
   const [scrolling, setScrolling] = createSignal(false)
+
+  const [filteredStickers, setFilteredStickers] = createSignal<Document.document[]>()
 
   const lazyLoadQueue = new LazyLoadQueue(1)
 
-  let thumbsListScrollable: HTMLDivElement
 
   async function onStickerSetThumbClick(id: string) {
     setActiveSet(String(id))
@@ -169,8 +171,8 @@ export default function MediaEditorStickers() {
   }
 
   createEffect(() => {
-    if(!stickerSets()) return
-    new ScrollableX(thumbsListScrollable)
+    if(!thumbsListScrollable()) return
+    new ScrollableX(thumbsListScrollable())
   })
 
   createEffect(() => {
@@ -185,7 +187,7 @@ export default function MediaEditorStickers() {
       root: container(),
       rootMargin: `0px 0px -${container().clientHeight - 100}px 0px`
     }))
-    console.log('recentButton', recentLabel())
+
     onCleanup(() => {
       intersectionObserver()?.disconnect()
     })
@@ -200,24 +202,46 @@ export default function MediaEditorStickers() {
     }
   })
 
+  createEffect(async() => {
+    if(search()) {
+      setFilteredStickers(await managers.appStickersManager.searchStickers(search()))
+      return
+    }
+    if(group()) {
+      const g = group()
+      if(g._ === 'emojiGroupPremium') {
+        setFilteredStickers(await managers.appStickersManager.getPremiumStickers());
+        return
+      }
+      setFilteredStickers(await managers.appStickersManager.getStickersByEmoticon({
+        emoticon: g.emoticons,
+        includeServerStickers: true
+      }));
+
+      return
+    }
+    if(!group() && !search()) {
+      setFilteredStickers()
+    }
+  })
+
   return (
     <>
-      <Space amount="56px" />
+      <Space amount={filteredStickers() ? '0px' : '48px'} />
+      <Space amount="8px" />
 
       <div class='media-editor__sticker-search'>
         <EmoticonsSearch type="stickers" onValue={(value) => {
-          console.log('[Media Editor] search', value)
           setSearch(value)
         }} onGroup={(group) => {
-          console.log('[Media Editor] group', group)
           setGroup(group)
         }} categoryColor='white' />
       </div>
 
       {/* TODO: Favorties */}
+      <Space amount="16px" />
 
-      <Show when={recentStickers()?.length > 0}>
-        <Space amount="16px" />
+      <Show when={recentStickers()?.length > 0 && !filteredStickers()}>
         <div
           ref={setRecentLabel}
           class='media-editor__label'
@@ -231,15 +255,23 @@ export default function MediaEditorStickers() {
         </div>
       </Show>
 
-      <Show when={stickerSets()}>
+      <Show when={filteredStickers()}>
+        <div class='media-editor__stickers-grid'>
+          <For each={filteredStickers()}>
+            {doc => <Sticker doc={doc} />}
+          </For>
+        </div>
+      </Show>
+
+      <Show when={stickerSets() && !filteredStickers()}>
         <For each={stickerSets().sets}>
           {set => <StickerSetSection set={set} />}
         </For>
       </Show>
 
-      <div class='media-editor__stickers-thumb-list-scrollable' ref={thumbsListScrollable}>
-        <div class='media-editor__stickers-thumb-list'>
-          <Show when={stickerSets()}>
+      <Show when={stickerSets() && !filteredStickers()}>
+        <div class='media-editor__stickers-thumb-list-scrollable' ref={setThumbsListScrollable}>
+          <div class='media-editor__stickers-thumb-list'>
             <Show when={recentStickers()?.length}>
               <div
                 class='media-editor__stickers-recent-button'
@@ -254,9 +286,9 @@ export default function MediaEditorStickers() {
             <For each={stickerSets().sets}>
               {set => <StickerSetThumb set={set} />}
             </For>
-          </Show>
+          </div>
         </div>
-      </div>
+      </Show>
     </>
   )
 }
