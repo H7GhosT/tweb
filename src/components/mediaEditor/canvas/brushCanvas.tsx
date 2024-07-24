@@ -16,7 +16,7 @@ export default function BrushCanvas() {
   const [currentBrush] = context.currentBrush
   const [currentTab] = context.currentTab
   const [, setSelectedTextLayer] = context.selectedResizableLayer
-  const [, setLines] = context.brushDrawnLines
+  const [lines, setLines] = context.brushDrawnLines
 
 
   const [lastLine, setLastLine] = createSignal<BrushDrawnLine>()
@@ -52,6 +52,11 @@ export default function BrushCanvas() {
     resetLastLine()
   })
 
+  function reDraw() {
+    brushPainter.clear()
+    lines().forEach(line => brushPainter.drawLine(line))
+  }
+
   onMount(() => {
     let initialPosition: [number, number]
     let points: [number, number][] = []
@@ -80,9 +85,22 @@ export default function BrushCanvas() {
       }, THROTTLE_MS, true),
       onReset() {
         setTimeout(() => {
-          setLines(prev => [...prev, lastLine()])
+          const prevLines = [...lines()]
+          const newLines = [...lines(), lastLine()]
+          setLines(newLines)
           resetLastLine()
           brushPainter.saveLastLine()
+
+          context.pushToHistory({
+            undo() {
+              setLines(prevLines)
+              reDraw()
+            },
+            redo() {
+              setLines(newLines)
+              reDraw()
+            }
+          })
 
           points = []
           initialPosition = undefined

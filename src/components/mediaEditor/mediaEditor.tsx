@@ -16,7 +16,7 @@ import MediaEditorCrop from './mediaEditorCrop';
 import MediaEditorText from './mediaEditorText';
 import MediaEditorBrush from './mediaEditorBrush';
 import MediaEditorStickers from './mediaEditorStickers';
-import MediaEditorContext from './context';
+import MediaEditorContext, {HistoryItem} from './context';
 import MainCanvas from './canvas/mainCanvas';
 import FinishButton from './finishButton';
 import {TextLayerInfo} from './canvas/resizableLayers';
@@ -28,6 +28,9 @@ type MediaEditorProps = {
 }
 
 export function MediaEditor(props: MediaEditorProps) {
+  const history = createSignal<HistoryItem[]>([])
+  const redoHistory = createSignal<HistoryItem[]>([])
+
   let overlay: HTMLDivElement;
 
   onMount(async() => {
@@ -47,6 +50,12 @@ export function MediaEditor(props: MediaEditorProps) {
     props.onClose()
   }
 
+  function pushToHistory(item: HistoryItem) {
+    const [, setHistory] = history
+    const [, setRedoHistory] = redoHistory
+    setHistory(prev => [...prev, item])
+    setRedoHistory([])
+  }
 
   return (
     <MediaEditorContext.Provider value={{
@@ -86,7 +95,11 @@ export function MediaEditor(props: MediaEditorProps) {
         brush: 'pen',
         color: '#fe4438',
         size: 18
-      })
+      }),
+
+      history,
+      redoHistory,
+      pushToHistory
     }}>
       <div ref={overlay} class="media-editor__overlay night">
         <div class="media-editor__container">

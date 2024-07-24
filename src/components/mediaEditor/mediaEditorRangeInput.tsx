@@ -13,6 +13,7 @@ export default function MediaEditorRangeInput(props: {
   min: number
   max: number
   onChange: (value: number) => void
+  onChangeFinish?: (prevValue: number, currentValue: number) => void
   passiveLabel?: boolean
   color?: string
 }) {
@@ -20,6 +21,8 @@ export default function MediaEditorRangeInput(props: {
   const mappedCenter = createMemo(() => nMap(0, props.min, props.max, 0, 100))
 
   const brightShadow = () => props.color && hexaToHsla(props.color).l < 32
+
+  let prevValue: number | null = null
 
   return (
     <div
@@ -53,7 +56,13 @@ export default function MediaEditorRangeInput(props: {
           step="1"
           value={props.value}
           onInput={e => {
-            props.onChange(clamp(e.currentTarget.valueAsNumber, props.min, props.max))
+            if(prevValue === null) prevValue = props.value
+            const newValue = clamp(e.currentTarget.valueAsNumber, props.min, props.max)
+            props.onChange(newValue)
+          }}
+          onChange={() => {
+            props.onChangeFinish(prevValue, props.value)
+            prevValue = null
           }}
         />
         <div class="media-editor__range-input-thumb media-editor__range-input-thumb--shadow" />

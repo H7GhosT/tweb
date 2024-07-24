@@ -72,6 +72,11 @@ export default class BrushPainter {
     this.saveLastLine()
   }
 
+  clear() {
+    this.targetCtx.clearRect(0, 0, this.width, this.height)
+    this.cacheCtx.clearRect(0, 0, this.width, this.height)
+  }
+
   private drawLinePath(line: BrushDrawnLine, ctx: CanvasRenderingContext2D) {
     const {points} = line
     if(!points.length) return

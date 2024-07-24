@@ -104,18 +104,40 @@ export default function MediaEditorStickers() {
 
     function onClick() {
       const id = context.resizableLayersSeed++
+      const newLayer = {
+        id,
+        position: [canvasSize()[0] / 2, canvasSize()[1] / 2],
+        rotation: 0,
+        scale: 1,
+        type: 'sticker',
+        sticker: props.doc
+      } as ResizableLayer
       setLayers(prev => [
         ...prev,
-        createSignal<ResizableLayer>({
-          id,
-          position: [canvasSize()[0] / 2, canvasSize()[1] / 2],
-          rotation: 0,
-          scale: 1,
-          type: 'sticker',
-          sticker: props.doc
-        })
+        createSignal<ResizableLayer>({...newLayer})
       ])
       setSelectedResizableLayer(id)
+
+      let position = 0
+      let deletedLayer: ResizableLayer
+
+      context.pushToHistory({
+        undo() {
+          setLayers(prev => {
+            prev = [...prev]
+            position = prev.findIndex(layer => layer[0]().id === newLayer.id)
+            if(position > -1) deletedLayer = prev.splice(position, 1)[0]?.[0]()
+            return prev
+          })
+        },
+        redo() {
+          setLayers(prev => {
+            prev = [...prev]
+            if(position > -1) prev.splice(position, 0, createSignal({...deletedLayer}))
+            return prev
+          })
+        }
+      })
     }
 
     return (

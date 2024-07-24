@@ -38,6 +38,15 @@ export interface MediaEditorContextValue {
     brush: string
   }>
   brushDrawnLines: Signal<BrushDrawnLine[]>
+
+  history: Signal<HistoryItem[]>
+  redoHistory: Signal<HistoryItem[]>
+  pushToHistory: (item: HistoryItem) => void
+}
+
+export type HistoryItem = {
+  undo: () => void
+  redo: () => void
 }
 
 const MediaEditorContext = createContext<MediaEditorContextValue>()
