@@ -90,6 +90,12 @@ export default function TextLayerContent(props: ResizableLayerProps) {
     }))
   }))
 
+  onMount(() => {
+    container.addEventListener('dragstart', (e: Event) => {
+      e.preventDefault()
+    })
+  })
+
 
   let container: HTMLDivElement
   let contentEditable: HTMLDivElement

@@ -11,6 +11,7 @@ import {initWebGL} from './webgl/initWebGL'
 import BrushPainter from './canvas/brushPainter'
 import {getCropOffset} from './canvas/cropOffset'
 import {fontInfoMap, getContrastColor} from './canvas/textLayerContent'
+import {ResizableLayer} from './canvas/resizableLayers'
 
 export default function FinishButton(props: {
   onClick: () => void
@@ -47,6 +48,7 @@ async function createResult() {
   const [flip] = context.flip
   const [resizableLayers] = context.resizableLayers
   const [textLayersInfo] = context.textLayersInfo
+  const [stickersLayersInfo] = context.stickersLayersInfo
   const [renderingPayload] = context.renderingPayload
 
   const cropOffset = getCropOffset()
@@ -155,6 +157,27 @@ async function createResult() {
   })
 
   scaledLayers.forEach(layer => {
+    if(layer.type === 'text') drawTextLayer(layer)
+    if(layer.type === 'sticker') drawStickerLayer(layer)
+  })
+
+  function drawStickerLayer(layer: ResizableLayer) {
+    const {container} = stickersLayersInfo()[layer.id]
+    const stickerChild = container?.lastElementChild
+    if(!stickerChild) return
+
+    const STICKER_SIZE = 200
+    const size = STICKER_SIZE * layer.scale * canvasScale
+
+    ctx.save()
+    ctx.translate(layer.position[0], layer.position[1])
+    ctx.rotate(layer.rotation)
+    ctx.drawImage(stickerChild as CanvasImageSource, -size / 2, - size / 2, size, size)
+
+    ctx.restore()
+  }
+
+  function drawTextLayer(layer: ResizableLayer) {
     if(layer.type !== 'text') return
     const renderingInfo = {...textLayersInfo()[layer.id]}
     renderingInfo.height *= canvasScale * layer.scale
@@ -229,7 +252,7 @@ async function createResult() {
     })
 
     ctx.restore()
-  })
+  }
 
   return resultCanvas
 }

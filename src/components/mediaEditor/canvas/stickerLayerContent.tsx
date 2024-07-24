@@ -1,11 +1,16 @@
-import {onMount} from 'solid-js'
+import {onMount, useContext} from 'solid-js'
 
 import createMiddleware from '../../../helpers/solid/createMiddleware'
 import wrapSticker from '../../wrappers/sticker'
 
+import MediaEditorContext from '../context'
+
 import {ResizableContainer, ResizableLayerProps} from './resizableLayers'
 
 export default function StickerLayerContent(props: ResizableLayerProps) {
+  const context = useContext(MediaEditorContext)
+  const [, setStickersLayersInfo] = context.stickersLayersInfo
+
   let container: HTMLDivElement
   const [layer] = props.layerSignal
 
@@ -16,9 +21,13 @@ export default function StickerLayerContent(props: ResizableLayerProps) {
       group: 'none',
       width: 500,
       height: 500,
-      middleware: createMiddleware().get(),
-      textColor: 'white'
+      middleware: createMiddleware().get()
     })
+
+    setStickersLayersInfo(prev => ({
+      ...prev,
+      [layer().id]: {container}
+    }))
   })
 
   return (

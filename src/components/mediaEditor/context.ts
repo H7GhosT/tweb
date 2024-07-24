@@ -1,7 +1,7 @@
 import {createContext, Signal} from 'solid-js';
 import {AppManagers} from '../../lib/appManagers/managers';
 import {AdjustmentsConfig} from './adjustments';
-import {ResizableLayer, TextLayerInfo, TextRenderingInfo} from './canvas/resizableLayers';
+import {ResizableLayer, StickerRenderingInfo, TextLayerInfo, TextRenderingInfo} from './canvas/resizableLayers';
 import {RenderingPayload} from './webgl/initWebGL';
 import {BrushDrawnLine} from './canvas/brushPainter';
 
@@ -29,6 +29,7 @@ export interface MediaEditorContextValue {
   resizableLayers: Signal<Signal<ResizableLayer>[]>
   selectedResizableLayer: Signal<number>
   textLayersInfo: Signal<Record<number, TextRenderingInfo>>
+  stickersLayersInfo: Signal<Record<number, StickerRenderingInfo>>
 
   imageCanvas: Signal<HTMLCanvasElement>
   currentBrush: Signal<{

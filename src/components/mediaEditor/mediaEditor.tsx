@@ -78,6 +78,7 @@ export function MediaEditor(props: MediaEditorProps) {
       }),
       selectedResizableLayer: createSignal(),
       textLayersInfo: createSignal({}),
+      stickersLayersInfo: createSignal({}),
 
       brushDrawnLines: createSignal([]),
       imageCanvas: createSignal(),

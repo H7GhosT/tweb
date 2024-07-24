@@ -29,6 +29,10 @@ export type TextRenderingInfo = {
   lines: TextRenderingInfoLine[]
 }
 
+export type StickerRenderingInfo = {
+  container?: HTMLDivElement
+}
+
 export type TextRenderingInfoLine = {
   left: number
   right: number
