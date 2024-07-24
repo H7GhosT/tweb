@@ -467,21 +467,6 @@
     }
   }
 
-  &__font-button {
-    &--roboto {
-      font-family: 'Roboto';
-    }
-
-    &--times {
-      font-family: 'Times New Roman', Times, serif;
-      font-weight: 600;
-    }
-
-    &--segoe-ui {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-  }
-
   &__brush-button {
     &-svg-wrapper {
       color: rgb(56, 163, 89);
@@ -913,9 +898,9 @@
     &-svg-outline {
       pointer-events: none;
       position: absolute;
-      left: 0;
+      left: -0.35em;
       top: 0;
-      height: 100%;
+      line-height: 1;
 
       text {
         font-style: normal;

@@ -19,6 +19,7 @@ import MediaEditorStickers from './mediaEditorStickers';
 import MediaEditorContext from './context';
 import MainCanvas from './canvas/mainCanvas';
 import FinishButton from './finishButton';
+import {TextLayerInfo} from './canvas/resizableLayers';
 
 
 type MediaEditorProps = {
@@ -50,7 +51,8 @@ export function MediaEditor(props: MediaEditorProps) {
   return (
     <MediaEditorContext.Provider value={{
       managers: props.managers,
-      imageSrc: 'tmp/texture.png',
+      // imageSrc: 'tmp/texture4.png',
+      imageSrc: 'tmp/texture3.jpg',
       pixelRatio: window.devicePixelRatio,
       renderingPayload: createSignal(),
 
@@ -67,7 +69,7 @@ export function MediaEditor(props: MediaEditorProps) {
 
       resizableLayersSeed: 1,
       resizableLayers: createSignal([]),
-      currentTextLayerInfo: createSignal({
+      currentTextLayerInfo: createSignal<TextLayerInfo>({
         alignment: 'left',
         style: 'outline',
         color: '#ffffff',

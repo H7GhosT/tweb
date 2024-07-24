@@ -215,12 +215,15 @@ function updateOutlineStyle(container: HTMLDivElement, contentEditable: HTMLDivE
   const fontInfo = fontInfoMap[info.font]
   function updateSvg(div: HTMLDivElement) {
     div.querySelector('.media-editor__text-layer-svg-outline')?.remove()
+    const stretch = info.size * 0.5
+    const w = div.clientWidth + stretch
+    const h = div.clientHeight + stretch
     const svg = createElementFromMarkup(`
-      <div class="media-editor__text-layer-svg-outline">
-        <svg width="${div.clientWidth}" height="${div.clientHeight}" viewBox="0 0 ${div.clientWidth} ${div.clientHeight}">
+      <div class="media-editor__text-layer-svg-outline" style="width: ${w}px; height: ${h}px;">
+        <svg style="width: ${w}px; height: ${h}px;" viewBox="${-stretch / 2} 0 ${div.clientWidth + stretch / 2} ${div.clientHeight + stretch}">
           <text
             x="${info.size * 0.2}"
-            y="${(div.clientHeight * fontInfo.baseline)}"
+            y="${(info.size * 1.33 * fontInfo.baseline)}"
             style="font-size:${info.size}px;stroke:${info.color};stroke-width:${div.clientHeight * 0.15}px;font-family:${fontInfo.fontFamily};font-weight:${fontInfo.fontWeight};">
             ${div.innerText}
           </text>
@@ -256,20 +259,47 @@ type FontInfo = {
   baseline: number
 }
 
-export const fontInfoMap: Record<string, FontInfo> = {
+export type FontKey = keyof typeof fontInfoMap
+
+export const fontInfoMap = {
   roboto: {
     fontFamily: '\'Roboto\'',
     fontWeight: 500,
     baseline: 0.75
   },
-  times: {
-    fontFamily: '\'Times New Roman\'',
-    fontWeight: 600,
+  suez: {
+    fontFamily: '\'Suez One\'',
+    fontWeight: 400,
     baseline: 0.75
   },
-  segoe: {
-    fontFamily: '\'Segoe UI\'',
-    fontWeight: 500,
-    baseline: 0.78
+  bubbles: {
+    fontFamily: '\'Rubik Bubbles\'',
+    fontWeight: 400,
+    baseline: 0.75
+  },
+  playwrite: {
+    fontFamily: '\'Playwrite BE VLG\'',
+    fontWeight: 400,
+    baseline: 0.85
+  },
+  chewy: {
+    fontFamily: '\'Chewy\'',
+    fontWeight: 400,
+    baseline: 0.75
+  },
+  courier: {
+    fontFamily: '\'Courier Prime\'',
+    fontWeight: 700,
+    baseline: 0.65
+  },
+  fugaz: {
+    fontFamily: '\'Fugaz One\'',
+    fontWeight: 400,
+    baseline: 0.75
+  },
+  sedan: {
+    fontFamily: '\'Sedan\'',
+    fontWeight: 400,
+    baseline: 0.75
   }
-}
+} satisfies Record<string, FontInfo>

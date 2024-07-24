@@ -6,7 +6,7 @@ import {Document} from '../../../layer'
 import {withCurrentOwner} from '../utils'
 import MediaEditorContext from '../context'
 
-import TextLayerContent from './textLayerContent'
+import TextLayerContent, {FontKey} from './textLayerContent'
 import StickerLayerContent from './stickerLayerContent'
 
 export type ResizableLayer = {
@@ -41,7 +41,7 @@ export type TextLayerInfo = {
   alignment: string
   style: string
   size: number
-  font: string
+  font: FontKey
 }
 
 export type ResizableLayerProps = {

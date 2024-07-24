@@ -11,6 +11,7 @@ import MediaEditorLargeButton from './mediaEditorLargeButton';
 import Space from './Space';
 import MediaEditorContext from './context';
 import {createStoredColor} from './createStoredColor';
+import {fontInfoMap, FontKey} from './canvas/textLayerContent';
 
 
 export default function MediaEditorText() {
@@ -32,7 +33,7 @@ export default function MediaEditorText() {
   function setStyle(value: string) {
     setLayerInfo(prev => ({...prev, style: value}))
   }
-  function setFont(value: string) {
+  function setFont(value: FontKey) {
     setLayerInfo(prev => ({...prev, font: value}))
   }
 
@@ -51,11 +52,14 @@ export default function MediaEditorText() {
     })
   })
 
-  const fontButton = (text: JSX.Element, textFont: string) =>
+  const fontButton = (text: JSX.Element, textFont: FontKey) =>
     <MediaEditorLargeButton
       active={layerInfo()?.font === textFont}
       onClick={() => setFont(textFont)}
-      class={`media-editor__font-button--${textFont}`}
+      style={{
+        'font-family': fontInfoMap[textFont].fontFamily,
+        'font-weight': fontInfoMap[textFont].fontWeight
+      }}
     >
       {text}
     </MediaEditorLargeButton>
@@ -97,8 +101,13 @@ export default function MediaEditorText() {
       <div class="media-editor__label">{i18n('MediaEditor.Font')}</div>
 
       {fontButton(i18n('MediaEditor.Fonts.Roboto'), 'roboto')}
-      {fontButton(i18n('MediaEditor.Fonts.TimesNewRoman'), 'times')}
-      {fontButton(i18n('MediaEditor.Fonts.SegoeUI'), 'segoe')}
+      {fontButton(i18n('MediaEditor.Fonts.SuezOne'), 'suez')}
+      {fontButton(i18n('MediaEditor.Fonts.RubikBubbles'), 'bubbles')}
+      {fontButton(i18n('MediaEditor.Fonts.Playwrite'), 'playwrite')}
+      {fontButton(i18n('MediaEditor.Fonts.Chewy'), 'chewy')}
+      {fontButton(i18n('MediaEditor.Fonts.CourierPrime'), 'courier')}
+      {fontButton(i18n('MediaEditor.Fonts.FugazOne'), 'fugaz')}
+      {fontButton(i18n('MediaEditor.Fonts.Sedan'), 'sedan')}
     </>
   )
 }
