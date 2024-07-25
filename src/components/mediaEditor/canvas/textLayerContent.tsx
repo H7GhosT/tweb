@@ -12,7 +12,7 @@ export default function TextLayerContent(props: ResizableLayerProps) {
   const context = useContext(MediaEditorContext)
   const [selectedResizableLayer, setSelectedResizableLayer] = context.selectedResizableLayer
   const [currentTextLayerInfo, setCurrentTextLayerInfo] = context.currentTextLayerInfo
-  const [, setTextLayersInfo] = context.textLayersInfo
+  const [textLayersInfo, setTextLayersInfo] = context.textLayersInfo
 
   const [layer, setLayer] = props.layerSignal
 
@@ -105,6 +105,12 @@ export default function TextLayerContent(props: ResizableLayerProps) {
     return getContrastColor(layer().textInfo.color)
   }
 
+  const intialContent = (() => {
+    const layerInfo = textLayersInfo()[layer().id]
+    if(!layerInfo) return <div>Type something...</div>
+    return layerInfo.lines.map(line => <div>{line.content}</div>)
+  })()
+
   return (
     <ResizableContainer
       layerSignal={props.layerSignal}
@@ -131,9 +137,7 @@ export default function TextLayerContent(props: ResizableLayerProps) {
           onInput={() => updateBackground()}
           onFocus={onFocus}
         >
-          <div>
-            Type something...
-          </div>
+          {intialContent}
         </div>
       </div>
     </ResizableContainer>
