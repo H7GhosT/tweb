@@ -1,9 +1,11 @@
-import {createRoot, createSignal, onCleanup, onMount} from 'solid-js';
+import {onCleanup, onMount} from 'solid-js';
 import {render} from 'solid-js/web';
 
 import {NoneToVoidFunction} from '../../types';
 import {doubleRaf} from '../../helpers/schedulers';
 import {AppManagers} from '../../lib/appManagers/managers';
+
+import appNavigationController from '../appNavigationController';
 
 import {delay} from './utils';
 import {injectMediaEditorLangPack} from './langPack';
@@ -48,6 +50,13 @@ export function MediaEditor(props: MediaEditorProps) {
     overlay.classList.add('media-editor__overlay--hidden')
     await doubleRaf()
     overlay.classList.remove('media-editor__overlay--hidden')
+
+    appNavigationController.pushItem({
+      type: 'popup',
+      onPop: () => props.onClose()
+    })
+
+    overlay.focus()
   })
 
   onCleanup(() => {

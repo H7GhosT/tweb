@@ -868,6 +868,7 @@ export default class PopupNewMedia extends PopupElement {
       if(!isVideo && file.type !== 'image/gif') {
         equalizeIcon = Icon('equalizer', itemCls)
         equalizeIcon.addEventListener('click', () => {
+          (this.btnConfirmOnEnter as HTMLButtonElement).disabled = true
           openMediaEditor({
             imageURL: params.editResult?.originalSrc || params.objectURL,
             managers: this.managers,
@@ -876,7 +877,9 @@ export default class PopupNewMedia extends PopupElement {
               this.attachFiles()
             },
             standaloneContext: params.editResult?.standaloneContext,
-            onClose: () => {}
+            onClose: () => {
+              (this.btnConfirmOnEnter as HTMLButtonElement).disabled = false
+            }
           })
         })
       }
