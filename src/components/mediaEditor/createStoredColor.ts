@@ -4,26 +4,26 @@ import {colorPickerSwatches} from './colorPicker';
 
 export function createStoredColor(key: string, defaultColor: string) {
   // (1 - use swatch, 2 - use picker color), (color from swatch), (color from picker)
-  type SavedColorInfo = [1 | 2, string, string]
+  type SavedColor = [1 | 2, string, string]
 
-  const [savedColor, setSavedColor] = createSignal<SavedColorInfo>((() => {
+  const [savedColor, setSavedColor] = createSignal<SavedColor>((() => {
     const fallback = () => {
-      const value = [colorPickerSwatches.includes(defaultColor) ? 1 : 2, defaultColor, defaultColor] as SavedColorInfo
+      const value = [colorPickerSwatches.includes(defaultColor) ? 1 : 2, defaultColor, defaultColor] as SavedColor
       localStorage.setItem(key, JSON.stringify(value))
       return value
     }
     try {
-      const meta: SavedColorInfo = JSON.parse(localStorage.getItem(key))
-      if(!(meta instanceof Array) || typeof meta[0] !== 'number' || typeof meta[1] !== 'string' || typeof meta[2] !== 'string') {
+      const value: SavedColor = JSON.parse(localStorage.getItem(key))
+      if(!(value instanceof Array) || typeof value[0] !== 'number' || typeof value[1] !== 'string' || typeof value[2] !== 'string') {
         return fallback()
       }
-      return meta
+      return value
     } catch{}
     return fallback()
   })())
 
   function setColor(color: string) {
-    let value: SavedColorInfo
+    let value: SavedColor
     if(colorPickerSwatches.includes(color)) {
       value = [1, color, color]
     } else {

@@ -3,7 +3,6 @@ import {i18n} from '../../lib/langPack'
 
 export type AdjustmentsConfig = ReturnType<typeof createAdjustmentsConfig>;
 
-
 export const createAdjustmentsConfig = () => [
   {key: 'enhance', signal: createSignal(0), uniform: 'uEnhance', label: () => i18n('MediaEditor.Adjustments.Enhance'), to100: true},
   {key: 'brightness', signal: createSignal(0), uniform: 'uBrightness', label: () => i18n('MediaEditor.Adjustments.Brightness'), to100: false},

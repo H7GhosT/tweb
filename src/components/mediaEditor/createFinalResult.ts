@@ -7,8 +7,8 @@ import {draw} from './webgl/draw'
 import {initWebGL} from './webgl/initWebGL'
 import BrushPainter from './canvas/brushPainter'
 import {getCropOffset} from './canvas/cropOffset'
-import {fontInfoMap, getContrastColor} from './canvas/textLayerContent'
-import {ResizableLayer} from './canvas/resizableLayers'
+import {fontInfoMap, getContrastColor} from './utils'
+import {ResizableLayer} from './types'
 
 export type MediaEditorFinalResult = {
   blob: Blob

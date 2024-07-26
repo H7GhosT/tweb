@@ -1,40 +1,46 @@
 import {createEffect, createResource, createSignal, For, onCleanup, onMount, Show, useContext} from 'solid-js';
-import EmoticonsSearch from '../../emoticonsDropdown/search';
+
 import {Document, EmojiGroup, StickerSet} from '../../../layer';
+import wrapEmojiText from '../../../lib/richTextProcessor/wrapEmojiText';
+import {i18n} from '../../../lib/langPack';
+
+import EmoticonsSearch from '../../emoticonsDropdown/search';
 import LazyLoadQueue from '../../lazyLoadQueue';
 import wrapStickerSetThumb from '../../wrappers/stickerSetThumb';
 import createMiddleware from '../../../helpers/solid/createMiddleware';
 import {IconTsx} from '../../iconTsx';
 import wrapSticker from '../../wrappers/sticker';
-import wrapEmojiText from '../../../lib/richTextProcessor/wrapEmojiText';
-import Space from '../space';
-import {i18n} from '../../../lib/langPack';
 import {ScrollableX} from '../../scrollable';
+
+import Space from '../space';
 import MediaEditorContext from '../context';
-import {ResizableLayer} from '../canvas/resizableLayers';
-import {TabContentContext} from './tabContent';
+import {ResizableLayer} from '../types';
 import {delay} from '../utils';
 
-// TODO: Don't forget favorites
+import {TabContentContext} from './tabContent';
 
 export default function StickersTab() {
   const context = useContext(MediaEditorContext)
   const {container} = useContext(TabContentContext)
+
   const {managers} = context
   const [, setLayers] = context.resizableLayers
   const [canvasSize] = context.canvasSize
   const [, setSelectedResizableLayer] = context.selectedResizableLayer
-  const [search, setSearch] = createSignal('')
-  const [group, setGroup] = createSignal<EmojiGroup>()
+
   const [recentStickers] = createResource(() => managers.appStickersManager.getRecentStickersStickers())
   const [stickerSets] = createResource(() => managers.appStickersManager.getAllStickers())
-  const [intersectionObserver, setIntersectionObserver] = createSignal<IntersectionObserver>()
+  const [filteredStickers, setFilteredStickers] = createSignal<Document.document[]>()
+
+  const [search, setSearch] = createSignal('')
+  const [group, setGroup] = createSignal<EmojiGroup>()
   const [activeSet, setActiveSet] = createSignal('recent')
-  const [recentLabel, setRecentLabel] = createSignal<HTMLDivElement>()
-  const [thumbsListScrollable, setThumbsListScrollable] = createSignal<HTMLDivElement>()
   const [scrolling, setScrolling] = createSignal(false)
 
-  const [filteredStickers, setFilteredStickers] = createSignal<Document.document[]>()
+  const [intersectionObserver, setIntersectionObserver] = createSignal<IntersectionObserver>()
+  const [recentLabel, setRecentLabel] = createSignal<HTMLDivElement>()
+  const [thumbsListScrollable, setThumbsListScrollable] = createSignal<HTMLDivElement>()
+
 
   const lazyLoadQueue = new LazyLoadQueue(1)
 
@@ -42,7 +48,7 @@ export default function StickersTab() {
   async function onStickerSetThumbClick(id: string) {
     setActiveSet(String(id))
     setScrolling(true)
-    container()?.querySelector(`[data-set-id="${id}"]`).scrollIntoView({
+    container()?.querySelector(`[data-set-id="${id}"]`)?.scrollIntoView({
       behavior: 'smooth', block: 'start'
     })
     await delay(1000)

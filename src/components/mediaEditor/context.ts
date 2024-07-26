@@ -1,7 +1,9 @@
 import {createContext, createRoot, createSignal, Signal} from 'solid-js';
+
 import {AppManagers} from '../../lib/appManagers/managers';
+
 import {AdjustmentsConfig, createAdjustmentsConfig} from './adjustments';
-import {ResizableLayer, StickerRenderingInfo, TextLayerInfo, TextRenderingInfo} from './canvas/resizableLayers';
+import {ResizableLayer, StickerRenderingInfo, TextLayerInfo, TextRenderingInfo} from './types';
 import {RenderingPayload} from './webgl/initWebGL';
 import {BrushDrawnLine} from './canvas/brushPainter';
 import {MediaEditorProps} from './mediaEditor';

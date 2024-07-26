@@ -4,8 +4,9 @@ import createMiddleware from '../../../helpers/solid/createMiddleware'
 import wrapSticker from '../../wrappers/sticker'
 
 import MediaEditorContext from '../context'
+import {ResizableLayerProps} from '../types'
 
-import {ResizableContainer, ResizableLayerProps} from './resizableLayers'
+import {ResizableContainer} from './resizableLayers'
 
 export default function StickerLayerContent(props: ResizableLayerProps) {
   const context = useContext(MediaEditorContext)

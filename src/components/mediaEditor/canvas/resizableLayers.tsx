@@ -1,56 +1,13 @@
 import {createEffect, createSignal, For, on, onMount, ParentProps, Show, Signal, useContext} from 'solid-js'
 
 import SwipeHandler, {getEvent} from '../../swipeHandler'
-import {Document} from '../../../layer'
 
 import {withCurrentOwner} from '../utils'
 import MediaEditorContext from '../context'
+import {ResizableLayer} from '../types'
 
-import TextLayerContent, {FontKey} from './textLayerContent'
+import TextLayerContent from './textLayerContent'
 import StickerLayerContent from './stickerLayerContent'
-
-export type ResizableLayer = {
-  id: number
-  type: 'text' | 'sticker'
-  position: [number, number]
-  rotation: number
-  scale: number
-
-  sticker?: Document.document
-
-  textInfo?: TextLayerInfo
-}
-
-export type TextRenderingInfo = {
-  width: number
-  height: number
-
-  path?: (number | string)[]
-  lines: TextRenderingInfoLine[]
-}
-
-export type StickerRenderingInfo = {
-  container?: HTMLDivElement
-}
-
-export type TextRenderingInfoLine = {
-  left: number
-  right: number
-  height: number
-  content: string
-}
-
-export type TextLayerInfo = {
-  color: string
-  alignment: string
-  style: string
-  size: number
-  font: FontKey
-}
-
-export type ResizableLayerProps = {
-  layerSignal: Signal<ResizableLayer>
-}
 
 type ResizableContainerProps = {
   layerSignal: Signal<ResizableLayer>

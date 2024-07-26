@@ -11,7 +11,8 @@ import LargeButton from '../largeButton';
 import Space from '../space';
 import MediaEditorContext from '../context';
 import {createStoredColor} from '../createStoredColor';
-import {fontInfoMap, FontKey} from '../canvas/textLayerContent';
+import {fontInfoMap} from '../utils';
+import {FontKey} from '../types';
 
 
 export default function TextTab() {

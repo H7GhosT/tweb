@@ -1,4 +1,5 @@
 import {useContext} from 'solid-js';
+
 import MediaEditorContext from '../context';
 
 export function getCropOffset() {

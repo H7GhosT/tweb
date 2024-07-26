@@ -1,11 +1,12 @@
 import {createEffect, on, onMount, useContext} from 'solid-js'
 
 import createElementFromMarkup from '../../../helpers/createElementFromMarkup'
-import {hexaToHsla} from '../../../helpers/color'
 
 import MediaEditorContext from '../context'
+import {ResizableLayerProps, TextLayerInfo, TextRenderingInfoLine} from '../types'
+import {fontInfoMap, getContrastColor} from '../utils'
 
-import {ResizableContainer, ResizableLayerProps, TextLayerInfo, TextRenderingInfoLine} from './resizableLayers'
+import {ResizableContainer} from './resizableLayers'
 
 
 export default function TextLayerContent(props: ResizableLayerProps) {
@@ -268,64 +269,9 @@ function updateOutlineStyle(container: HTMLDivElement, contentEditable: HTMLDivE
   })
 }
 
-export function getContrastColor(color: string) {
-  return hexaToHsla(color).l < 80 ? '#ffffff' : '#000000'
-}
-
 
 const flexAlignMap: Record<string, string> = {
   left: 'start',
   center: 'center',
   right: 'end'
 }
-
-type FontInfo = {
-  fontFamily: string
-  fontWeight: number
-  baseline: number
-}
-
-export type FontKey = keyof typeof fontInfoMap
-
-export const fontInfoMap = {
-  roboto: {
-    fontFamily: '\'Roboto\'',
-    fontWeight: 500,
-    baseline: 0.75
-  },
-  suez: {
-    fontFamily: '\'Suez One\'',
-    fontWeight: 400,
-    baseline: 0.75
-  },
-  bubbles: {
-    fontFamily: '\'Rubik Bubbles\'',
-    fontWeight: 400,
-    baseline: 0.75
-  },
-  playwrite: {
-    fontFamily: '\'Playwrite BE VLG\'',
-    fontWeight: 400,
-    baseline: 0.85
-  },
-  chewy: {
-    fontFamily: '\'Chewy\'',
-    fontWeight: 400,
-    baseline: 0.75
-  },
-  courier: {
-    fontFamily: '\'Courier Prime\'',
-    fontWeight: 700,
-    baseline: 0.65
-  },
-  fugaz: {
-    fontFamily: '\'Fugaz One\'',
-    fontWeight: 400,
-    baseline: 0.75
-  },
-  sedan: {
-    fontFamily: '\'Sedan\'',
-    fontWeight: 400,
-    baseline: 0.75
-  }
-} satisfies Record<string, FontInfo>

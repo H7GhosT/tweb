@@ -58,6 +58,7 @@ export default function BrushCanvas() {
     brushPainter.clear()
     lines().forEach(line => brushPainter.drawLine(line))
   }
+  // After reopening the media editor, they history undo should have access to the latest redraw
   currentReDraw = reDraw
 
   onMount(() => {
