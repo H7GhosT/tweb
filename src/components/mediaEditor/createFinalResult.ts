@@ -151,8 +151,19 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
 
     ctx.save()
     ctx.translate(layer.position[0], layer.position[1])
-    ctx.rotate(layer.rotation)
-    ctx.drawImage(stickerChild as CanvasImageSource, -size / 2, - size / 2, size, size)
+    ctx.rotate(layer.rotation);
+
+    const [w, h] = (() => {
+      if(stickerChild instanceof HTMLImageElement) {
+        const ratio = stickerChild.naturalWidth / stickerChild.naturalHeight
+        return snapToViewport(ratio, size, size)
+      } else if(stickerChild instanceof HTMLVideoElement) {
+        const ratio = stickerChild.videoWidth / stickerChild.videoHeight
+        return snapToViewport(ratio, size, size)
+      } else return [size, size]
+    })()
+
+    ctx.drawImage(stickerChild as CanvasImageSource, -size / 2 + (size - w) / 2, - size / 2 + (size - h) / 2, w, h)
 
     ctx.restore()
   }
