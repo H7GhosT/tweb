@@ -9,8 +9,8 @@ import LazyLoadQueue from '../../lazyLoadQueue';
 import wrapStickerSetThumb from '../../wrappers/stickerSetThumb';
 import createMiddleware from '../../../helpers/solid/createMiddleware';
 import {IconTsx} from '../../iconTsx';
-import wrapSticker from '../../wrappers/sticker';
 import {ScrollableX} from '../../scrollable';
+import SuperStickerRenderer from '../../emoticonsDropdown/tabs/SuperStickerRenderer';
 
 import Space from '../space';
 import MediaEditorContext from '../context';
@@ -42,7 +42,19 @@ export default function StickersTab() {
   const [thumbsListScrollable, setThumbsListScrollable] = createSignal<HTMLDivElement>()
 
 
-  const lazyLoadQueue = new LazyLoadQueue(1)
+  const lazyLoadQueue = new LazyLoadQueue()
+  const stickerRenderer = new SuperStickerRenderer({
+    regularLazyLoadQueue: lazyLoadQueue,
+    group: 'none',
+    managers,
+    intersectionObserverInit: {root: container()},
+    withLock: false
+  })
+
+  onCleanup(() => {
+    stickerRenderer.destroy()
+    lazyLoadQueue.clear()
+  })
 
 
   async function onStickerSetThumbClick(id: string) {
@@ -95,17 +107,19 @@ export default function StickersTab() {
     let container: HTMLDivElement
 
     onMount(() => {
-      wrapSticker({
-        div: container,
-        doc: props.doc,
-        group: 'none',
-        width: 70,
-        height: 70,
-        lazyLoadQueue,
-        middleware: createMiddleware().get(),
-        managers,
-        textColor: 'white'
-      })
+      stickerRenderer.renderSticker(props.doc, container)
+      stickerRenderer.observeAnimated(container)
+      // wrapSticker({
+      //   div: container,
+      //   doc: props.doc,
+      //   group: 'none',
+      //   width: 70,
+      //   height: 70,
+      //   lazyLoadQueue,
+      //   middleware: createMiddleware().get(),
+      //   managers,
+      //   textColor: 'white'
+      // })
     })
 
     function onClick() {
@@ -259,11 +273,17 @@ export default function StickersTab() {
       <Space amount="8px" />
 
       <div class='media-editor__sticker-search'>
-        <EmoticonsSearch type="stickers" onValue={(value) => {
-          setSearch(value)
-        }} onGroup={(group) => {
-          setGroup(group)
-        }} categoryColor='white' />
+        <EmoticonsSearch
+          type="stickers"
+          onValue={(value) => {
+            setSearch(value)
+          }}
+          onGroup={(group) => {
+            setGroup(group)
+          }}
+          categoryColor='white'
+          animatedItemGroup='none'
+        />
       </div>
 
       {/* TODO: Favorties */}
