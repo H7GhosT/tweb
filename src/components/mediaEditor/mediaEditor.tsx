@@ -1,4 +1,4 @@
-import {onCleanup, onMount} from 'solid-js';
+import {onMount} from 'solid-js';
 import {render} from 'solid-js/web';
 
 import {NoneToVoidFunction} from '../../types';
@@ -9,15 +9,15 @@ import appNavigationController from '../appNavigationController';
 
 import {delay} from './utils';
 import {injectMediaEditorLangPack} from './langPack';
-import MediaEditorTabs from './mediaEditorTabs';
-import MediaEditorTopbar from './mediaEditorTopbar';
-import MediaEditorTabContent from './mediaEditorTabContent';
-import MediaEditorEqualizer from './mediaEditorEqualizer';
-import MediaEditorCrop from './mediaEditorCrop';
-import MediaEditorText from './mediaEditorText';
-import MediaEditorBrush from './mediaEditorBrush';
-import MediaEditorStickers from './mediaEditorStickers';
-import MediaEditorContext, {createStandaloneContextValue, HistoryItem, MediaEditorContextValue, StandaloneContext} from './context';
+import Topbar from './topbar';
+import Tabs from './tabs/tabs';
+import TabContent from './tabs/tabContent';
+import AdjustmentsTab from './tabs/adjustmentsTab';
+import CropTab from './tabs/cropTab';
+import TextTab from './tabs/textTab';
+import BrushTab from './tabs/brushTab';
+import StickersTab from './tabs/stickersTab';
+import MediaEditorContext, {createStandaloneContextValue, StandaloneContext} from './context';
 import MainCanvas from './canvas/mainCanvas';
 import FinishButton from './finishButton';
 import {withCurrentOwner} from './utils'
@@ -46,7 +46,6 @@ export function MediaEditor(props: MediaEditorProps) {
   let overlay: HTMLDivElement;
 
   onMount(async() => {
-    console.log('[Media editor] mounted');
     overlay.classList.add('media-editor__overlay--hidden')
     await doubleRaf()
     overlay.classList.remove('media-editor__overlay--hidden')
@@ -59,14 +58,12 @@ export function MediaEditor(props: MediaEditorProps) {
     overlay.focus()
   })
 
-  onCleanup(() => {
-    console.log('[Media editor] cleanup');
-  })
 
-  async function handleClose() {
+  async function handleClose(finished = false) {
     overlay.classList.add('media-editor__overlay--hidden')
     await delay(200)
     props.onClose()
+    if(!finished && !props.standaloneContext) standaloneContext.dispose()
   }
 
 
@@ -76,20 +73,20 @@ export function MediaEditor(props: MediaEditorProps) {
         <div class="media-editor__container">
           <MainCanvas />
           <div class="media-editor__toolbar">
-            <MediaEditorTopbar onClose={handleClose} />
-            <MediaEditorTabs />
-            <MediaEditorTabContent tabs={{
-              adjustments: () => <MediaEditorEqualizer />,
-              crop: () => <MediaEditorCrop />,
-              text: () => <MediaEditorText />,
-              brush: () => <MediaEditorBrush />,
-              stickers: () => <MediaEditorStickers />
+            <Topbar onClose={handleClose} />
+            <Tabs />
+            <TabContent tabs={{
+              adjustments: () => <AdjustmentsTab />,
+              crop: () => <CropTab />,
+              text: () => <TextTab />,
+              brush: () => <BrushTab />,
+              stickers: () => <StickersTab />
             }} />
           </div>
           <FinishButton onClick={withCurrentOwner(async() => {
             const result = await createFinalResult(standaloneContext)
             props.onEditFinish(result)
-            props.onClose()
+            handleClose(true)
           })} />
         </div>
       </div>
@@ -102,10 +99,8 @@ export function openMediaEditor(props: MediaEditorProps) {
 
   const element = document.createElement('div')
   document.body.append(element)
-  console.log('[Media editor] appended wrapper');
 
   const dispose = render(() => <MediaEditor {...props} onClose={onClose} />, element)
-  console.log('[Media editor] rendered jsx');
 
   function onClose() {
     props.onClose()

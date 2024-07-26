@@ -1,19 +1,19 @@
-import {Accessor, createContext, createEffect, createSignal, JSX, onCleanup, onMount} from 'solid-js'
+import {Accessor, createContext, createEffect, createSignal, JSX, onCleanup, onMount, useContext} from 'solid-js'
 
-import {useContext} from 'solid-js';
-import {doubleRaf} from '../../helpers/schedulers'
-import Scrollable from '../scrollable'
+import {doubleRaf} from '../../../helpers/schedulers'
+import Scrollable from '../../scrollable'
 
-import {delay} from './utils'
-import {mediaEditorTabsOrder} from './mediaEditorTabs'
-import MediaEditorContext from './context';
+import {delay} from '../utils'
+import MediaEditorContext from '../context';
+
+import {mediaEditorTabsOrder} from './tabs'
 
 type TabContentContextValue = {
   container: Accessor<HTMLDivElement>
 }
 export const TabContentContext = createContext<TabContentContextValue>()
 
-export default function MediaEditorTabContent(props: {
+export default function TabContent(props: {
   tabs: Record<string, () => JSX.Element>
 }) {
   const context = useContext(MediaEditorContext)

@@ -1,10 +1,10 @@
 import {useContext} from 'solid-js';
 
-import MediaEditorRangeInput from './mediaEditorRangeInput';
-import Space from './Space';
-import MediaEditorContext from './context';
+import RangeInput from '../rangeInput';
+import Space from '../space';
+import MediaEditorContext from '../context';
 
-export default function MediaEditorEqualizer(props: {}) {
+export default function AdjustmentsTab() {
   const context = useContext(MediaEditorContext);
   const {adjustments} = context
 
@@ -15,7 +15,7 @@ export default function MediaEditorEqualizer(props: {}) {
         const [value, setValue] = item.signal
         return (
           <>
-            <MediaEditorRangeInput
+            <RangeInput
               value={value()}
               onChange={setValue}
               label={item.label()}

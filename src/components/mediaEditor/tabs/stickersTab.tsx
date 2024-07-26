@@ -1,23 +1,23 @@
 import {createEffect, createResource, createSignal, For, onCleanup, onMount, Show, useContext} from 'solid-js';
-import EmoticonsSearch from '../emoticonsDropdown/search';
-import {Document, EmojiGroup, StickerSet} from '../../layer';
-import LazyLoadQueue from '../lazyLoadQueue';
-import wrapStickerSetThumb from '../wrappers/stickerSetThumb';
-import createMiddleware from '../../helpers/solid/createMiddleware';
-import {IconTsx} from '../iconTsx';
-import wrapSticker from '../wrappers/sticker';
-import wrapEmojiText from '../../lib/richTextProcessor/wrapEmojiText';
-import Space from './Space';
-import {i18n} from '../../lib/langPack';
-import {ScrollableX} from '../scrollable';
-import MediaEditorContext from './context';
-import {ResizableLayer} from './canvas/resizableLayers';
-import {TabContentContext} from './mediaEditorTabContent';
-import {delay} from './utils';
+import EmoticonsSearch from '../../emoticonsDropdown/search';
+import {Document, EmojiGroup, StickerSet} from '../../../layer';
+import LazyLoadQueue from '../../lazyLoadQueue';
+import wrapStickerSetThumb from '../../wrappers/stickerSetThumb';
+import createMiddleware from '../../../helpers/solid/createMiddleware';
+import {IconTsx} from '../../iconTsx';
+import wrapSticker from '../../wrappers/sticker';
+import wrapEmojiText from '../../../lib/richTextProcessor/wrapEmojiText';
+import Space from '../space';
+import {i18n} from '../../../lib/langPack';
+import {ScrollableX} from '../../scrollable';
+import MediaEditorContext from '../context';
+import {ResizableLayer} from '../canvas/resizableLayers';
+import {TabContentContext} from './tabContent';
+import {delay} from '../utils';
 
 // TODO: Don't forget favorites
 
-export default function MediaEditorStickers() {
+export default function StickersTab() {
   const context = useContext(MediaEditorContext)
   const {container} = useContext(TabContentContext)
   const {managers} = context

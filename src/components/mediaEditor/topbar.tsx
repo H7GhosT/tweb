@@ -6,7 +6,7 @@ import {ButtonIconTsx} from '../buttonIconTsx';
 
 import MediaEditorContext from './context';
 
-export default function MediaEditorTopbar(props: {
+export default function Topbar(props: {
   onClose: NoneToVoidFunction
 }) {
   const context = useContext(MediaEditorContext)

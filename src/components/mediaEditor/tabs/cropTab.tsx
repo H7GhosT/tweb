@@ -1,12 +1,12 @@
 import {JSX, splitProps, useContext} from 'solid-js';
 
-import {i18n} from '../../lib/langPack';
-import {IconTsx} from '../iconTsx';
+import {i18n} from '../../../lib/langPack';
+import {IconTsx} from '../../iconTsx';
 
-import MediaEditorLargeButton, {MediaEditorLargeButtonProps} from './mediaEditorLargeButton';
-import MediaEditorContext from './context';
-import {applyCurrentFixedRatio} from './canvas/applyCurrentFixedRatio';
-import {withCurrentOwner} from './utils';
+import LargeButton, {MediaEditorLargeButtonProps} from '../largeButton';
+import MediaEditorContext from '../context';
+import {applyCurrentFixedRatio} from '../canvas/applyCurrentFixedRatio';
+import {withCurrentOwner} from '../utils';
 
 const ratioRects = {
   '1x1': () => <rect x="4" y="4" width="16" height="16" rx="2" stroke="white" stroke-width="1.66"/>,
@@ -29,17 +29,17 @@ function Item(inProps: MediaEditorLargeButtonProps & {
   const [props, buttonProps] = splitProps(inProps, ['icon', 'text'])
 
   return (
-    <MediaEditorLargeButton
+    <LargeButton
       {...buttonProps}
       class="media-editor__crop-item"
     >
       {props.icon}
       {props.text}
-    </MediaEditorLargeButton>
+    </LargeButton>
   );
 }
 
-export default function MediaEditorCrop(props: {}) {
+export default function CropTab() {
   const context = useContext(MediaEditorContext)
   const [fixedImageRatioKey, setFixedImageRatioKey] = context.fixedImageRatioKey
 

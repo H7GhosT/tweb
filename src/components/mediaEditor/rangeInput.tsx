@@ -7,7 +7,7 @@ function nMap(value: number, min: number, max: number, tMin: number, tMax: numbe
   return (value - min) / (max - min) * (tMax - tMin) + tMin
 }
 
-export default function MediaEditorRangeInput(props: {
+export default function RangeInput(props: {
   label: JSX.Element
   value: number
   min: number

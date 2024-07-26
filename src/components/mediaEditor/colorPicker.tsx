@@ -1,8 +1,9 @@
 import {createEffect, createReaction, createSignal, on, onMount} from 'solid-js';
 
 import {hexToRgb} from '../../helpers/color';
-import ColorPicker from '../colorPicker';
+import _ColorPicker from '../colorPicker';
 import ripple from '../ripple';
+
 import {delay} from './utils';
 
 export const colorPickerSwatches = [
@@ -20,7 +21,7 @@ const PICKER_WIDTH_PX = 200
 const PICKER_HEIGHT_PX = 120
 const SLIDER_WIDTH_PX = 304
 
-export default function MediaEditorColorPicker(props: {
+export default function ColorPicker(props: {
   value: string
   onChange: (value: string) => void
   colorKey?: string // Just for reaction, not used to access anything
@@ -52,7 +53,7 @@ export default function MediaEditorColorPicker(props: {
     }
   }
 
-  const colorPicker = new ColorPicker({
+  const colorPicker = new _ColorPicker({
     buildLayout: (parts) => {
       return (
         <div

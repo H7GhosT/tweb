@@ -1,11 +1,12 @@
 import {JSX, onMount} from 'solid-js';
+
 import ripple from '../ripple';
 
 export type MediaEditorLargeButtonProps = JSX.HTMLAttributes<HTMLDivElement> & {
   active?: boolean
 }
 
-export default function MediaEditorLargeButton(props: MediaEditorLargeButtonProps) {
+export default function LargeButton(props: MediaEditorLargeButtonProps) {
   let element: HTMLDivElement
 
   onMount(() => {

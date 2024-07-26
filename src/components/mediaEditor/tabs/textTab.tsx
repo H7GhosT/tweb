@@ -1,20 +1,20 @@
 import {onMount, Accessor, JSX, useContext, createEffect} from 'solid-js';
 
-import {i18n} from '../../lib/langPack';
+import {i18n} from '../../../lib/langPack';
 
-import ripple from '../ripple';
-import {IconTsx} from '../iconTsx';
+import ripple from '../../ripple';
+import {IconTsx} from '../../iconTsx';
 
-import MediaEditorColorPicker from './mediaEditorColorPicker';
-import MediaEditorRangeInput from './mediaEditorRangeInput';
-import MediaEditorLargeButton from './mediaEditorLargeButton';
-import Space from './Space';
-import MediaEditorContext from './context';
-import {createStoredColor} from './createStoredColor';
-import {fontInfoMap, FontKey} from './canvas/textLayerContent';
+import ColorPicker from '../colorPicker';
+import RangeInput from '../rangeInput';
+import LargeButton from '../largeButton';
+import Space from '../space';
+import MediaEditorContext from '../context';
+import {createStoredColor} from '../createStoredColor';
+import {fontInfoMap, FontKey} from '../canvas/textLayerContent';
 
 
-export default function MediaEditorText() {
+export default function TextTab() {
   const context = useContext(MediaEditorContext)
   const [layerInfo, setLayerInfo] = context.currentTextLayerInfo
 
@@ -53,7 +53,7 @@ export default function MediaEditorText() {
   })
 
   const fontButton = (text: JSX.Element, textFont: FontKey) =>
-    <MediaEditorLargeButton
+    <LargeButton
       active={layerInfo()?.font === textFont}
       onClick={() => setFont(textFont)}
       style={{
@@ -62,11 +62,11 @@ export default function MediaEditorText() {
       }}
     >
       {text}
-    </MediaEditorLargeButton>
+    </LargeButton>
 
   return (
     <>
-      <MediaEditorColorPicker
+      <ColorPicker
         value={layerInfo()?.color}
         onChange={setSavedColor}
         previousColor={savedColor().previous}
@@ -86,7 +86,7 @@ export default function MediaEditorText() {
         </div>
       </div>
 
-      <MediaEditorRangeInput
+      <RangeInput
         label={i18n('MediaEditor.Size')}
         min={16}
         max={64}

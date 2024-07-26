@@ -1,6 +1,8 @@
 import {useContext} from 'solid-js';
-import {ButtonIconTsx} from '../buttonIconTsx';
-import MediaEditorContext from './context';
+
+import {ButtonIconTsx} from '../../buttonIconTsx';
+
+import MediaEditorContext from '../context';
 
 
 type ConfigItem = {
@@ -18,7 +20,7 @@ const config: ConfigItem[] = [
 
 export const mediaEditorTabsOrder = config.map(item => item.key)
 
-export default function MediaEditorTabs() {
+export default function Tabs() {
   const context = useContext(MediaEditorContext)
   const [tab, setTab] = context.currentTab
 
