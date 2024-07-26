@@ -9,61 +9,59 @@ import {BrushDrawnLine} from './canvas/brushPainter';
 import {MediaEditorProps} from './mediaEditor';
 
 export interface MediaEditorContextValue {
-  managers: AppManagers
-  pixelRatio: number
-  imageSrc: string
-  adjustments: AdjustmentsConfig
-  renderingPayload: Signal<RenderingPayload>
+  managers: AppManagers;
+  pixelRatio: number;
+  imageSrc: string;
+  adjustments: AdjustmentsConfig;
+  renderingPayload: Signal<RenderingPayload>;
 
-  currentTab: Signal<string>
+  currentTab: Signal<string>;
 
-  imageSize: Signal<[number, number]>
-  canvasSize: Signal<[number, number]>
-  currentImageRatio: Signal<number>
-  fixedImageRatioKey: Signal<string>
-  scale: Signal<number>
-  rotation: Signal<number>
-  translation: Signal<[number, number]>
-  flip: Signal<[number, number]>
+  imageSize: Signal<[number, number]>;
+  canvasSize: Signal<[number, number]>;
+  currentImageRatio: Signal<number>;
+  fixedImageRatioKey: Signal<string>;
+  scale: Signal<number>;
+  rotation: Signal<number>;
+  translation: Signal<[number, number]>;
+  flip: Signal<[number, number]>;
 
+  resizableLayersSeed: number;
+  currentTextLayerInfo: Signal<TextLayerInfo>;
+  resizableLayers: Signal<Signal<ResizableLayer>[]>;
+  selectedResizableLayer: Signal<number>;
+  textLayersInfo: Signal<Record<number, TextRenderingInfo>>;
+  stickersLayersInfo: Signal<Record<number, StickerRenderingInfo>>;
 
-  resizableLayersSeed: number
-  currentTextLayerInfo: Signal<TextLayerInfo>
-  resizableLayers: Signal<Signal<ResizableLayer>[]>
-  selectedResizableLayer: Signal<number>
-  textLayersInfo: Signal<Record<number, TextRenderingInfo>>
-  stickersLayersInfo: Signal<Record<number, StickerRenderingInfo>>
-
-  imageCanvas: Signal<HTMLCanvasElement>
+  imageCanvas: Signal<HTMLCanvasElement>;
   currentBrush: Signal<{
-    color: string
-    size: number
-    brush: string
-  }>
-  brushDrawnLines: Signal<BrushDrawnLine[]>
+    color: string;
+    size: number;
+    brush: string;
+  }>;
+  brushDrawnLines: Signal<BrushDrawnLine[]>;
 
-  history: Signal<HistoryItem[]>
-  redoHistory: Signal<HistoryItem[]>
-  pushToHistory: (item: HistoryItem) => void
+  history: Signal<HistoryItem[]>;
+  redoHistory: Signal<HistoryItem[]>;
+  pushToHistory: (item: HistoryItem) => void;
 }
 
 export type HistoryItem = {
-  undo: () => void
-  redo: () => void
-}
+  undo: () => void;
+  redo: () => void;
+};
 
-const MediaEditorContext = createContext<MediaEditorContextValue>()
-
+const MediaEditorContext = createContext<MediaEditorContextValue>();
 
 function createContextValue(props: MediaEditorProps): MediaEditorContextValue {
-  const history = createSignal<HistoryItem[]>([])
-  const redoHistory = createSignal<HistoryItem[]>([])
+  const history = createSignal<HistoryItem[]>([]);
+  const redoHistory = createSignal<HistoryItem[]>([]);
 
   function pushToHistory(item: HistoryItem) {
-    const [, setHistory] = history
-    const [, setRedoHistory] = redoHistory
-    setHistory(prev => [...prev, item])
-    setRedoHistory([])
+    const [, setHistory] = history;
+    const [, setRedoHistory] = redoHistory;
+    setHistory((prev) => [...prev, item]);
+    setRedoHistory([]);
   }
 
   return {
@@ -107,21 +105,21 @@ function createContextValue(props: MediaEditorProps): MediaEditorContextValue {
     history,
     redoHistory,
     pushToHistory
-  }
+  };
 }
 
-export type StandaloneContext = ReturnType<typeof createStandaloneContextValue>
+export type StandaloneContext = ReturnType<typeof createStandaloneContextValue>;
 
 export function createStandaloneContextValue(props: MediaEditorProps) {
-  let dispose: () => void
+  let dispose: () => void;
   const value = createRoot((_dispose) => {
-    dispose = _dispose
-    return createContextValue(props)
-  })
+    dispose = _dispose;
+    return createContextValue(props);
+  });
   return {
     value,
     dispose
-  }
+  };
 }
 
-export default MediaEditorContext
+export default MediaEditorContext;

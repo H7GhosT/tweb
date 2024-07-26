@@ -1,28 +1,28 @@
-import {createMemo, JSX} from 'solid-js'
+import {createMemo, JSX} from 'solid-js';
 
-import clamp from '../../helpers/number/clamp'
-import {hexaToHsla} from '../../helpers/color'
+import clamp from '../../helpers/number/clamp';
+import {hexaToHsla} from '../../helpers/color';
 
 function nMap(value: number, min: number, max: number, tMin: number, tMax: number) {
-  return (value - min) / (max - min) * (tMax - tMin) + tMin
+  return ((value - min) / (max - min)) * (tMax - tMin) + tMin;
 }
 
 export default function RangeInput(props: {
-  label: JSX.Element
-  value: number
-  min: number
-  max: number
-  onChange: (value: number) => void
-  onChangeFinish?: (prevValue: number, currentValue: number) => void
-  passiveLabel?: boolean
-  color?: string
+  label: JSX.Element;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+  onChangeFinish?: (prevValue: number, currentValue: number) => void;
+  passiveLabel?: boolean;
+  color?: string;
 }) {
-  const normalizedValue = () => nMap(props.value, props.min, props.max, 0, 1)
-  const mappedCenter = createMemo(() => nMap(0, props.min, props.max, 0, 100))
+  const normalizedValue = () => nMap(props.value, props.min, props.max, 0, 1);
+  const mappedCenter = createMemo(() => nMap(0, props.min, props.max, 0, 100));
 
-  const brightShadow = () => props.color && hexaToHsla(props.color).l < 32
+  const brightShadow = () => props.color && hexaToHsla(props.color).l < 32;
 
-  let prevValue: number | null = null
+  let prevValue: number | null = null;
 
   return (
     <div
@@ -35,18 +35,14 @@ export default function RangeInput(props: {
       style={{
         '--color': props.color,
         '--normalized': normalizedValue(),
-        '--w': Math.abs(props.value - Math.max(0, props.min)) / (props.max - props.min) * 100 + '%',
+        '--w': (Math.abs(props.value - Math.max(0, props.min)) / (props.max - props.min)) * 100 + '%',
         '--bar-left': props.value >= 0 ? Math.max(0, mappedCenter()) + '%' : undefined,
         '--bar-right': props.value < 0 ? mappedCenter() + '%' : undefined
       }}
     >
       <div class="media-editor__range-input-row">
-        <div class="media-editor__range-input-label">
-          {props.label}
-        </div>
-        <div class="media-editor__range-input-value">
-          {props.value}
-        </div>
+        <div class="media-editor__range-input-label">{props.label}</div>
+        <div class="media-editor__range-input-value">{props.value}</div>
       </div>
       <div class="media-editor__range-input-wrapper">
         <input
@@ -55,14 +51,14 @@ export default function RangeInput(props: {
           max={props.max}
           step="1"
           value={props.value}
-          onInput={e => {
-            if(prevValue === null) prevValue = props.value
-            const newValue = clamp(e.currentTarget.valueAsNumber, props.min, props.max)
-            props.onChange(newValue)
+          onInput={(e) => {
+            if(prevValue === null) prevValue = props.value;
+            const newValue = clamp(e.currentTarget.valueAsNumber, props.min, props.max);
+            props.onChange(newValue);
           }}
           onChange={() => {
-            props.onChangeFinish?.(prevValue, props.value)
-            prevValue = null
+            props.onChangeFinish?.(prevValue, props.value);
+            prevValue = null;
           }}
         />
         <div class="media-editor__range-input-thumb media-editor__range-input-thumb--shadow" />
@@ -72,5 +68,5 @@ export default function RangeInput(props: {
         <div class="media-editor__range-input-progress" />
       </div>
     </div>
-  )
+  );
 }

@@ -10,11 +10,7 @@ export function initShaderProgram(gl: WebGLRenderingContext, vsSource: string, f
   gl.linkProgram(shaderProgram);
 
   if(!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-    log.error(
-      `Unable to initialize the shader program: ${gl.getProgramInfoLog(
-        shaderProgram
-      )}`
-    );
+    log.error(`Unable to initialize the shader program: ${gl.getProgramInfoLog(shaderProgram)}`);
     return null;
   }
 
@@ -28,9 +24,7 @@ function loadShader(gl: WebGLRenderingContext, type: GLenum, source: string) {
   gl.compileShader(shader);
 
   if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    log.error(
-      `An error occurred compiling the shaders: ${gl.getShaderInfoLog(shader)}`
-    );
+    log.error(`An error occurred compiling the shaders: ${gl.getShaderInfoLog(shader)}`);
     gl.deleteShader(shader);
     return null;
   }

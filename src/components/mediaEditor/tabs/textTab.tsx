@@ -14,31 +14,35 @@ import {createStoredColor} from '../createStoredColor';
 import {fontInfoMap} from '../utils';
 import {FontKey} from '../types';
 
-
 export default function TextTab() {
-  const context = useContext(MediaEditorContext)
-  const [layerInfo, setLayerInfo] = context.currentTextLayerInfo
+  const context = useContext(MediaEditorContext);
+  const [layerInfo, setLayerInfo] = context.currentTextLayerInfo;
 
-  const [savedColor, setSavedColor] = createStoredColor('media-editor-text-color', '#ffffff')
+  const [savedColor, setSavedColor] = createStoredColor('media-editor-text-color', '#ffffff');
 
   createEffect(() => {
-    setLayerInfo(prev => ({...prev, color: savedColor().value}))
-  })
+    setLayerInfo((prev) => ({...prev, color: savedColor().value}));
+  });
 
   function setSize(value: number) {
-    setLayerInfo(prev => ({...prev, size: value}))
+    setLayerInfo((prev) => ({...prev, size: value}));
   }
   function setAlignment(value: string) {
-    setLayerInfo(prev => ({...prev, alignment: value}))
+    setLayerInfo((prev) => ({...prev, alignment: value}));
   }
   function setStyle(value: string) {
-    setLayerInfo(prev => ({...prev, style: value}))
+    setLayerInfo((prev) => ({...prev, style: value}));
   }
   function setFont(value: FontKey) {
-    setLayerInfo(prev => ({...prev, font: value}))
+    setLayerInfo((prev) => ({...prev, font: value}));
   }
 
-  const toggleButton = (icon: Icon, value: string, currentValue: Accessor<string>, setValue: (value: string) => void) =>
+  const toggleButton = (
+    icon: Icon,
+    value: string,
+    currentValue: Accessor<string>,
+    setValue: (value: string) => void
+  ) => (
     <div
       class="media-editor__toggle-button"
       classList={{'media-editor__toggle-button--active': value === currentValue()}}
@@ -46,14 +50,15 @@ export default function TextTab() {
     >
       <IconTsx icon={icon} />
     </div>
+  );
 
   onMount(() => {
     document.querySelectorAll('.media-editor__toggle-button').forEach((element) => {
-      ripple(element as HTMLElement)
-    })
-  })
+      ripple(element as HTMLElement);
+    });
+  });
 
-  const fontButton = (text: JSX.Element, textFont: FontKey) =>
+  const fontButton = (text: JSX.Element, textFont: FontKey) => (
     <LargeButton
       active={layerInfo()?.font === textFont}
       onClick={() => setFont(textFont)}
@@ -64,14 +69,11 @@ export default function TextTab() {
     >
       {text}
     </LargeButton>
+  );
 
   return (
     <>
-      <ColorPicker
-        value={layerInfo()?.color}
-        onChange={setSavedColor}
-        previousColor={savedColor().previous}
-      />
+      <ColorPicker value={layerInfo()?.color} onChange={setSavedColor} previousColor={savedColor().previous} />
 
       <div class="media-editor__toggle-group-row">
         <div class="media-editor__toggle-group">
@@ -110,5 +112,5 @@ export default function TextTab() {
       {fontButton(i18n('MediaEditor.Fonts.RubikBubbles'), 'bubbles')}
       {fontButton(i18n('MediaEditor.Fonts.Playwrite'), 'playwrite')}
     </>
-  )
+  );
 }

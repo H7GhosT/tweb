@@ -6,13 +6,13 @@ import MediaEditorContext from '../context';
 
 export default function AdjustmentsTab() {
   const context = useContext(MediaEditorContext);
-  const {adjustments} = context
+  const {adjustments} = context;
 
   return (
     <>
-      <Space amount='16px' />
+      <Space amount="16px" />
       {adjustments.map((item) => {
-        const [value, setValue] = item.signal
+        const [value, setValue] = item.signal;
         return (
           <>
             <RangeInput
@@ -21,17 +21,21 @@ export default function AdjustmentsTab() {
               label={item.label()}
               onChangeFinish={(prevValue, currentValue) => {
                 context.pushToHistory({
-                  undo() { setValue(prevValue) },
-                  redo() { setValue(currentValue) }
-                })
+                  undo() {
+                    setValue(prevValue);
+                  },
+                  redo() {
+                    setValue(currentValue);
+                  }
+                });
               }}
               min={item.to100 ? 0 : -50}
               max={item.to100 ? 100 : 50}
             />
-            <Space amount='32px' />
+            <Space amount="32px" />
           </>
-        )
+        );
       })}
     </>
-  )
+  );
 }

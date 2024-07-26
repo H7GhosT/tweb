@@ -3,18 +3,18 @@
 import lang from '../../lang';
 import I18n from '../../lib/langPack';
 
-const mediaEditorLang = Object.fromEntries(Object.entries(lang).filter(([key]) => key.startsWith('MediaEditor')))
+const mediaEditorLang = Object.fromEntries(Object.entries(lang).filter(([key]) => key.startsWith('MediaEditor')));
 
-let injected = false
+let injected = false;
 
 export function injectMediaEditorLangPack() {
-  if(injected) return
+  if(injected) return;
   Object.entries(mediaEditorLang).forEach(([key, value]) => {
     I18n.strings.set(key as keyof typeof lang, {
       _: 'langPackString',
       key,
       value: value as string
-    })
-  })
-  injected = true
+    });
+  });
+  injected = true;
 }

@@ -3,15 +3,15 @@ import {JSX, onMount} from 'solid-js';
 import ripple from '../ripple';
 
 export type MediaEditorLargeButtonProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  active?: boolean
-}
+  active?: boolean;
+};
 
 export default function LargeButton(props: MediaEditorLargeButtonProps) {
-  let element: HTMLDivElement
+  let element: HTMLDivElement;
 
   onMount(() => {
-    ripple(element)
-  })
+    ripple(element);
+  });
 
   return (
     <div
@@ -23,5 +23,5 @@ export default function LargeButton(props: MediaEditorLargeButtonProps) {
         [props.class]: !!props.class
       }}
     />
-  )
+  );
 }

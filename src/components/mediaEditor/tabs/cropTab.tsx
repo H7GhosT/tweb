@@ -9,30 +9,37 @@ import {applyCurrentFixedRatio} from '../canvas/applyCurrentFixedRatio';
 import {withCurrentOwner} from '../utils';
 
 const ratioRects = {
-  '1x1': () => <rect x="4" y="4" width="16" height="16" rx="2" stroke="white" stroke-width="1.66"/>,
-  '3x2': () => <rect x="3" y="6" width="18" height="12" rx="2" stroke="white" stroke-width="1.66"/>,
-  '4x3': () => <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" stroke-width="1.66"/>,
-  '5x4': () => <rect x="3" y="4.5" width="18" height="15" rx="2" stroke="white" stroke-width="1.66"/>,
-  '7x5': () => <rect x="3" y="4" width="18" height="16" rx="2" stroke="white" stroke-width="1.66"/>,
-  '16x9': () => <rect x="2.5" y="6.5" width="19" height="11" rx="2" stroke="white" stroke-width="1.66"/>
-}
+  '1x1': () => <rect x="4" y="4" width="16" height="16" rx="2" stroke="white" stroke-width="1.66" />,
+  '3x2': () => <rect x="3" y="6" width="18" height="12" rx="2" stroke="white" stroke-width="1.66" />,
+  '4x3': () => <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" stroke-width="1.66" />,
+  '5x4': () => <rect x="3" y="4.5" width="18" height="15" rx="2" stroke="white" stroke-width="1.66" />,
+  '7x5': () => <rect x="3" y="4" width="18" height="16" rx="2" stroke="white" stroke-width="1.66" />,
+  '16x9': () => <rect x="2.5" y="6.5" width="19" height="11" rx="2" stroke="white" stroke-width="1.66" />
+};
 
-const ratioIcon = (ratio: keyof typeof ratioRects, rotated?: boolean) =>
-  <svg classList={{'media-editor__crop-item-icon--rotated': rotated}} width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+const ratioIcon = (ratio: keyof typeof ratioRects, rotated?: boolean) => (
+  <svg
+    classList={{'media-editor__crop-item-icon--rotated': rotated}}
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     {ratioRects[ratio]()}
   </svg>
+);
 
-function Item(inProps: MediaEditorLargeButtonProps & {
-  icon: JSX.Element
-  text: JSX.Element
-}) {
-  const [props, buttonProps] = splitProps(inProps, ['icon', 'text'])
+function Item(
+  inProps: MediaEditorLargeButtonProps & {
+    icon: JSX.Element;
+    text: JSX.Element;
+  }
+) {
+  const [props, buttonProps] = splitProps(inProps, ['icon', 'text']);
 
   return (
-    <LargeButton
-      {...buttonProps}
-      class="media-editor__crop-item"
-    >
+    <LargeButton {...buttonProps} class="media-editor__crop-item">
       {props.icon}
       {props.text}
     </LargeButton>
@@ -40,23 +47,38 @@ function Item(inProps: MediaEditorLargeButtonProps & {
 }
 
 export default function CropTab() {
-  const context = useContext(MediaEditorContext)
-  const [fixedImageRatioKey, setFixedImageRatioKey] = context.fixedImageRatioKey
+  const context = useContext(MediaEditorContext);
+  const [fixedImageRatioKey, setFixedImageRatioKey] = context.fixedImageRatioKey;
 
-  const isActive = (what?: string) => fixedImageRatioKey() === what
+  const isActive = (what?: string) => fixedImageRatioKey() === what;
 
   const onRatioClick = withCurrentOwner((ratio?: string) => {
-    setFixedImageRatioKey(ratio)
-    applyCurrentFixedRatio()
-  })
+    setFixedImageRatioKey(ratio);
+    applyCurrentFixedRatio();
+  });
 
   return (
     <>
       <div class="media-editor__label">{i18n('MediaEditor.AspectRatio')}</div>
 
-      <Item icon={<IconTsx icon="free_transform" />} text={i18n('MediaEditor.Free')} active={isActive()} onClick={() => onRatioClick()} />
-      <Item icon={<IconTsx icon="image_original" />} text={i18n('MediaEditor.Original')} active={isActive('original')} onClick={() => onRatioClick('original')} />
-      <Item icon={ratioIcon('1x1')} text={i18n('MediaEditor.Square')} active={isActive('1x1')} onClick={() => onRatioClick('1x1')} />
+      <Item
+        icon={<IconTsx icon="free_transform" />}
+        text={i18n('MediaEditor.Free')}
+        active={isActive()}
+        onClick={() => onRatioClick()}
+      />
+      <Item
+        icon={<IconTsx icon="image_original" />}
+        text={i18n('MediaEditor.Original')}
+        active={isActive('original')}
+        onClick={() => onRatioClick('original')}
+      />
+      <Item
+        icon={ratioIcon('1x1')}
+        text={i18n('MediaEditor.Square')}
+        active={isActive('1x1')}
+        onClick={() => onRatioClick('1x1')}
+      />
 
       <div class="media-editor__crop-grid">
         <Item icon={ratioIcon('3x2')} text="3:2" active={isActive('3x2')} onClick={() => onRatioClick('3x2')} />
@@ -72,7 +94,12 @@ export default function CropTab() {
         <Item icon={ratioIcon('7x5', true)} text="5:7" active={isActive('5x7')} onClick={() => onRatioClick('5x7')} />
 
         <Item icon={ratioIcon('16x9')} text="16:9" active={isActive('16x9')} onClick={() => onRatioClick('16x9')} />
-        <Item icon={ratioIcon('16x9', true)} text="9:16" active={isActive('9x16')} onClick={() => onRatioClick('9x16')} />
+        <Item
+          icon={ratioIcon('16x9', true)}
+          text="9:16"
+          active={isActive('9x16')}
+          onClick={() => onRatioClick('9x16')}
+        />
       </div>
     </>
   );

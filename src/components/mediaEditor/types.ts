@@ -1,64 +1,54 @@
-import {Signal} from 'solid-js'
+import {Signal} from 'solid-js';
 
-import {Document} from '../../layer'
-
+import {Document} from '../../layer';
 
 export type ResizableLayer = {
-  id: number
-  type: 'text' | 'sticker'
-  position: [number, number]
-  rotation: number
-  scale: number
+  id: number;
+  type: 'text' | 'sticker';
+  position: [number, number];
+  rotation: number;
+  scale: number;
 
-  sticker?: Document.document
+  sticker?: Document.document;
 
-  textInfo?: TextLayerInfo
-}
+  textInfo?: TextLayerInfo;
+};
 
 export type TextRenderingInfo = {
-  width: number
-  height: number
+  width: number;
+  height: number;
 
-  path?: (number | string)[]
-  lines: TextRenderingInfoLine[]
-}
+  path?: (number | string)[];
+  lines: TextRenderingInfoLine[];
+};
 
 export type StickerRenderingInfo = {
-  container?: HTMLDivElement
-}
+  container?: HTMLDivElement;
+};
 
 export type TextRenderingInfoLine = {
-  left: number
-  right: number
-  height: number
-  content: string
-}
+  left: number;
+  right: number;
+  height: number;
+  content: string;
+};
 
-export type FontKey =
-  | 'roboto'
-  | 'suez'
-  | 'bubbles'
-  | 'playwrite'
-  | 'chewy'
-  | 'courier'
-  | 'fugaz'
-  | 'sedan'
+export type FontKey = 'roboto' | 'suez' | 'bubbles' | 'playwrite' | 'chewy' | 'courier' | 'fugaz' | 'sedan';
 
 export type TextLayerInfo = {
-  color: string
-  alignment: string
-  style: string
-  size: number
-  font: FontKey
-}
+  color: string;
+  alignment: string;
+  style: string;
+  size: number;
+  font: FontKey;
+};
 
 export type ResizableLayerProps = {
-  layerSignal: Signal<ResizableLayer>
-}
+  layerSignal: Signal<ResizableLayer>;
+};
 
 export type FontInfo = {
-  fontFamily: string
-  fontWeight: number
-  baseline: number
-}
-
+  fontFamily: string;
+  fontWeight: number;
+  baseline: number;
+};

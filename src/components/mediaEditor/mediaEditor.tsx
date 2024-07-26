@@ -7,7 +7,7 @@ import {AppManagers} from '../../lib/appManagers/managers';
 
 import appNavigationController from '../appNavigationController';
 
-import {delay} from './utils';
+import {delay, log} from './utils';
 import {injectMediaEditorLangPack} from './langPack';
 import Topbar from './topbar';
 import Tabs from './tabs/tabs';
@@ -20,52 +20,48 @@ import StickersTab from './tabs/stickersTab';
 import MediaEditorContext, {createStandaloneContextValue, StandaloneContext} from './context';
 import MainCanvas from './canvas/mainCanvas';
 import FinishButton from './finishButton';
-import {withCurrentOwner} from './utils'
+import {withCurrentOwner} from './utils';
 import {createFinalResult, MediaEditorFinalResult} from './createFinalResult';
 
-
 export type MediaEditorProps = {
-  onClose: NoneToVoidFunction
-  managers: AppManagers
-  onEditFinish: (result: MediaEditorFinalResult) => void
-  imageURL: string
-  standaloneContext?: StandaloneContext
-}
-
+  onClose: NoneToVoidFunction;
+  managers: AppManagers;
+  onEditFinish: (result: MediaEditorFinalResult) => void;
+  imageURL: string;
+  standaloneContext?: StandaloneContext;
+};
 
 export function MediaEditor(props: MediaEditorProps) {
-  const standaloneContext = props.standaloneContext || createStandaloneContextValue(props)
+  const standaloneContext = props.standaloneContext || createStandaloneContextValue(props);
 
-  const [, setRenderingPayload] = standaloneContext.value.renderingPayload
-  const [, setCanvasSize] = standaloneContext.value.canvasSize
-  const [, setCurretTab] = standaloneContext.value.currentTab
-  setRenderingPayload()
-  setCanvasSize()
-  setCurretTab('adjustments')
+  const [, setRenderingPayload] = standaloneContext.value.renderingPayload;
+  const [, setCanvasSize] = standaloneContext.value.canvasSize;
+  const [, setCurretTab] = standaloneContext.value.currentTab;
+  setRenderingPayload();
+  setCanvasSize();
+  setCurretTab('adjustments');
 
   let overlay: HTMLDivElement;
 
   onMount(async() => {
-    overlay.classList.add('media-editor__overlay--hidden')
-    await doubleRaf()
-    overlay.classList.remove('media-editor__overlay--hidden')
+    overlay.classList.add('media-editor__overlay--hidden');
+    await doubleRaf();
+    overlay.classList.remove('media-editor__overlay--hidden');
 
     appNavigationController.pushItem({
       type: 'popup',
       onPop: () => props.onClose()
-    })
+    });
 
-    overlay.focus()
-  })
-
+    overlay.focus();
+  });
 
   async function handleClose(finished = false) {
-    overlay.classList.add('media-editor__overlay--hidden')
-    await delay(200)
-    props.onClose()
-    if(!finished && !props.standaloneContext) standaloneContext.dispose()
+    overlay.classList.add('media-editor__overlay--hidden');
+    await delay(200);
+    props.onClose();
+    if(!finished && !props.standaloneContext) standaloneContext.dispose();
   }
-
 
   return (
     <MediaEditorContext.Provider value={standaloneContext.value}>
@@ -75,35 +71,39 @@ export function MediaEditor(props: MediaEditorProps) {
           <div class="media-editor__toolbar">
             <Topbar onClose={handleClose} />
             <Tabs />
-            <TabContent tabs={{
-              adjustments: () => <AdjustmentsTab />,
-              crop: () => <CropTab />,
-              text: () => <TextTab />,
-              brush: () => <BrushTab />,
-              stickers: () => <StickersTab />
-            }} />
+            <TabContent
+              tabs={{
+                adjustments: () => <AdjustmentsTab />,
+                crop: () => <CropTab />,
+                text: () => <TextTab />,
+                brush: () => <BrushTab />,
+                stickers: () => <StickersTab />
+              }}
+            />
           </div>
-          <FinishButton onClick={withCurrentOwner(async() => {
-            const result = await createFinalResult(standaloneContext)
-            props.onEditFinish(result)
-            handleClose(true)
-          })} />
+          <FinishButton
+            onClick={withCurrentOwner(async() => {
+              const result = await createFinalResult(standaloneContext);
+              props.onEditFinish(result);
+              handleClose(true);
+            })}
+          />
         </div>
       </div>
     </MediaEditorContext.Provider>
-  )
+  );
 }
 
 export function openMediaEditor(props: MediaEditorProps) {
-  injectMediaEditorLangPack()
+  injectMediaEditorLangPack();
 
-  const element = document.createElement('div')
-  document.body.append(element)
+  const element = document.createElement('div');
+  document.body.append(element);
 
-  const dispose = render(() => <MediaEditor {...props} onClose={onClose} />, element)
+  const dispose = render(() => <MediaEditor {...props} onClose={onClose} />, element);
 
   function onClose() {
-    props.onClose()
-    dispose()
+    props.onClose();
+    dispose();
   }
 }

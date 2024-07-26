@@ -1,25 +1,24 @@
-import {getOwner, runWithOwner} from 'solid-js'
+import {getOwner, runWithOwner} from 'solid-js';
 
-import {logger} from '../../lib/logger'
-import {hexaToHsla} from '../../helpers/color'
+import {logger} from '../../lib/logger';
+import {hexaToHsla} from '../../helpers/color';
 
-import {FontInfo, FontKey} from './types'
+import {FontInfo, FontKey} from './types';
 
-export const delay = (timeout: number) => new Promise(resolve => setTimeout(resolve, timeout))
+export const delay = (timeout: number) => new Promise((resolve) => setTimeout(resolve, timeout));
 
-export const log = logger('Media editor')
+export const log = logger('Media editor');
 
 export function withCurrentOwner<Args extends Array<unknown>, Result>(fn: (...args: Args) => Result) {
-  const owner = getOwner()
+  const owner = getOwner();
   return (...args: Args) => {
-    return runWithOwner(owner, () => fn(...args))
-  }
+    return runWithOwner(owner, () => fn(...args));
+  };
 }
 
 export function getContrastColor(color: string) {
-  return hexaToHsla(color).l < 80 ? '#ffffff' : '#000000'
+  return hexaToHsla(color).l < 80 ? '#ffffff' : '#000000';
 }
-
 
 export const fontInfoMap: Record<FontKey, FontInfo> = {
   roboto: {
@@ -62,4 +61,4 @@ export const fontInfoMap: Record<FontKey, FontInfo> = {
     fontWeight: 400,
     baseline: 0.75
   }
-}
+};
