@@ -23,16 +23,19 @@ export default function FinishButton(props: {
   })
 
   const canFinish = () => {
+    function approximateCompare(value: number, toWhat: number) {
+      return Math.abs(value - toWhat) < 0.00001
+    }
     const initialRatio = imageSize()[0] / imageSize()[1]
 
     return (
-      Math.abs(initialRatio - currentImageRatio()) < 0.0001 ||
-      rotation() !== 0 ||
-      flip()[0] !== 1 ||
-      flip()[1] !== 1 ||
-      scale() !== 1 ||
-      translation()[0] !== 0 ||
-      translation()[1] !== 0 ||
+      !approximateCompare(initialRatio, currentImageRatio()) ||
+      !approximateCompare(rotation(), 0) ||
+      !approximateCompare(flip()[0], 1) ||
+      !approximateCompare(flip()[1], 1) ||
+      !approximateCompare(scale(), 1) ||
+      !approximateCompare(translation()[0], 0) ||
+      !approximateCompare(translation()[1], 0) ||
       history().length > 0
     )
   }
