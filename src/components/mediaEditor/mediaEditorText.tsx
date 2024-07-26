@@ -102,12 +102,12 @@ export default function MediaEditorText() {
 
       {fontButton(i18n('MediaEditor.Fonts.Roboto'), 'roboto')}
       {fontButton(i18n('MediaEditor.Fonts.SuezOne'), 'suez')}
+      {fontButton(i18n('MediaEditor.Fonts.FugazOne'), 'fugaz')}
+      {fontButton(i18n('MediaEditor.Fonts.CourierPrime'), 'courier')}
+      {fontButton(i18n('MediaEditor.Fonts.Chewy'), 'chewy')}
+      {fontButton(i18n('MediaEditor.Fonts.Sedan'), 'sedan')}
       {fontButton(i18n('MediaEditor.Fonts.RubikBubbles'), 'bubbles')}
       {fontButton(i18n('MediaEditor.Fonts.Playwrite'), 'playwrite')}
-      {fontButton(i18n('MediaEditor.Fonts.Chewy'), 'chewy')}
-      {fontButton(i18n('MediaEditor.Fonts.CourierPrime'), 'courier')}
-      {fontButton(i18n('MediaEditor.Fonts.FugazOne'), 'fugaz')}
-      {fontButton(i18n('MediaEditor.Fonts.Sedan'), 'sedan')}
     </>
   )
 }
