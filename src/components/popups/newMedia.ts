@@ -901,6 +901,7 @@ export default class PopupNewMedia extends PopupElement {
         const idx = this.files.findIndex(file => file === params.file)
         if(idx >= 0) {
           this.files.splice(idx, 1)
+          params.editResult?.standaloneContext?.dispose()
           this.files.length ? this.attachFiles() : this.btnClose.click()
         }
       })
@@ -1052,18 +1053,8 @@ export default class PopupNewMedia extends PopupElement {
       }
     });
     this.show();
-
-    // console.log('this.container', )
-    // console.log('this.element', this.element)
-
-    // TODO: scale down if too big
-    // this.container.querySelectorAll('.popup-item-media-action-menu').forEach((element) => {
-    //   const parent = element.parentElement;
-    //   if (parent.clientWidth < element.clientWidth) {
-    //     (element as HTMLElement).style.setProperty('--scale', (0.8 * (parent.clientWidth / element.clientWidth)) + '');
-    //   }
-    // })
   }
+
 
   private setTitle() {
     const {willAttach, title, files} = this;
@@ -1196,7 +1187,26 @@ export default class PopupNewMedia extends PopupElement {
     }).then(() => {
       this.onRender();
       this.onScroll();
+      doubleRaf().then(() => this.adjustActionsPosition());
     });
+  }
+
+  private adjustActionsPosition() {
+    const mediaContainerBCR = this.mediaContainer.getBoundingClientRect()
+    this.willAttach.sendFileDetails.forEach(params => {
+      const actions: HTMLDivElement = params.itemDiv.querySelector('.popup-item-media-action-menu')
+
+      if(!actions) return
+      const actionsBCR = actions.getBoundingClientRect()
+
+      const padding = 4
+      if(mediaContainerBCR.left + padding > actionsBCR.left) {
+        actions.style.setProperty('--move', (mediaContainerBCR.left + padding - actionsBCR.left) + 'px')
+      } else if(mediaContainerBCR.right - padding < actionsBCR.right) {
+        console.log('mediaContainerBCR.right - padding - actionsBCR.right', mediaContainerBCR.right - padding - actionsBCR.right)
+        actions.style.setProperty('--move', (mediaContainerBCR.right - padding - actionsBCR.right) + 'px')
+      }
+    })
   }
 }
 
