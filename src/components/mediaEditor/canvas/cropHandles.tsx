@@ -105,27 +105,29 @@ export default function CropHandles() {
               rotation: rotation(),
               translation: initialTranslation,
               extendCrop: [
-                [left === -1 ? xDiff : 0, top === 1 ? yDiff : 0],
-                [left === 1 ? xDiff : 0, top === -1 ? yDiff : 0]
+                [fixed && left === 0 ? -xDiff / 2 : left === -1 ? xDiff : 0, fixed && top === 0 ? yDiff / 2 : top === 1 ? yDiff : 0],
+                [fixed && left === 0 ? xDiff / 2 : left === 1 ? xDiff : 0, fixed && top === 0 ? -yDiff / 2 : top === -1 ? yDiff : 0]
               ]
             });
           const halfImageWidth = (imageMaxX - imageMinX) / 2,
             halfImageHeight = (imageMaxY - imageMinY) / 2;
           const imageCenter = [imageMinX + halfImageWidth, imageMinY + halfImageHeight];
 
-          let additionalScale = 1;
+          let additionalScaleX = 1;
+          let additionalScaleY = 1;
 
           if(imageMinX > cropMinX)
-            additionalScale = Math.max((imageCenter[0] - cropMinX) / halfImageWidth, additionalScale);
+            additionalScaleX *= 1 + (((imageCenter[0] - cropMinX) / halfImageWidth) - 1) / 2;
           if(imageMaxX < cropMaxX)
-            additionalScale = Math.max((cropMaxX - imageCenter[0]) / halfImageWidth, additionalScale);
+            additionalScaleX *= 1 + (((cropMaxX - imageCenter[0]) / halfImageWidth) - 1) / 2;
           if(imageMinY > cropMinY)
-            additionalScale = Math.max((imageCenter[1] - cropMinY) / halfImageHeight, additionalScale);
+            additionalScaleY *= 1 + (((imageCenter[1] - cropMinY) / halfImageHeight) - 1) / 2;
           if(imageMaxY < cropMaxY)
-            additionalScale = Math.max((cropMaxY - imageCenter[1]) / halfImageHeight, additionalScale);
+            additionalScaleY *= 1 + (((cropMaxY - imageCenter[1]) / halfImageHeight) - 1) / 2;
 
+          const additionalScale = Math.max(additionalScaleX, additionalScaleY)
           if(additionalScale > 1) {
-            setScale(initialScale * (1 + (additionalScale - 1) / 2));
+            setScale(initialScale * additionalScale);
           }
 
           function maxAbs(x: number, y: number) {
@@ -135,10 +137,14 @@ export default function CropHandles() {
 
           let boundDiff = [0, 0];
 
-          if(imageMinX > cropMinX) boundDiff[0] = maxAbs(boundDiff[0], imageMinX - cropMinX);
-          if(imageMaxX < cropMaxX) boundDiff[0] = maxAbs(boundDiff[0], imageMaxX - cropMaxX);
-          if(imageMinY > cropMinY) boundDiff[1] = maxAbs(boundDiff[1], imageMinY - cropMinY);
-          if(imageMaxY < cropMaxY) boundDiff[1] = maxAbs(boundDiff[1], imageMaxY - cropMaxY);
+          if(imageMinX > cropMinX) boundDiff[0] += imageMinX - cropMinX;
+          if(imageMaxX < cropMaxX) boundDiff[0] += imageMaxX - cropMaxX;
+          if(imageMinY > cropMinY) boundDiff[1] += imageMinY - cropMinY;
+          if(imageMaxY < cropMaxY) boundDiff[1] += imageMaxY - cropMaxY;
+          // boundDiff[0] += imageMinX - cropMinX;
+          // boundDiff[0] += imageMaxX - cropMaxX;
+          // boundDiff[1] += imageMinY - cropMinY;
+          // boundDiff[1] += imageMaxY - cropMaxY;
 
           const r = [Math.sin(rotation()), Math.cos(rotation())];
 
