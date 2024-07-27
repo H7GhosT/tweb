@@ -66,7 +66,7 @@ export default function BrushCanvas() {
     reDraw();
   });
   createEffect(() => {
-    if(isAdjusting()) {
+    if(isAdjusting() || currentTab() === 'crop') {
       onCleanup(() => {
         reDraw()
       })
