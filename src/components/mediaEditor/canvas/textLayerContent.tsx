@@ -1,6 +1,7 @@
 import {createEffect, on, onMount, useContext} from 'solid-js';
 
 import createElementFromMarkup from '../../../helpers/createElementFromMarkup';
+import {i18n} from '../../../lib/langPack';
 
 import MediaEditorContext from '../context';
 import {ResizableLayerProps, TextLayerInfo, TextRenderingInfoLine} from '../types';
@@ -108,7 +109,7 @@ export default function TextLayerContent(props: ResizableLayerProps) {
 
   const intialContent = (() => {
     const layerInfo = textLayersInfo()[layer().id];
-    if(!layerInfo) return <div>Type something...</div>;
+    if(!layerInfo) return <div>{i18n('MediaEditor.TypeSomething')}</div>;
     return layerInfo.lines.map((line) => <div>{line.content}</div>);
   })();
 
