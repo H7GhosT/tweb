@@ -1,4 +1,4 @@
-import {createEffect, createSignal, onMount, Show, useContext} from 'solid-js';
+import {createEffect, createSignal, onCleanup, onMount, Show, useContext} from 'solid-js';
 
 import SwipeHandler from '../../swipeHandler';
 
@@ -53,11 +53,18 @@ export default function CropHandles() {
       {el: bottomHandle, left: 0, top: 1}
     ];
 
-    let boundDiff: [number, number] = [0, 0];
+    let boundDiff: [number, number];
+    let initialScale: number;
+    let initialTranslation: [number, number];
 
-    multipliers.forEach(({el, left, top}) => {
-      new SwipeHandler({
+    const resizeSwipeHandlers = multipliers.map(({el, left, top}) => {
+      return new SwipeHandler({
         element: el,
+        onStart() {
+          initialScale = scale();
+          initialTranslation = translation();
+          el.classList.add('media-editor__crop-handles-circle--anti-flicker');
+        },
         onSwipe(xDiff, yDiff) {
           const fixed = fixedImageRatioKey();
           let ratio = currentImageRatio();
@@ -80,47 +87,6 @@ export default function CropHandles() {
             }
           }
 
-          const {cropMinX, cropMaxX, cropMinY, cropMaxY, imageMinX, imageMaxX, imageMinY, imageMaxY} =
-            getConvenientPositioning({
-              scale: scale(),
-              rotation: rotation(),
-              translation: translation(),
-              extendCrop: [
-                [left === -1 ? xDiff : 0, top === 1 ? yDiff : 0],
-                [left === 1 ? xDiff : 0, top === -1 ? yDiff : 0]
-              ]
-            });
-
-          function maxAbs(x: number, y: number) {
-            if(Math.abs(x) > Math.abs(y)) return x;
-            return y;
-          }
-
-          boundDiff = [0, 0];
-
-          if(imageMinX > cropMinX) boundDiff[0] = maxAbs(boundDiff[0], imageMinX - cropMinX);
-          if(imageMaxX < cropMaxX) boundDiff[0] = maxAbs(boundDiff[0], imageMaxX - cropMaxX);
-          if(imageMinY > cropMinY) boundDiff[1] = maxAbs(boundDiff[1], imageMinY - cropMinY);
-          if(imageMaxY < cropMaxY) boundDiff[1] = maxAbs(boundDiff[1], imageMaxY - cropMaxY);
-
-          const r = [Math.sin(rotation()), Math.cos(rotation())];
-
-          boundDiff = [boundDiff[0] * r[1] - boundDiff[1] * r[0], boundDiff[1] * r[1] + boundDiff[0] * r[0]];
-
-          if(fixed) {
-            const d = [...boundDiff];
-            if(top === 1) {
-              if(boundDiff[0] / ratio < boundDiff[1]) boundDiff = [d[0], d[0] / ratio];
-              else boundDiff = [d[1] * ratio, d[1]];
-            } else {
-              if(boundDiff[0] / ratio > boundDiff[1]) boundDiff = [d[0], d[0] / ratio];
-              else boundDiff = [d[1] * ratio, d[1]];
-            }
-          }
-
-          xDiff += boundDiff[0];
-          yDiff += boundDiff[1];
-
           if(fixed && top === 0) {
             setDiff([left * xDiff, yDiff]);
           } else if(fixed && left === 0) {
@@ -133,9 +99,52 @@ export default function CropHandles() {
             fixed && left === 0 ? -xDiff / 2 : Number(left < 0) * xDiff,
             fixed && top === 0 ? -yDiff / 2 : Number(top < 0) * yDiff
           ]);
-        },
-        onStart() {
-          el.classList.add('media-editor__crop-handles-circle--anti-flicker');
+          const {cropMinX, cropMaxX, cropMinY, cropMaxY, imageMinX, imageMaxX, imageMinY, imageMaxY} =
+            getConvenientPositioning({
+              scale: initialScale,
+              rotation: rotation(),
+              translation: initialTranslation,
+              extendCrop: [
+                [left === -1 ? xDiff : 0, top === 1 ? yDiff : 0],
+                [left === 1 ? xDiff : 0, top === -1 ? yDiff : 0]
+              ]
+            });
+          const halfImageWidth = (imageMaxX - imageMinX) / 2,
+            halfImageHeight = (imageMaxY - imageMinY) / 2;
+          const imageCenter = [imageMinX + halfImageWidth, imageMinY + halfImageHeight];
+
+          let additionalScale = 1;
+
+          if(imageMinX > cropMinX)
+            additionalScale = Math.max((imageCenter[0] - cropMinX) / halfImageWidth, additionalScale);
+          if(imageMaxX < cropMaxX)
+            additionalScale = Math.max((cropMaxX - imageCenter[0]) / halfImageWidth, additionalScale);
+          if(imageMinY > cropMinY)
+            additionalScale = Math.max((imageCenter[1] - cropMinY) / halfImageHeight, additionalScale);
+          if(imageMaxY < cropMaxY)
+            additionalScale = Math.max((cropMaxY - imageCenter[1]) / halfImageHeight, additionalScale);
+
+          if(additionalScale > 1) {
+            setScale(initialScale * (1 + (additionalScale - 1) / 2));
+          }
+
+          function maxAbs(x: number, y: number) {
+            if(Math.abs(x) > Math.abs(y)) return x;
+            return y;
+          }
+
+          let boundDiff = [0, 0];
+
+          if(imageMinX > cropMinX) boundDiff[0] = maxAbs(boundDiff[0], imageMinX - cropMinX);
+          if(imageMaxX < cropMaxX) boundDiff[0] = maxAbs(boundDiff[0], imageMaxX - cropMaxX);
+          if(imageMinY > cropMinY) boundDiff[1] = maxAbs(boundDiff[1], imageMinY - cropMinY);
+          if(imageMaxY < cropMaxY) boundDiff[1] = maxAbs(boundDiff[1], imageMaxY - cropMaxY);
+
+          const r = [Math.sin(rotation()), Math.cos(rotation())];
+
+          boundDiff = [boundDiff[0] * r[1] - boundDiff[1] * r[0], boundDiff[1] * r[1] + boundDiff[0] * r[0]];
+
+          setTranslation([initialTranslation[0] - boundDiff[0] / 2, initialTranslation[1] - boundDiff[1] / 2]);
         },
         onReset() {
           const newWidth = size()[0] + diff()[0],
@@ -157,16 +166,12 @@ export default function CropHandles() {
           setDiff([0, 0]);
           setLeftTopDiff([0, 0]);
 
-          // adjustScaleAfterResize()
-
           el.classList.remove('media-editor__crop-handles-circle--anti-flicker');
         }
       });
     });
 
-    let initialTranslation: [number, number] = [0, 0];
-
-    new SwipeHandler({
+    const translationSwipeHandler = new SwipeHandler({
       element: cropArea,
       onStart() {
         initialTranslation = translation();
@@ -200,6 +205,11 @@ export default function CropHandles() {
       onReset() {
         setTranslation((prev) => [prev[0] - boundDiff[0], prev[1] - boundDiff[1]]);
       }
+    });
+
+    onCleanup(() => {
+      resizeSwipeHandlers.forEach((handler) => handler.removeListeners());
+      translationSwipeHandler.removeListeners();
     });
   });
 
@@ -277,27 +287,6 @@ export default function CropHandles() {
           }}
         ></div>
       </Show>
-      <div
-        style={{
-          position: isCroping() ? 'absolute' : 'static',
-          left: left() + 'px',
-          top: top() + 'px',
-          width: width() + 'px',
-          height: height() + 'px'
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '6px',
-            height: '6px',
-            background: 'rgba(255, 0, 0, .4)'
-          }}
-        />
-      </div>
       <div
         class="media-editor__crop-handles-backdrop"
         style={{
