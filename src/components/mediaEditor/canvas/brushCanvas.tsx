@@ -1,4 +1,4 @@
-import {createEffect, createSignal, onMount, useContext} from 'solid-js';
+import {createEffect, createSignal, onCleanup, onMount, useContext} from 'solid-js';
 
 import SwipeHandler, {getEvent} from '../../swipeHandler';
 import throttle from '../../../helpers/schedulers/throttle';
@@ -6,10 +6,9 @@ import throttle from '../../../helpers/schedulers/throttle';
 import MediaEditorContext from '../context';
 
 import BrushPainter, {BrushDrawnLine} from './brushPainter';
+import getCropTransform from './getCropTransform';
 
 const THROTTLE_MS = 25;
-
-let currentReDraw: () => void;
 
 export default function BrushCanvas() {
   const context = useContext(MediaEditorContext);
@@ -19,6 +18,7 @@ export default function BrushCanvas() {
   const [currentTab] = context.currentTab;
   const [, setSelectedTextLayer] = context.selectedResizableLayer;
   const [lines, setLines] = context.brushDrawnLines;
+  const [isAdjusting] = context.isAdjusting;
 
   const [lastLine, setLastLine] = createSignal<BrushDrawnLine>();
 
@@ -30,6 +30,10 @@ export default function BrushCanvas() {
       class="media-editor__brush-canvas"
       classList={{
         'media-editor__brush-canvas--active': currentTab() === 'brush'
+      }}
+      style={{
+        'transform': getCropTransform(),
+        'opacity': isAdjusting() ? 0 : 1
       }}
       width={w}
       height={h}
@@ -58,12 +62,21 @@ export default function BrushCanvas() {
     brushPainter.clear();
     lines().forEach((line) => brushPainter.drawLine(line));
   }
-  // After reopening the media editor, they history undo should have access to the latest redraw
-  currentReDraw = reDraw;
-
   onMount(() => {
     reDraw();
   });
+  createEffect(() => {
+    if(isAdjusting()) {
+      onCleanup(() => {
+        reDraw()
+      })
+    }
+  })
+
+  context.redrawBrushes = reDraw;
+  onCleanup(() => {
+    context.redrawBrushes = () => {}
+  })
 
   onMount(() => {
     let initialPosition: [number, number];
@@ -103,11 +116,11 @@ export default function BrushCanvas() {
           context.pushToHistory({
             undo() {
               setLines(prevLines);
-              currentReDraw();
+              context.redrawBrushes();
             },
             redo() {
               setLines(newLines);
-              currentReDraw();
+              context.redrawBrushes();
             }
           });
 

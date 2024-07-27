@@ -44,6 +44,9 @@ export interface MediaEditorContextValue {
   history: Signal<HistoryItem[]>;
   redoHistory: Signal<HistoryItem[]>;
   pushToHistory: (item: HistoryItem) => void;
+
+  redrawBrushes: () => void
+  isAdjusting: Signal<boolean>;
 }
 
 export type HistoryItem = {
@@ -104,7 +107,10 @@ function createContextValue(props: MediaEditorProps): MediaEditorContextValue {
 
     history,
     redoHistory,
-    pushToHistory
+    pushToHistory,
+
+    redrawBrushes: () => {},
+    isAdjusting: createSignal(false)
   };
 }
 

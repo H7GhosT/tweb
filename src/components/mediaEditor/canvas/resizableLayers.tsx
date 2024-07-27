@@ -8,6 +8,7 @@ import {ResizableLayer} from '../types';
 
 import TextLayerContent from './textLayerContent';
 import StickerLayerContent from './stickerLayerContent';
+import getCropTransform from './getCropTransform';
 
 type ResizableContainerProps = {
   layerSignal: Signal<ResizableLayer>;
@@ -21,6 +22,7 @@ export default function ResizableLayers() {
   const isTextTab = () => currentTab() === 'text';
   const [currentTextLayerInfo] = context.currentTextLayerInfo;
   const [selectedResizableLayer, setSelectedResizableLayer] = context.selectedResizableLayer;
+  const [isAdjusting] = context.isAdjusting;
 
   createEffect(
     on(selectedResizableLayer, () => {
@@ -83,25 +85,33 @@ export default function ResizableLayers() {
 
   return (
     <div
-      ref={container}
       class="media-editor__resizable-layers"
       classList={{
         'media-editor__resizable-layers--active': isTextTab()
       }}
-      onClick={withCurrentOwner(addLayer)}
     >
-      <For each={layers()}>
-        {(layerSignal) => (
-          <>
-            <Show when={layerSignal[0]().type === 'text'}>
-              <TextLayerContent layerSignal={layerSignal} />
-            </Show>
-            <Show when={layerSignal[0]().type === 'sticker'}>
-              <StickerLayerContent layerSignal={layerSignal} />
-            </Show>
-          </>
-        )}
-      </For>
+      <div
+        ref={container}
+        class="media-editor__resizable-layers-inner"
+        onClick={withCurrentOwner(addLayer)}
+        style={{
+          'transform': getCropTransform(),
+          'opacity': isAdjusting() ? 0 : 1
+        }}
+      >
+        <For each={layers()}>
+          {(layerSignal) => (
+            <>
+              <Show when={layerSignal[0]().type === 'text'}>
+                <TextLayerContent layerSignal={layerSignal} />
+              </Show>
+              <Show when={layerSignal[0]().type === 'sticker'}>
+                <StickerLayerContent layerSignal={layerSignal} />
+              </Show>
+            </>
+          )}
+        </For>
+      </div>
     </div>
   );
 }
