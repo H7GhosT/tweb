@@ -708,7 +708,7 @@ export default class PopupNewMedia extends PopupElement {
       }
 
       const d: SendFileDetails[] = sendFileParams.map((params) => {
-        params.editResult?.standaloneContext?.dispose()
+        params.editResult?.standaloneContext?.dispose();
 
         return {
           ...params,
@@ -860,60 +860,55 @@ export default class PopupNewMedia extends PopupElement {
       }
     }
     {
-      const actions = document.createElement('div')
-      actions.classList.add('popup-item-media-action-menu')
-      const itemCls = 'popup-item-media-action'
+      const actions = document.createElement('div');
+      actions.classList.add('popup-item-media-action-menu');
+      const itemCls = 'popup-item-media-action';
 
-      let equalizeIcon: HTMLSpanElement
+      let equalizeIcon: HTMLSpanElement;
       if(!isVideo && file.type !== 'image/gif') {
-        equalizeIcon = Icon('equalizer', itemCls)
+        equalizeIcon = Icon('equalizer', itemCls);
         equalizeIcon.addEventListener('click', () => {
-          (this.btnConfirmOnEnter as HTMLButtonElement).disabled = true
+          (this.btnConfirmOnEnter as HTMLButtonElement).disabled = true;
           openMediaEditor({
             imageURL: params.editResult?.originalSrc || params.objectURL,
             managers: this.managers,
             onEditFinish: (result) => {
-              params.editResult = result
-              this.attachFiles()
+              params.editResult = result;
+              this.attachFiles();
             },
             standaloneContext: params.editResult?.standaloneContext,
             onClose: () => {
-              (this.btnConfirmOnEnter as HTMLButtonElement).disabled = false
+              (this.btnConfirmOnEnter as HTMLButtonElement).disabled = false;
             }
-          })
-        })
+          });
+        });
       }
 
-      const spoilerToggle = document.createElement('span')
-      spoilerToggle.classList.add(itemCls, 'spoiler-toggle')
-      if(params.mediaSpoiler) spoilerToggle.dataset.toggled = 'true'
-      spoilerToggle.append(
-        Icon('mediaspoiler'),
-        Icon('mediaspoileroff')
-      );
+      const spoilerToggle = document.createElement('span');
+      spoilerToggle.classList.add(itemCls, 'spoiler-toggle');
+      if(params.mediaSpoiler) spoilerToggle.dataset.toggled = 'true';
+      spoilerToggle.append(Icon('mediaspoiler'), Icon('mediaspoileroff'));
       spoilerToggle.addEventListener('click', () => {
-        if(spoilerToggle.dataset.disabled) return // Prevent double clicks
-        (!params.mediaSpoiler) ? this.applyMediaSpoiler(params) : this.removeMediaSpoiler(params)
-      })
+        if(spoilerToggle.dataset.disabled) return; // Prevent double clicks
+        !params.mediaSpoiler ? this.applyMediaSpoiler(params) : this.removeMediaSpoiler(params);
+      });
 
-      const deleteIcon = Icon('delete', itemCls)
+      const deleteIcon = Icon('delete', itemCls);
       deleteIcon.addEventListener('click', () => {
-        const idx = this.files.findIndex(file => file === params.file)
+        const idx = this.files.findIndex((file) => file === params.file);
         if(idx >= 0) {
-          this.files.splice(idx, 1)
-          params.editResult?.standaloneContext?.dispose()
-          this.files.length ? this.attachFiles() : this.btnClose.click()
+          this.files.splice(idx, 1);
+          params.editResult?.standaloneContext?.dispose();
+          this.files.length ? this.attachFiles() : this.btnClose.click();
         }
-      })
+      });
 
-      actions.append(
-        ...[equalizeIcon, spoilerToggle, deleteIcon].filter(Boolean)
-      )
+      actions.append(...[equalizeIcon, spoilerToggle, deleteIcon].filter(Boolean));
 
-      itemDiv.append(actions)
+      itemDiv.append(actions);
     }
 
-    return promise
+    return promise;
   }
 
   private async attachDocument(params: SendFileParams): ReturnType<PopupNewMedia['attachMedia']> {
@@ -1192,21 +1187,24 @@ export default class PopupNewMedia extends PopupElement {
   }
 
   private adjustActionsPosition() {
-    const mediaContainerBCR = this.mediaContainer.getBoundingClientRect()
-    this.willAttach.sendFileDetails.forEach(params => {
-      const actions: HTMLDivElement = params.itemDiv.querySelector('.popup-item-media-action-menu')
+    const mediaContainerBCR = this.mediaContainer.getBoundingClientRect();
+    this.willAttach.sendFileDetails.forEach((params) => {
+      const actions: HTMLDivElement = params.itemDiv.querySelector('.popup-item-media-action-menu');
 
-      if(!actions) return
-      const actionsBCR = actions.getBoundingClientRect()
+      if(!actions) return;
+      const actionsBCR = actions.getBoundingClientRect();
 
-      const padding = 4
+      const padding = 4;
       if(mediaContainerBCR.left + padding > actionsBCR.left) {
-        actions.style.setProperty('--move', (mediaContainerBCR.left + padding - actionsBCR.left) + 'px')
+        actions.style.setProperty('--move', mediaContainerBCR.left + padding - actionsBCR.left + 'px');
       } else if(mediaContainerBCR.right - padding < actionsBCR.right) {
-        console.log('mediaContainerBCR.right - padding - actionsBCR.right', mediaContainerBCR.right - padding - actionsBCR.right)
-        actions.style.setProperty('--move', (mediaContainerBCR.right - padding - actionsBCR.right) + 'px')
+        console.log(
+          'mediaContainerBCR.right - padding - actionsBCR.right',
+          mediaContainerBCR.right - padding - actionsBCR.right
+        );
+        actions.style.setProperty('--move', mediaContainerBCR.right - padding - actionsBCR.right + 'px');
       }
-    })
+    });
   }
 }
 
