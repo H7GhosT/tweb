@@ -2851,6 +2851,7 @@ const lang = {
   'MediaEditor.AspectRatio': 'Aspect ratio',
   'MediaEditor.Size': 'Size',
   'MediaEditor.Font': 'Font',
+  'MediaEditor.TypeSomething': 'Type something...',
   'MediaEditor.Fonts.Roboto': 'Roboto',
   'MediaEditor.Fonts.SuezOne': 'Suez One',
   'MediaEditor.Fonts.RubikBubbles': 'Rubik Bubbles',
