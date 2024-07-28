@@ -25,10 +25,10 @@ export default function FinishButton(props: {onClick: () => void}) {
       return Math.abs(value - toWhat) < 0.00001;
     }
     const initialRatio = imageSize()[0] / imageSize()[1];
-
+    const snappedRotation = Math.round(rotation() / (Math.PI * 2)) * Math.PI * 2
     return (
       !approximateCompare(initialRatio, currentImageRatio()) ||
-      !approximateCompare(rotation(), 0) ||
+      !approximateCompare(rotation(), snappedRotation) ||
       !approximateCompare(flip()[0], 1) ||
       !approximateCompare(flip()[1], 1) ||
       !approximateCompare(scale(), 1) ||

@@ -47,6 +47,17 @@ export default function TextLayerContent(props: ResizableLayerProps) {
     });
     if(!contentEditable.textContent) {
       contentEditable.innerHTML = '<div></div>';
+
+      // Firefox cursor reset
+      const child = contentEditable.children[0]
+      const range = document.createRange()
+      const sel = window.getSelection()
+
+      range.setStart(child, 0)
+      range.collapse(true)
+
+      sel.removeAllRanges()
+      sel.addRange(range)
     }
 
     container.querySelector('.media-editor__text-layer-background')?.remove();

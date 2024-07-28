@@ -27,10 +27,18 @@
 
   &__container {
     position: absolute;
-    left: 0;
-    top: 0;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     width: 100%;
     height: 100%;
+    max-width: 1780px;
+    max-height: 1080px;
+
+    @media screen and (min-width: 1780px) {
+      border-radius: 16px;
+      overflow: hidden;
+    }
 
     display: flex;
   }
@@ -583,7 +591,8 @@
       border-radius: 8px;
     }
 
-    &--active::before, &:hover::before {
+    &--active::before,
+    &:hover::before {
       background-color: #262626;
     }
   }
@@ -614,7 +623,8 @@
       border-radius: 8px;
     }
 
-    &--active::before, &:hover::before {
+    &--active::before,
+    &:hover::before {
       background-color: #262626;
     }
   }
@@ -662,21 +672,25 @@
       border-radius: 50%;
 
       --offset: -5px;
+
       &--nw {
         cursor: nw-resize;
         left: var(--offset);
         top: var(--offset);
       }
+
       &--ne {
         cursor: ne-resize;
         right: var(--offset);
         top: var(--offset);
       }
+
       &--sw {
         cursor: sw-resize;
         left: var(--offset);
         bottom: var(--offset);
       }
+
       &--se {
         cursor: se-resize;
         right: var(--offset);
@@ -700,28 +714,35 @@
       position: absolute;
       background-color: transparent;
 
-      &--w, &--e {
+      &--w,
+      &--e {
         width: 8px;
         height: 100%;
         top: 0;
       }
+
       &--w {
         cursor: w-resize;
         left: -4px;
       }
+
       &--e {
         cursor: e-resize;
         right: -4px;
       }
-      &--n, &--s {
+
+      &--n,
+      &--s {
         height: 8px;
         width: 100%;
         left: 0;
       }
+
       &--n {
         cursor: n-resize;
         top: -4px;
       }
+
       &--s {
         cursor: s-resize;
         bottom: -4px;
@@ -1026,14 +1047,14 @@
       }
 
     }
-    
+
     &-border {
       position: absolute;
       background-repeat: repeat;
       background-position: center;
 
       opacity: var(--opacity);
-      
+
       &--vertical {
         background-size: 1px 9px;
         background-image: url(assets/img/media-editor-border-part-vertical.svg);
@@ -1041,7 +1062,7 @@
         width: 1px;
         height: 100%;
       }
-      
+
       &--horizontal {
         background-size: 9px 1px;
         background-image: url(assets/img/media-editor-border-part.svg);

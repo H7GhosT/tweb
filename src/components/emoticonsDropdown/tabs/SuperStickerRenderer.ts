@@ -33,7 +33,7 @@ export default class SuperStickerRenderer {
     visibleRenderOptions?: SuperStickerRenderer['visibleRenderOptions'];
     withLock?: boolean
   }) {
-    options.withLock ??= true
+    options.withLock ??= true;
     safeAssign(this, options);
 
     this.lazyLoadQueue = new LazyLoadQueueRepeat(undefined, ({target, visible}) => {

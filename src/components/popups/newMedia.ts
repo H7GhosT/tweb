@@ -302,33 +302,6 @@ export default class PopupNewMedia extends PopupElement {
       }
     });
 
-    // let target: HTMLElement, isMedia: boolean, item: SendFileParams;
-    /* createContextMenu({
-      buttons: [{
-        icon: 'mediaspoiler',
-        text: 'EnablePhotoSpoiler',
-        onClick: () => {
-          this.applyMediaSpoiler(item);
-        },
-        verify: () => isMedia && !item.mediaSpoiler
-      }, {
-        icon: 'mediaspoileroff',
-        text: 'DisablePhotoSpoiler',
-        onClick: () => {
-          this.removeMediaSpoiler(item);
-        },
-        verify: () => !!(isMedia && item.mediaSpoiler)
-      }],
-      listenTo: this.mediaContainer,
-      listenerSetter: this.listenerSetter,
-      findElement: (e) => {
-        target = findUpClassName(e.target, 'popup-item');
-        isMedia = target.classList.contains('popup-item-media');
-        item = this.willAttach.sendFileDetails.find((i) => i.itemDiv === target);
-        return target;
-      }
-    }); */
-
     if(this.chat.type !== ChatType.Scheduled) {
       createRoot((dispose) => {
         this.chat.destroyMiddlewareHelper.onDestroy(dispose);
@@ -380,8 +353,8 @@ export default class PopupNewMedia extends PopupElement {
   };
 
   private async applyMediaSpoiler(item: SendFileParams, noAnimation?: boolean) {
-    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle')
-    if(spoilerToggle) spoilerToggle.dataset.disabled = 'true'
+    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle');
+    if(spoilerToggle) spoilerToggle.dataset.disabled = 'true';
 
 
     const middleware = item.middlewareHelper.get();
@@ -449,8 +422,6 @@ export default class PopupNewMedia extends PopupElement {
     item.mediaSpoiler = mediaSpoiler;
     item.itemDiv.append(mediaSpoiler);
 
-    console.log('HERE');
-
     await doubleRaf();
     if(!middleware()) {
       return;
@@ -462,14 +433,14 @@ export default class PopupNewMedia extends PopupElement {
     });
 
     if(spoilerToggle) {
-      spoilerToggle.dataset.toggled = 'true'
-      delete spoilerToggle.dataset.disabled
+      spoilerToggle.dataset.toggled = 'true';
+      delete spoilerToggle.dataset.disabled;
     }
   }
 
   private removeMediaSpoiler(item: SendFileParams) {
-    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle')
-    if(spoilerToggle) spoilerToggle.dataset.disabled = 'true'
+    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle');
+    if(spoilerToggle) spoilerToggle.dataset.disabled = 'true';
 
     toggleMediaSpoiler({
       mediaSpoiler: item.mediaSpoiler,
@@ -478,8 +449,8 @@ export default class PopupNewMedia extends PopupElement {
     });
 
     if(spoilerToggle) {
-      delete spoilerToggle.dataset.toggled
-      delete spoilerToggle.dataset.disabled
+      delete spoilerToggle.dataset.toggled;
+      delete spoilerToggle.dataset.disabled;
     }
 
     item.mediaSpoiler = undefined;
@@ -782,7 +753,7 @@ export default class PopupNewMedia extends PopupElement {
     const file = params.file;
     const isVideo = file.type.startsWith('video/');
 
-    let promise: Promise<void>
+    let promise: Promise<void>;
 
     if(isVideo) {
       const video = createVideo({middleware: params.middlewareHelper.get()});
@@ -1130,7 +1101,7 @@ export default class PopupNewMedia extends PopupElement {
         oldParams?.editResult ? {
           editResult: oldParams.editResult
         } : undefined
-      )
+      );
     });
 
     Promise.all(promises).then(() => {

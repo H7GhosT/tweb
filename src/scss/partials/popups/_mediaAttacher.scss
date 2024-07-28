@@ -207,7 +207,6 @@
     }
   }
 
-
   .popup-item-media-action-menu {
     position: absolute;
     --size: 20px;
@@ -223,9 +222,9 @@
 
     border-radius: 999px;
 
-    background-color: rgba(0,0,0,.4);
+    background-color: rgba(0, 0, 0, .4);
     backdrop-filter: blur(35px);
-    
+
     @supports (-moz-animation: animation 1s) {
       // Firefox doesn't render backdrop-filter by default
       background-color: rgba(0, 0, 0, .8);
@@ -242,11 +241,10 @@
     z-index: 2;
   }
 
-  .popup-item-media:hover > .popup-item-media-action-menu {
+  .popup-item-media:hover>.popup-item-media-action-menu {
     opacity: 1;
     pointer-events: initial;
   }
-
 
   .popup-item-media-action {
     position: relative;
@@ -275,7 +273,7 @@
       transform: translate(-50%, -50%);
       transition: .2s;
     }
-    
+
     >span:nth-child(2) {
       opacity: 0;
     }

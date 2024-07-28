@@ -104,17 +104,6 @@ export default function StickersTab() {
     onMount(() => {
       stickerRenderer.renderSticker(props.doc, container);
       stickerRenderer.observeAnimated(container);
-      // wrapSticker({
-      //   div: container,
-      //   doc: props.doc,
-      //   group: 'none',
-      //   width: 70,
-      //   height: 70,
-      //   lazyLoadQueue,
-      //   middleware: createMiddleware().get(),
-      //   managers,
-      //   textColor: 'white'
-      // })
     });
 
     function onClick() {
