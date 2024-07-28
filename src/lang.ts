@@ -2844,7 +2844,41 @@ const lang = {
   'Chat.UploadLimit.Text': {
     'one_value': 'Subscribe to [Telegram Premium]() to increase upload speeds %d time.',
     'other_value': 'Subscribe to [Telegram Premium]() to increase upload speeds %d times.'
-  }
+  },
+  'MediaEditor.Free': 'Free',
+  'MediaEditor.Original': 'Original',
+  'MediaEditor.Square': 'Square',
+  'MediaEditor.AspectRatio': 'Aspect ratio',
+  'MediaEditor.Size': 'Size',
+  'MediaEditor.Font': 'Font',
+  'MediaEditor.TypeSomething': 'Type something...',
+  'MediaEditor.Fonts.Roboto': 'Roboto',
+  'MediaEditor.Fonts.SuezOne': 'Suez One',
+  'MediaEditor.Fonts.RubikBubbles': 'Rubik Bubbles',
+  'MediaEditor.Fonts.Playwrite': 'Playwrite',
+  'MediaEditor.Fonts.Chewy': 'Chewy',
+  'MediaEditor.Fonts.CourierPrime': 'Courier Prime',
+  'MediaEditor.Fonts.FugazOne': 'Fugaz One',
+  'MediaEditor.Fonts.Sedan': 'Sedan',
+  'MediaEditor.Tool': 'Tool',
+  'MediaEditor.Brushes.Pen': 'Pen',
+  'MediaEditor.Brushes.Arrow': 'Arrow',
+  'MediaEditor.Brushes.Brush': 'Brush',
+  'MediaEditor.Brushes.Neon': 'Neon',
+  'MediaEditor.Brushes.Blur': 'Blur',
+  'MediaEditor.Brushes.Eraser': 'Eraser',
+  'MediaEditor.RecentlyUsed': 'Recently Used',
+  'MediaEditor.Adjustments.Enhance': 'Enhance',
+  'MediaEditor.Adjustments.Brightness': 'Brightness',
+  'MediaEditor.Adjustments.Contrast': 'Contrast',
+  'MediaEditor.Adjustments.Saturation': 'Saturation',
+  'MediaEditor.Adjustments.Warmth': 'Warmth',
+  'MediaEditor.Adjustments.Fade': 'Fade',
+  'MediaEditor.Adjustments.Highlights': 'Highlights',
+  'MediaEditor.Adjustments.Shadows': 'Shadows',
+  'MediaEditor.Adjustments.Vignette': 'Vignette',
+  'MediaEditor.Adjustments.Grain': 'Grain',
+  'MediaEditor.Adjustments.Sharpen': 'Sharpen'
 };
 
 export default lang;
