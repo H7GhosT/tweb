@@ -54,6 +54,9 @@ import {ChatType} from '../chat/chat';
 import pause from '../../helpers/schedulers/pause';
 import {Accessor, createRoot, createSignal, Setter} from 'solid-js';
 import SelectedEffect from '../chat/selectedEffect';
+import Icon from '../icon';
+import {openMediaEditor} from '../mediaEditor/mediaEditor';
+import {MediaEditorFinalResult} from '../mediaEditor/createFinalResult';
 
 type SendFileParams = SendFileDetails & {
   file?: File,
@@ -61,8 +64,8 @@ type SendFileParams = SendFileDetails & {
   noSound?: boolean,
   itemDiv: HTMLElement,
   mediaSpoiler?: HTMLElement,
-  middlewareHelper: MiddlewareHelper
-  // strippedBytes?: PhotoSize.photoStrippedSize['bytes']
+  middlewareHelper: MiddlewareHelper,
+  editResult?: MediaEditorFinalResult
 };
 
 let currentPopup: PopupNewMedia;
@@ -299,33 +302,6 @@ export default class PopupNewMedia extends PopupElement {
       }
     });
 
-    let target: HTMLElement, isMedia: boolean, item: SendFileParams;
-    createContextMenu({
-      buttons: [{
-        icon: 'mediaspoiler',
-        text: 'EnablePhotoSpoiler',
-        onClick: () => {
-          this.applyMediaSpoiler(item);
-        },
-        verify: () => isMedia && !item.mediaSpoiler
-      }, {
-        icon: 'mediaspoileroff',
-        text: 'DisablePhotoSpoiler',
-        onClick: () => {
-          this.removeMediaSpoiler(item);
-        },
-        verify: () => !!(isMedia && item.mediaSpoiler)
-      }],
-      listenTo: this.mediaContainer,
-      listenerSetter: this.listenerSetter,
-      findElement: (e) => {
-        target = findUpClassName(e.target, 'popup-item');
-        isMedia = target.classList.contains('popup-item-media');
-        item = this.willAttach.sendFileDetails.find((i) => i.itemDiv === target);
-        return target;
-      }
-    });
-
     if(this.chat.type !== ChatType.Scheduled) {
       createRoot((dispose) => {
         this.chat.destroyMiddlewareHelper.onDestroy(dispose);
@@ -377,6 +353,10 @@ export default class PopupNewMedia extends PopupElement {
   };
 
   private async applyMediaSpoiler(item: SendFileParams, noAnimation?: boolean) {
+    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle');
+    if(spoilerToggle) spoilerToggle.dataset.disabled = 'true';
+
+
     const middleware = item.middlewareHelper.get();
     const {width: widthStr, height: heightStr} = item.itemDiv.style;
 
@@ -451,14 +431,27 @@ export default class PopupNewMedia extends PopupElement {
       mediaSpoiler,
       reveal: false
     });
+
+    if(spoilerToggle) {
+      spoilerToggle.dataset.toggled = 'true';
+      delete spoilerToggle.dataset.disabled;
+    }
   }
 
   private removeMediaSpoiler(item: SendFileParams) {
+    const spoilerToggle: HTMLElement = item.itemDiv.querySelector('.spoiler-toggle');
+    if(spoilerToggle) spoilerToggle.dataset.disabled = 'true';
+
     toggleMediaSpoiler({
       mediaSpoiler: item.mediaSpoiler,
       reveal: true,
       destroyAfter: true
     });
+
+    if(spoilerToggle) {
+      delete spoilerToggle.dataset.toggled;
+      delete spoilerToggle.dataset.disabled;
+    }
 
     item.mediaSpoiler = undefined;
   }
@@ -686,10 +679,15 @@ export default class PopupNewMedia extends PopupElement {
       }
 
       const d: SendFileDetails[] = sendFileParams.map((params) => {
+        params.editResult?.standaloneContext?.dispose();
+
         return {
           ...params,
-          file: params.scaledBlob || params.file,
-          spoiler: !!params.mediaSpoiler
+          file: params.editResult?.blob || params.scaledBlob || params.file,
+          width: params.editResult?.width || params.width,
+          height: params.editResult?.height || params.height,
+          spoiler: !!params.mediaSpoiler,
+          editResult: undefined
         };
       });
 
@@ -755,6 +753,8 @@ export default class PopupNewMedia extends PopupElement {
     const file = params.file;
     const isVideo = file.type.startsWith('video/');
 
+    let promise: Promise<void>;
+
     if(isVideo) {
       const video = createVideo({middleware: params.middlewareHelper.get()});
       video.src = params.objectURL = await apiManagerProxy.invoke('createObjectURL', file);
@@ -770,7 +770,7 @@ export default class PopupNewMedia extends PopupElement {
 
       let error: Error;
       try {
-        const promise = onMediaLoad(video);
+        const promise = onMediaLoad(video as HTMLMediaElement);
         await handleVideoLeak(video, promise);
       } catch(err) {
         error = err as any;
@@ -797,14 +797,17 @@ export default class PopupNewMedia extends PopupElement {
     } else {
       const img = new Image();
       itemDiv.append(img);
-      const url = params.objectURL = await apiManagerProxy.invoke('createObjectURL', file);
 
+      const url = params.objectURL = await apiManagerProxy.invoke('createObjectURL', params.editResult?.blob || file);
       await renderImageFromUrlPromise(img, url);
-      const mimeType = params.file.type as MTMimeType;
-      const scaled = await this.scaleImageForTelegram(img, mimeType, true);
-      if(scaled) {
-        params.objectURL = scaled.url;
-        params.scaledBlob = scaled.blob;
+
+      if(!params.editResult) {
+        const mimeType = params.file.type as MTMimeType;
+        const scaled = await this.scaleImageForTelegram(img, mimeType, true);
+        if(scaled) {
+          params.objectURL = scaled.url;
+          params.scaledBlob = scaled.blob;
+        }
       }
 
       params.width = img.naturalWidth;
@@ -813,7 +816,7 @@ export default class PopupNewMedia extends PopupElement {
       if(file.type === 'image/gif') {
         params.noSound = true;
 
-        return Promise.all([
+        promise = Promise.all([
           getGifDuration(img).then((duration) => {
             params.duration = Math.ceil(duration);
           }),
@@ -827,6 +830,56 @@ export default class PopupNewMedia extends PopupElement {
         ]).then(() => {});
       }
     }
+    {
+      const actions = document.createElement('div');
+      actions.classList.add('popup-item-media-action-menu');
+      const itemCls = 'popup-item-media-action';
+
+      let equalizeIcon: HTMLSpanElement;
+      if(!isVideo && file.type !== 'image/gif') {
+        equalizeIcon = Icon('equalizer', itemCls);
+        equalizeIcon.addEventListener('click', () => {
+          (this.btnConfirmOnEnter as HTMLButtonElement).disabled = true;
+          openMediaEditor({
+            imageURL: params.editResult?.originalSrc || params.objectURL,
+            managers: this.managers,
+            onEditFinish: (result) => {
+              params.editResult = result;
+              this.attachFiles();
+            },
+            standaloneContext: params.editResult?.standaloneContext,
+            onClose: () => {
+              (this.btnConfirmOnEnter as HTMLButtonElement).disabled = false;
+            }
+          });
+        });
+      }
+
+      const spoilerToggle = document.createElement('span');
+      spoilerToggle.classList.add(itemCls, 'spoiler-toggle');
+      if(params.mediaSpoiler) spoilerToggle.dataset.toggled = 'true';
+      spoilerToggle.append(Icon('mediaspoiler'), Icon('mediaspoileroff'));
+      spoilerToggle.addEventListener('click', () => {
+        if(spoilerToggle.dataset.disabled) return; // Prevent double clicks
+        !params.mediaSpoiler ? this.applyMediaSpoiler(params) : this.removeMediaSpoiler(params);
+      });
+
+      const deleteIcon = Icon('delete', itemCls);
+      deleteIcon.addEventListener('click', () => {
+        const idx = this.files.findIndex((file) => file === params.file);
+        if(idx >= 0) {
+          this.files.splice(idx, 1);
+          params.editResult?.standaloneContext?.dispose();
+          this.files.length ? this.attachFiles() : this.btnClose.click();
+        }
+      });
+
+      actions.append(...[equalizeIcon, spoilerToggle, deleteIcon].filter(Boolean));
+
+      itemDiv.append(actions);
+    }
+
+    return promise;
   }
 
   private async attachDocument(params: SendFileParams): ReturnType<PopupNewMedia['attachMedia']> {
@@ -920,7 +973,7 @@ export default class PopupNewMedia extends PopupElement {
     itemDiv.append(docDiv);
   }
 
-  private attachFile = (file: File) => {
+  private attachFile = (file: File, oldParams?: Partial<SendFileParams>) => {
     const willAttach = this.willAttach;
     const shouldCompress = this.shouldCompress(file.type);
 
@@ -928,7 +981,8 @@ export default class PopupNewMedia extends PopupElement {
     itemDiv.classList.add('popup-item');
 
     const params: SendFileParams = {
-      file
+      file,
+      ...(oldParams || {})
     } as any;
 
     // do not pass these properties to worker
@@ -966,6 +1020,7 @@ export default class PopupNewMedia extends PopupElement {
     });
     this.show();
   }
+
 
   private setTitle() {
     const {willAttach, title, files} = this;
@@ -1039,7 +1094,15 @@ export default class PopupNewMedia extends PopupElement {
       params.middlewareHelper.destroy();
     });
 
-    const promises = files.map((file) => this.attachFile(file));
+    const promises = files.map((file) => {
+      const oldParams = oldSendFileDetails.find((o) => o.file === file);
+      return this.attachFile(
+        file,
+        oldParams?.editResult ? {
+          editResult: oldParams.editResult
+        } : undefined
+      );
+    });
 
     Promise.all(promises).then(() => {
       mediaContainer.replaceChildren();
@@ -1090,6 +1153,28 @@ export default class PopupNewMedia extends PopupElement {
     }).then(() => {
       this.onRender();
       this.onScroll();
+      doubleRaf().then(() => this.adjustActionsPosition());
+    });
+  }
+
+  private adjustActionsPosition() {
+    const mediaContainerBCR = this.mediaContainer.getBoundingClientRect();
+    this.willAttach.sendFileDetails.forEach((params) => {
+      const actions: HTMLDivElement = params.itemDiv.querySelector('.popup-item-media-action-menu');
+
+      if(!actions) return;
+      const actionsBCR = actions.getBoundingClientRect();
+
+      const padding = 4;
+      if(mediaContainerBCR.left + padding > actionsBCR.left) {
+        actions.style.setProperty('--move', mediaContainerBCR.left + padding - actionsBCR.left + 'px');
+      } else if(mediaContainerBCR.right - padding < actionsBCR.right) {
+        console.log(
+          'mediaContainerBCR.right - padding - actionsBCR.right',
+          mediaContainerBCR.right - padding - actionsBCR.right
+        );
+        actions.style.setProperty('--move', mediaContainerBCR.right - padding - actionsBCR.right + 'px');
+      }
     });
   }
 }
