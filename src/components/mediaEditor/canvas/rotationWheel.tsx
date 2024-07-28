@@ -137,6 +137,7 @@ export default function RotationWheel() {
   function flipImage() {
     const isReversedRatio = Math.abs(Math.round((rotation() / Math.PI) * 2)) & 1;
     setFlip((flip) => [flip[0] * (isReversedRatio ? 1 : -1), flip[1] * (isReversedRatio ? -1 : 1)]);
+    context.redrawBrushes()
   }
 
   const value = () => ((-(moved() + movedDiff()) / DEGREE_DIST_PX) * DEGREE_STEP).toFixed(1).replace(/\.0$/, '');
