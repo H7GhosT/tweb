@@ -1,7 +1,7 @@
 import {useContext} from 'solid-js';
 
 import MediaEditorContext from '../context';
-import {snapToViewport} from '../math/viewports';
+import {snapToViewport} from '../utils';
 
 import {getCropOffset} from './cropOffset';
 

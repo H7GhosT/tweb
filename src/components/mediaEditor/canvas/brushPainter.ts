@@ -1,6 +1,6 @@
 import {hexaToRgba} from '../../../helpers/color';
 
-import {distance} from '../math/distance';
+import {distance} from '../utils';
 
 export type BrushDrawnLine = {
   color: string;

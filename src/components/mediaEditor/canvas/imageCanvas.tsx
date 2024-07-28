@@ -4,7 +4,7 @@ import MediaEditorContext from '../context';
 import {AdjustmentsConfig} from '../adjustments';
 import {initWebGL} from '../webgl/initWebGL';
 import {draw} from '../webgl/draw';
-import {getSnappedViewportsScale} from '../math/viewports';
+import {getSnappedViewportsScale} from '../utils';
 
 import {getCropOffset} from './cropOffset';
 

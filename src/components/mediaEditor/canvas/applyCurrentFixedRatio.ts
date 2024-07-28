@@ -2,7 +2,7 @@ import {batch, useContext} from 'solid-js';
 
 import MediaEditorContext from '../context';
 import {getCropOffset} from '../canvas/cropOffset';
-import {snapToViewport} from '../math/viewports';
+import {snapToViewport} from '../utils';
 
 export function applyCurrentFixedRatio() {
   const context = useContext(MediaEditorContext);

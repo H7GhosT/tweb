@@ -2,7 +2,7 @@ import {useContext} from 'solid-js';
 
 import MediaEditorContext, {StandaloneContext} from './context';
 import {AdjustmentsConfig} from './adjustments';
-import {getSnappedViewportsScale, snapToViewport} from './math/viewports';
+import {getSnappedViewportsScale, snapToViewport} from './utils';
 import {draw} from './webgl/draw';
 import {initWebGL} from './webgl/initWebGL';
 import BrushPainter from './canvas/brushPainter';

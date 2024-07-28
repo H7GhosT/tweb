@@ -2,7 +2,7 @@ import {createEffect, createSignal, onCleanup, onMount, Show, useContext} from '
 
 import SwipeHandler from '../../swipeHandler';
 
-import {snapToViewport} from '../math/viewports';
+import {snapToViewport} from '../utils';
 import MediaEditorContext from '../context';
 import {withCurrentOwner} from '../utils';
 
