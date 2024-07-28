@@ -60,6 +60,21 @@ export default function TextLayerContent(props: ResizableLayerProps) {
       sel.addRange(range)
     }
 
+    // Firefox puts the cursor outside the inner divs and messes up everything
+    const selection = window.getSelection()
+    if(selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0)
+      if(range.startContainer === contentEditable && range.startOffset === 0) {
+        const innerDiv = contentEditable.children[0]
+        const innerDivRange = document.createRange();
+        innerDivRange.selectNodeContents(innerDiv);
+        innerDivRange.collapse(false); // Collapse to the end of the inner div
+
+        selection.removeAllRanges();
+        selection.addRange(innerDivRange);
+      }
+    }
+
     container.querySelector('.media-editor__text-layer-background')?.remove();
     const lines = getLinesRenderingInfo(contentEditable, layer().textInfo.alignment);
     const path = createTextBackgroundPath(lines);
@@ -80,18 +95,19 @@ export default function TextLayerContent(props: ResizableLayerProps) {
 
   function selectAll() {
     const range = document.createRange();
-    range.selectNodeContents(contentEditable);
+    range.selectNodeContents(contentEditable.children[0]);
     const selection = window.getSelection();
     selection.removeAllRanges();
     selection.addRange(range);
   }
 
-  onMount(() => {
-    selectAll();
-  });
 
   createEffect(() => {
     updateBackground();
+  });
+
+  onMount(() => {
+    selectAll();
   });
 
   createEffect(

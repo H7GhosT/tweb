@@ -96,9 +96,16 @@ export default function ColorPicker(props: {
   createEffect(
     on(
       () => props.colorKey,
-      () => {
+      async() => {
         const newCollapsed = colorPickerSwatches.includes(props.value);
-        if(newCollapsed !== collapsed()) setCollapsed(newCollapsed);
+        if(newCollapsed !== collapsed()) {
+          setCollapsed(newCollapsed);
+          if(newCollapsed) {
+            setCollapsing(true);
+            await delay(200);
+            setCollapsing(false)
+          }
+        }
       }
     )
   );

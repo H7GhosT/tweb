@@ -21,7 +21,7 @@ import {TabContentContext} from './tabContent';
 
 export default function StickersTab() {
   const context = useContext(MediaEditorContext);
-  const {container} = useContext(TabContentContext);
+  const {container, scrollAmount} = useContext(TabContentContext);
 
   const {managers} = context;
   const [, setLayers] = context.resizableLayers;
@@ -39,7 +39,6 @@ export default function StickersTab() {
 
   const [intersectionObserver, setIntersectionObserver] = createSignal<IntersectionObserver>();
   const [recentLabel, setRecentLabel] = createSignal<HTMLDivElement>();
-  const [thumbsListScrollable, setThumbsListScrollable] = createSignal<HTMLDivElement>();
 
   const lazyLoadQueue = new LazyLoadQueue();
   const stickerRenderer = new SuperStickerRenderer({
@@ -177,10 +176,44 @@ export default function StickersTab() {
     );
   }
 
-  createEffect(() => {
-    if(!thumbsListScrollable()) return;
-    new ScrollableX(thumbsListScrollable());
-  });
+  function ThumbList() {
+    let thumbsListScrollable: HTMLDivElement;
+
+    onMount(() => {
+      document.querySelector('.media-editor__tabs')?.append(thumbsListScrollable);
+      new ScrollableX(thumbsListScrollable);
+    });
+    onCleanup(() => {
+      thumbsListScrollable.remove();
+    });
+
+    const visible = () => stickerSets() && !filteredStickers();
+    <div
+      class="media-editor__stickers-thumb-list-scrollable"
+      classList={{
+        'media-editor__stickers-thumb-list-scrollable--hidden': !visible(),
+        'media-editor__stickers-thumb-list-scrollable--has-scroll': scrollAmount() > 8
+      }}
+      ref={thumbsListScrollable}
+    >
+      <div class="media-editor__stickers-thumb-list">
+        <Show when={recentStickers()?.length}>
+          <div
+            class="media-editor__stickers-recent-button"
+            classList={{
+              'media-editor__stickers-recent-button--active': activeSet() === 'recent'
+            }}
+            onClick={() => onStickerSetThumbClick('recent')}
+          >
+            <IconTsx icon="recent" />
+          </div>
+        </Show>
+        <For each={stickerSets()?.sets}>{(set) => <StickerSetThumb set={set} />}</For>
+      </div>
+    </div>;
+    return <></>;
+  }
+
 
   createEffect(() => {
     setIntersectionObserver(
@@ -241,6 +274,8 @@ export default function StickersTab() {
 
   return (
     <>
+      <ThumbList />
+
       <Space amount={filteredStickers() ? '0px' : '48px'} />
       <Space amount="8px" />
 
@@ -279,25 +314,6 @@ export default function StickersTab() {
 
       <Show when={stickerSets() && !filteredStickers()}>
         <For each={stickerSets().sets}>{(set) => <StickerSetSection set={set} />}</For>
-      </Show>
-
-      <Show when={stickerSets() && !filteredStickers()}>
-        <div class="media-editor__stickers-thumb-list-scrollable" ref={setThumbsListScrollable}>
-          <div class="media-editor__stickers-thumb-list">
-            <Show when={recentStickers()?.length}>
-              <div
-                class="media-editor__stickers-recent-button"
-                classList={{
-                  'media-editor__stickers-recent-button--active': activeSet() === 'recent'
-                }}
-                onClick={() => onStickerSetThumbClick('recent')}
-              >
-                <IconTsx icon="recent" />
-              </div>
-            </Show>
-            <For each={stickerSets().sets}>{(set) => <StickerSetThumb set={set} />}</For>
-          </div>
-        </div>
       </Show>
     </>
   );

@@ -10,6 +10,7 @@ import {mediaEditorTabsOrder} from './tabs';
 
 type TabContentContextValue = {
   container: Accessor<HTMLDivElement>;
+  scrollAmount: Accessor<number>;
 };
 export const TabContentContext = createContext<TabContentContextValue>();
 
@@ -18,7 +19,7 @@ export default function TabContent(props: {tabs: Record<string, () => JSX.Elemen
   const [tab] = context.currentTab;
 
   const [container, setContainer] = createSignal<HTMLDivElement>();
-
+  const [scrollAmount, setScrollAmount] = createSignal(0)
   let prevElement: HTMLDivElement;
   let prevTab = tab();
   let scrollable: Scrollable;
@@ -33,7 +34,7 @@ export default function TabContent(props: {tabs: Record<string, () => JSX.Elemen
     const newElement = (
       <div>
         <div class="media-editor__tab-content-scrollable-content">
-          <TabContentContext.Provider value={{container}}>{props.tabs[tab()]()}</TabContentContext.Provider>
+          <TabContentContext.Provider value={{container, scrollAmount}}>{props.tabs[tab()]()}</TabContentContext.Provider>
         </div>
       </div>
     ) as HTMLDivElement;
@@ -71,8 +72,7 @@ export default function TabContent(props: {tabs: Record<string, () => JSX.Elemen
     scrollable = new Scrollable(element);
     scrollable.setListeners();
     scrollable.container.addEventListener('scroll', (e) => {
-      element.style.setProperty('--current-scroll-top', Math.max(scrollable.container.scrollTop, 8) + 'px');
-      element.dataset.hasScroll = String(scrollable.container.scrollTop > 0);
+      setScrollAmount(scrollable.container.scrollTop)
     });
   }
 
@@ -88,7 +88,7 @@ export default function TabContent(props: {tabs: Record<string, () => JSX.Elemen
     <div ref={setContainer} class="media-editor__tab-content">
       <div ref={prevElement}>
         <div class="media-editor__tab-content-scrollable-content">
-          <TabContentContext.Provider value={{container}}>{initialTab}</TabContentContext.Provider>
+          <TabContentContext.Provider value={{container, scrollAmount}}>{initialTab}</TabContentContext.Provider>
         </div>
       </div>
     </div>
