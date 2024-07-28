@@ -9,6 +9,8 @@ import {withCurrentOwner} from '../utils';
 import {getCropOffset} from './cropOffset';
 import _getConvenientPositioning from './getConvenientPositioning';
 
+const MAX_SCALE = 20
+
 export default function CropHandles() {
   const context = useContext(MediaEditorContext);
   const [canvasSize] = context.canvasSize;
@@ -77,6 +79,12 @@ export default function CropHandles() {
             ratio = -ratio;
           }
 
+          const [w, h] = size()
+          const minW = Math.min(w, cropOffset.width / MAX_SCALE * Math.min(MAX_SCALE, initialScale))
+          const minH = Math.min(h, cropOffset.height / MAX_SCALE * Math.min(MAX_SCALE, initialScale))
+          xDiff = Math.max(xDiff * left, minW - w) * left
+          yDiff = Math.max(yDiff * top, minH - h) * top
+
           if(fixed) {
             if(top === 0) {
               yDiff = xDiff / ratio;
@@ -132,21 +140,12 @@ export default function CropHandles() {
             setScale(initialScale * additionalScale);
           }
 
-          function maxAbs(x: number, y: number) {
-            if(Math.abs(x) > Math.abs(y)) return x;
-            return y;
-          }
-
           let boundDiff = [0, 0];
 
           if(imageMinX > cropMinX) boundDiff[0] += imageMinX - cropMinX;
           if(imageMaxX < cropMaxX) boundDiff[0] += imageMaxX - cropMaxX;
           if(imageMinY > cropMinY) boundDiff[1] += imageMinY - cropMinY;
           if(imageMaxY < cropMaxY) boundDiff[1] += imageMaxY - cropMaxY;
-          // boundDiff[0] += imageMinX - cropMinX;
-          // boundDiff[0] += imageMaxX - cropMaxX;
-          // boundDiff[1] += imageMinY - cropMinY;
-          // boundDiff[1] += imageMaxY - cropMaxY;
 
           const r = [Math.sin(rotation()), Math.cos(rotation())];
 
