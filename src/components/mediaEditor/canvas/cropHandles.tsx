@@ -300,12 +300,14 @@ export default function CropHandles() {
 
   const coverAnimatedStyle = () => ({
     'transition': '0.2s',
+    'transition-timing-function': isCroping() ? 'ease-in' : 'ease-out',
     'pointer-events': isCroping() ? 'none' : undefined,
     'opacity': isCroping() ? 0 : 1
   } as const);
 
   const controlsAnimatedStyle = () => ({
     'transition': '0.2s',
+    'transition-timing-function': isCroping() ? 'ease-out' : 'ease-in',
     'pointer-events': isCroping() ? undefined : 'none',
     'opacity': isCroping() ? 1 : 0,
     'transform': isCroping() ? undefined : 'scale(1.05)'
