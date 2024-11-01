@@ -1,8 +1,8 @@
-import {createEffect, createSignal, onCleanup, onMount, Show, useContext} from 'solid-js';
+import {batch, createEffect, createSignal, on, onCleanup, onMount, useContext} from 'solid-js';
 
 import SwipeHandler from '../../swipeHandler';
 
-import {snapToViewport} from '../utils';
+import {animateValue, lerp, lerpArray, snapToViewport} from '../utils';
 import MediaEditorContext from '../context';
 import {withCurrentOwner} from '../utils';
 
@@ -32,16 +32,54 @@ export default function CropHandles() {
 
   const getConvenientPositioning = withCurrentOwner(_getConvenientPositioning);
 
-  const resetSize = () => {
+  const getNewLeftTopAndSize = () => {
     const [width, height] = snapToViewport(currentImageRatio(), cropOffset.width, cropOffset.height);
 
-    setLeftTop([cropOffset.left + (cropOffset.width - width) / 2, cropOffset.top + (cropOffset.height - height) / 2]);
-    setSize([width, height]);
-  };
+    return {
+      leftTop: [cropOffset.left + (cropOffset.width - width) / 2, cropOffset.top + (cropOffset.height - height) / 2],
+      size: [width, height]
+    }
+  }
 
-  createEffect(() => {
-    resetSize();
+  onMount(() => {
+    const {
+      leftTop,
+      size
+    } = getNewLeftTopAndSize();
+    setLeftTop(leftTop);
+    setSize(size);
   });
+
+  let cancelSizeAnimation: () => void
+
+  function resetSizeWithAnimation() {
+    const initialDiff = diff();
+    const initialLeftTopDiff = leftTopDiff();
+    const initialLeftTop = leftTop();
+    const initialSize = size();
+
+    const targetDiff = [0, 0];
+    const targetLeftTopDiff = [0, 0];
+    const {
+      leftTop: targetLeftTop,
+      size: targetSize
+    } = getNewLeftTopAndSize();
+
+    cancelSizeAnimation?.();
+
+    cancelSizeAnimation = animateValue(0, 1, 200, (progress) => {
+      batch(() => {
+        setDiff(lerpArray(initialDiff, targetDiff, progress) as [number, number]);
+        setLeftTopDiff(lerpArray(initialLeftTopDiff, targetLeftTopDiff, progress) as [number, number]);
+        setLeftTop(lerpArray(initialLeftTop, targetLeftTop, progress) as [number, number]);
+        setSize(lerpArray(initialSize, targetSize, progress) as [number, number]);
+      });
+    });
+  }
+
+  createEffect(on(currentImageRatio, () => {
+    resetSizeWithAnimation();
+  }))
 
   onMount(() => {
     const multipliers = [
@@ -159,19 +197,24 @@ export default function CropHandles() {
           const newRatio = newWidth / newHeight;
 
           const upScale = Math.min(cropOffset.width / newWidth, cropOffset.height / newHeight);
-          const newScale = scale() * upScale;
-          setScale(newScale);
-
           setCurrentImageRatio(newRatio);
+          resetSizeWithAnimation();
 
-          setTranslation((translation) => [
-            upScale * (translation[0] + -diff()[0] * left * 0.5),
-            upScale * (translation[1] + -diff()[1] * top * 0.5)
-          ]);
+          const initialScale = scale();
+          const initialTranslation = translation();
 
-          resetSize();
-          setDiff([0, 0]);
-          setLeftTopDiff([0, 0]);
+          const targetScale = scale() * upScale;
+          const targetTranslation = [
+            upScale * (translation()[0] + -diff()[0] * left * 0.5),
+            upScale * (translation()[1] + -diff()[1] * top * 0.5)
+          ];
+
+          animateValue(0, 1, 200, (progress) => {
+            batch(() => {
+              setScale(lerp(initialScale, targetScale, progress));
+              setTranslation(lerpArray(initialTranslation, targetTranslation, progress) as [number, number]);
+            })
+          })
 
           setIsAdjusting(false);
 
@@ -213,7 +256,8 @@ export default function CropHandles() {
         boundDiff = [boundDiff[0] / resistance, boundDiff[1] / resistance];
       },
       onReset() {
-        setTranslation((prev) => [prev[0] - boundDiff[0], prev[1] - boundDiff[1]]);
+        const prevTranslation = translation();
+        animateValue(prevTranslation, [prevTranslation[0] - boundDiff[0], prevTranslation[1] - boundDiff[1]], 120, setTranslation);
         setIsAdjusting(false);
       }
     });
@@ -254,88 +298,116 @@ export default function CropHandles() {
   let rightHandle: HTMLDivElement;
   let bottomHandle: HTMLDivElement;
 
+  const coverAnimatedStyle = () => ({
+    'transition': '0.2s',
+    'pointer-events': isCroping() ? 'none' : undefined,
+    'opacity': isCroping() ? 0 : 1
+  } as const);
+
+  const controlsAnimatedStyle = () => ({
+    'transition': '0.2s',
+    'pointer-events': isCroping() ? undefined : 'none',
+    'opacity': isCroping() ? 1 : 0,
+    'transform': isCroping() ? undefined : 'scale(1.05)'
+  } as const);
+
   return (
     <>
-      <Show when={!isCroping()}>
-        <div
-          style={{
-            background: 'black',
-            position: 'absolute',
-            left: '0px',
-            top: '0px',
-            width: '100%',
-            height: croppedSizeFull()[1] + 'px'
-          }}
-        ></div>
-        <div
-          style={{
-            background: 'black',
-            position: 'absolute',
-            left: '0px',
-            bottom: '0px',
-            width: '100%',
-            height: croppedSizeFull()[1] + 'px'
-          }}
-        ></div>
-        <div
-          style={{
-            background: 'black',
-            position: 'absolute',
-            left: '0px',
-            top: '0px',
-            height: '100%',
-            width: croppedSizeFull()[0] + 'px'
-          }}
-        ></div>
-        <div
-          style={{
-            background: 'black',
-            position: 'absolute',
-            right: '0px',
-            top: '0px',
-            height: '100%',
-            width: croppedSizeFull()[0] + 'px'
-          }}
-        ></div>
-      </Show>
       <div
-        class="media-editor__crop-handles-backdrop"
         style={{
-          display: isCroping() ? undefined : 'none',
-          ['clip-path']: `polygon(
-            0 0, 0 100%,
-            ${left()}px 100%, ${left()}px ${top()}px, ${right()}px ${top()}px,
-            ${right()}px ${bottom()}px, ${left()}px ${bottom()}px, ${left()}px 100%,
-            100% 100%, 100% 0%
-          )`
+          background: 'black',
+          position: 'absolute',
+          left: '0px',
+          top: '0px',
+          width: '100%',
+          height: croppedSizeFull()[1] + 'px',
+          ...coverAnimatedStyle()
         }}
-      />
+      ></div>
       <div
-        ref={cropArea}
-        class="media-editor__crop-handles"
         style={{
-          display: isCroping() ? undefined : 'none',
-          left: left() + 'px',
-          top: top() + 'px',
-          width: width() + 'px',
-          height: height() + 'px'
+          background: 'black',
+          position: 'absolute',
+          left: '0px',
+          bottom: '0px',
+          width: '100%',
+          height: croppedSizeFull()[1] + 'px',
+          ...coverAnimatedStyle()
+        }}
+      ></div>
+      <div
+        style={{
+          background: 'black',
+          position: 'absolute',
+          left: '0px',
+          top: '0px',
+          height: '100%',
+          width: croppedSizeFull()[0] + 'px',
+          ...coverAnimatedStyle()
+        }}
+      ></div>
+      <div
+        style={{
+          background: 'black',
+          position: 'absolute',
+          right: '0px',
+          top: '0px',
+          height: '100%',
+          width: croppedSizeFull()[0] + 'px',
+          ...coverAnimatedStyle()
+        }}
+      ></div>
+      <div
+        style={{
+          position: 'absolute',
+          right: '0px',
+          top: '0px',
+          height: '100%',
+          width: '100%',
+          overflow: 'hidden',
+          ...controlsAnimatedStyle()
         }}
       >
-        <div class="media-editor__crop-handles-line-h" style={{top: '33%'}} />
-        <div class="media-editor__crop-handles-line-h" style={{top: '66%'}} />
-        <div class="media-editor__crop-handles-line-v" style={{left: '33%'}} />
-        <div class="media-editor__crop-handles-line-v" style={{left: '66%'}} />
+        <div
+          class="media-editor__crop-handles-backdrop"
+          style={{
+            ['clip-path']: `polygon(
+              0 0, 0 100%,
+              ${left()}px 100%, ${left()}px ${top()}px, ${right()}px ${top()}px,
+              ${right()}px ${bottom()}px, ${left()}px ${bottom()}px, ${left()}px 100%,
+              100% 100%, 100% 0%
+            )`
+            // ...controlsAnimatedStyle()
+          }}
+        />
+        <div
+          ref={cropArea}
+          class="media-editor__crop-handles"
+          style={{
+            left: left() + 'px',
+            top: top() + 'px',
+            width: width() + 'px',
+            height: height() + 'px'
+            // ...controlsAnimatedStyle()
+          }}
+        >
+          <div class="media-editor__crop-handles-line-h" style={{top: '33%'}} />
+          <div class="media-editor__crop-handles-line-h" style={{top: '66%'}} />
+          <div class="media-editor__crop-handles-line-v" style={{left: '33%'}} />
+          <div class="media-editor__crop-handles-line-v" style={{left: '66%'}} />
 
-        <div ref={leftHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--w" />
-        <div ref={topHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--n" />
-        <div ref={rightHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--e" />
-        <div ref={bottomHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--s" />
+          <div ref={leftHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--w" />
+          <div ref={topHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--n" />
+          <div ref={rightHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--e" />
+          <div ref={bottomHandle} class="media-editor__crop-handles-side media-editor__crop-handles-side--s" />
 
-        <div ref={leftTopHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--nw" />
-        <div ref={rightTopHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--ne" />
-        <div ref={leftBottomHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--sw" />
-        <div ref={rightBottomHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--se" />
+          <div ref={leftTopHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--nw" />
+          <div ref={rightTopHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--ne" />
+          <div ref={leftBottomHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--sw" />
+          <div ref={rightBottomHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--se" />
+        </div>
       </div>
+
     </>
   );
 }

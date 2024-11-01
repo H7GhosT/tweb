@@ -5,7 +5,7 @@ import {IconTsx} from '../../iconTsx';
 
 import LargeButton, {MediaEditorLargeButtonProps} from '../largeButton';
 import MediaEditorContext from '../context';
-import {applyCurrentFixedRatio} from '../canvas/applyCurrentFixedRatio';
+import {animateToNewRotationOrRatio} from '../canvas/animateToNewRotationOrRatio';
 import {withCurrentOwner} from '../utils';
 
 const ratioRects = {
@@ -49,12 +49,13 @@ function Item(
 export default function CropTab() {
   const context = useContext(MediaEditorContext);
   const [fixedImageRatioKey, setFixedImageRatioKey] = context.fixedImageRatioKey;
+  const [rotation] = context.rotation;
 
   const isActive = (what?: string) => fixedImageRatioKey() === what;
 
   const onRatioClick = withCurrentOwner((ratio?: string) => {
     setFixedImageRatioKey(ratio);
-    applyCurrentFixedRatio();
+    animateToNewRotationOrRatio(rotation());
   });
 
   return (

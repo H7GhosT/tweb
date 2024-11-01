@@ -6,9 +6,9 @@ import {ButtonIconTsx} from '../../buttonIconTsx';
 import SwipeHandler from '../../swipeHandler';
 
 import MediaEditorContext from '../context';
-import {withCurrentOwner} from '../utils';
+import {animateValue, withCurrentOwner} from '../utils';
 
-import {applyCurrentFixedRatio} from './applyCurrentFixedRatio';
+import {animateToNewRotationOrRatio} from './animateToNewRotationOrRatio';
 import getConvenientPositioning from './getConvenientPositioning';
 
 const DEGREE_DIST_PX = 42;
@@ -25,7 +25,7 @@ export default function RotationWheel() {
   const [currentTab] = context.currentTab;
   const isCroping = () => currentTab() === 'crop';
   const [rotation, setRotation] = context.rotation;
-  const [, setFlip] = context.flip;
+  const [flip, setFlip] = context.flip;
   const [fixedImageRatioKey] = context.fixedImageRatioKey;
   const [moved, setMoved] = createSignal(0);
   const [movedDiff, setMovedDiff] = createSignal(0);
@@ -106,6 +106,16 @@ export default function RotationWheel() {
     }
   });
 
+  function resetWheelWithAnimation() {
+    prevRotation = 0;
+    animateValue([moved(), movedDiff()], [0, 0], 200, (values) => {
+      batch(() => {
+        setMoved(values[0]);
+        setMovedDiff(values[1]);
+      })
+    })
+  }
+
   let isFirstEffect = true;
   createEffect(
     on(fixedImageRatioKey, () => {
@@ -113,30 +123,22 @@ export default function RotationWheel() {
         isFirstEffect = false;
         return;
       }
-      prevRotation = 0;
-      batch(() => {
-        setMoved(0);
-        setMovedDiff(0);
-      });
+      resetWheelWithAnimation();
     })
   );
 
   function rotateLeft() {
     const newRotation = (Math.round((rotation() / Math.PI) * 2) * Math.PI) / 2 - Math.PI / 2;
-    setRotation(newRotation);
 
-    applyCurrentFixedRatio();
+    animateToNewRotationOrRatio(newRotation);
 
-    prevRotation = 0;
-    batch(() => {
-      setMoved(0);
-      setMovedDiff(0);
-    });
+    resetWheelWithAnimation();
   }
 
   function flipImage() {
     const isReversedRatio = Math.abs(Math.round((rotation() / Math.PI) * 2)) & 1;
-    setFlip((flip) => [flip[0] * (isReversedRatio ? 1 : -1), flip[1] * (isReversedRatio ? -1 : 1)]);
+    const targetFlip = [flip()[0] * (isReversedRatio ? 1 : -1), flip()[1] * (isReversedRatio ? -1 : 1)];
+    animateValue(flip(), targetFlip, 200, setFlip);
     context.redrawBrushes()
   }
 
