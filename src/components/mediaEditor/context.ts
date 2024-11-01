@@ -7,6 +7,7 @@ import {ResizableLayer, StickerRenderingInfo, TextLayerInfo, TextRenderingInfo} 
 import {RenderingPayload} from './webgl/initWebGL';
 import {BrushDrawnLine} from './canvas/brushPainter';
 import {MediaEditorProps} from './mediaEditor';
+import {FinalTransform} from './canvas/getFinalTransform';
 
 export interface MediaEditorContextValue {
   managers: AppManagers;
@@ -25,6 +26,7 @@ export interface MediaEditorContextValue {
   rotation: Signal<number>;
   translation: Signal<[number, number]>;
   flip: Signal<[number, number]>;
+  finalTransform: Signal<FinalTransform>
 
   resizableLayersSeed: number;
   currentTextLayerInfo: Signal<TextLayerInfo>;
@@ -83,6 +85,13 @@ function createContextValue(props: MediaEditorProps): MediaEditorContextValue {
     translation: createSignal([0, 0]),
     flip: createSignal([1, 1]),
     fixedImageRatioKey: createSignal(),
+
+    finalTransform: createSignal({
+      flip: [1, 1],
+      rotation: 0,
+      scale: 1,
+      translation: [0, 0]
+    }),
 
     resizableLayersSeed: 1,
     resizableLayers: createSignal([]),

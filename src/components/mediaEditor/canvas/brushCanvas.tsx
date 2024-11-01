@@ -6,7 +6,8 @@ import throttle from '../../../helpers/schedulers/throttle';
 import MediaEditorContext from '../context';
 
 import BrushPainter, {BrushDrawnLine} from './brushPainter';
-import getFinalTransform from './getFinalTransform';
+import useNormalizePoint from './useNormalizePoint';
+import useProcessPoint from './useProcessPoint';
 
 const THROTTLE_MS = 25;
 
@@ -19,26 +20,17 @@ export default function BrushCanvas() {
   const [, setSelectedTextLayer] = context.selectedResizableLayer;
   const [lines, setLines] = context.brushDrawnLines;
   const [isAdjusting] = context.isAdjusting;
+  const [finalTransform] = context.finalTransform
 
-  const finalTransform = createMemo(getFinalTransform)
+  const normalizePoint = useNormalizePoint();
+  const processPoint = useProcessPoint()
 
   function processLine(line: BrushDrawnLine): BrushDrawnLine {
     const transform = finalTransform()
     return {
       ...line,
       size: line.size * transform.scale,
-      points: line.points.map(point => {
-        const r = [Math.sin(-transform.rotation), Math.cos(-transform.rotation)]
-        point = [
-          point[0] * r[1] + point[1] * r[0],
-          point[1] * r[1] - point[0] * r[0]
-        ]
-        point = [
-          (point[0] * transform.scale + w / 2 + transform.translation[0]),
-          (point[1] * transform.scale + h / 2 + transform.translation[1])
-        ]
-        return point
-      })
+      points: line.points.map(processPoint)
     }
   }
 
@@ -120,24 +112,12 @@ export default function BrushCanvas() {
             setSelectedTextLayer();
           }
 
-          const transform = finalTransform()
-
-          let point = [
-            (initialPosition[0] + xDiff) * context.pixelRatio,
-            (initialPosition[1] + yDiff) * context.pixelRatio
+          const point = [
+            (initialPosition[0] + xDiff),
+            (initialPosition[1] + yDiff)
           ] as [number, number]
 
-          point = [
-            (point[0] - transform.translation[0] - w / 2) / transform.scale,
-            (point[1] - transform.translation[1] - h / 2) / transform.scale
-          ]
-          const r = [Math.sin(transform.rotation), Math.cos(transform.rotation)]
-          point = [
-            point[0] * r[1] + point[1] * r[0],
-            point[1] * r[1] - point[0] * r[0]
-          ]
-
-          points.push(point);
+          points.push(normalizePoint(point));
 
           setLastLine((prev) => ({...prev, points}));
           brushPainter.previewLine(processLine({...lastLine(), points}));

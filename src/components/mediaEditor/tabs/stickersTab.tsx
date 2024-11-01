@@ -12,6 +12,7 @@ import {IconTsx} from '../../iconTsx';
 import {ScrollableX} from '../../scrollable';
 import SuperStickerRenderer from '../../emoticonsDropdown/tabs/SuperStickerRenderer';
 
+import useNormalizePoint from '../canvas/useNormalizePoint';
 import Space from '../space';
 import MediaEditorContext from '../context';
 import {ResizableLayer} from '../types';
@@ -27,6 +28,9 @@ export default function StickersTab() {
   const [, setLayers] = context.resizableLayers;
   const [canvasSize] = context.canvasSize;
   const [, setSelectedResizableLayer] = context.selectedResizableLayer;
+  const [finalTransform] = context.finalTransform
+
+  const normalizePoint = useNormalizePoint()
 
   const [recentStickers] = createResource(() => managers.appStickersManager.getRecentStickersStickers());
   const [stickerSets] = createResource(() => managers.appStickersManager.getAllStickers());
@@ -107,11 +111,12 @@ export default function StickersTab() {
 
     function onClick() {
       const id = context.resizableLayersSeed++;
+      const transform = finalTransform()
       const newLayer = {
         id,
-        position: [canvasSize()[0] / 2, canvasSize()[1] / 2],
-        rotation: 0,
-        scale: 1,
+        position: normalizePoint([canvasSize()[0] / 2, canvasSize()[1] / 2]),
+        rotation: -transform.rotation,
+        scale: 1 / transform.scale,
         type: 'sticker',
         sticker: props.doc
       } as ResizableLayer;

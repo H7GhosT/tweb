@@ -5,6 +5,8 @@ import {getSnappedViewportsScale} from '../utils';
 
 import {getCropOffset} from './cropOffset';
 
+export type FinalTransform = ReturnType<typeof getFinalTransform>
+
 export default function getFinalTransform() {
   const context = useContext(MediaEditorContext);
   const [canvasSize] = context.canvasSize;

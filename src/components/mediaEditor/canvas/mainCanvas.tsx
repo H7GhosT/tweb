@@ -1,4 +1,4 @@
-import {onMount, Show, useContext} from 'solid-js';
+import {createEffect, onMount, Show, useContext} from 'solid-js';
 
 import MediaEditorContext from '../context';
 
@@ -7,11 +7,18 @@ import RotationWheel from './rotationWheel';
 import ResizableLayers from './resizableLayers';
 import BrushCanvas from './brushCanvas';
 import ImageCanvas from './imageCanvas';
+import getFinalTransform from './getFinalTransform';
 
 export default function MainCanvas() {
   let container: HTMLDivElement;
   const context = useContext(MediaEditorContext);
   const [canvasSize, setCanvasSize] = context.canvasSize;
+
+  const [, setFinalTransform] = context.finalTransform;
+  createEffect(() => {
+    const transform = getFinalTransform()
+    transform && setFinalTransform(transform)
+  })
 
   onMount(() => {
     const bcr = container.getBoundingClientRect();

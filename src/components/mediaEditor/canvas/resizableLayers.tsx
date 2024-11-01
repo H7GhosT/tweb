@@ -1,4 +1,4 @@
-import {createEffect, createSignal, For, on, onMount, ParentProps, Show, Signal, useContext} from 'solid-js';
+import {createEffect, createMemo, createSignal, For, on, onMount, ParentProps, Show, Signal, useContext} from 'solid-js';
 
 import SwipeHandler, {getEvent} from '../../swipeHandler';
 
@@ -8,7 +8,8 @@ import {ResizableLayer} from '../types';
 
 import TextLayerContent from './textLayerContent';
 import StickerLayerContent from './stickerLayerContent';
-import getCropTransform from './getCropTransform';
+import useNormalizePoint from './useNormalizePoint';
+import useProcessPoint from './useProcessPoint';
 
 type ResizableContainerProps = {
   layerSignal: Signal<ResizableLayer>;
@@ -23,6 +24,7 @@ export default function ResizableLayers() {
   const [currentTextLayerInfo] = context.currentTextLayerInfo;
   const [selectedResizableLayer, setSelectedResizableLayer] = context.selectedResizableLayer;
   const [isAdjusting] = context.isAdjusting;
+  const [finalTransform] = context.finalTransform
 
   createEffect(
     on(selectedResizableLayer, () => {
@@ -46,17 +48,20 @@ export default function ResizableLayers() {
 
   let container: HTMLDivElement;
 
+  const normalizePoint = useNormalizePoint()
+
   function addLayer(e: MouseEvent) {
     if(e.target !== container) return;
     if(!isTextTab()) return;
 
     const bcr = container.getBoundingClientRect();
+    const transform = finalTransform()
 
     const newResizableLayer = {
       id: context.resizableLayersSeed++,
-      position: [e.clientX - bcr.left, e.clientY - bcr.top],
-      rotation: 0,
-      scale: 1,
+      position: normalizePoint([e.clientX - bcr.left, e.clientY - bcr.top]),
+      rotation: -transform.rotation,
+      scale: 1 / transform.scale,
       type: 'text',
       textInfo: currentTextLayerInfo()
     } as ResizableLayer;
@@ -95,7 +100,6 @@ export default function ResizableLayers() {
         class="media-editor__resizable-layers-inner"
         onClick={withCurrentOwner(addLayer)}
         style={{
-          'transform': getCropTransform(),
           'opacity': isAdjusting() ? 0 : 1
         }}
       >
@@ -118,11 +122,15 @@ export default function ResizableLayers() {
 
 export function ResizableContainer(props: ParentProps<ResizableContainerProps>) {
   const context = useContext(MediaEditorContext);
+  const [rotation] = context.rotation
   const [selectedResizableLayer, setSelectedResizableLayer] = context.selectedResizableLayer;
+  const [finalTransform] = context.finalTransform
 
   const [layer, setLayer] = props.layerSignal;
 
   const [diff, setDiff] = createSignal([0, 0]);
+
+  const normalizePoint = useNormalizePoint()
 
   let container: HTMLDivElement;
   let leftTopEl: HTMLDivElement;
@@ -147,16 +155,15 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
         onSwipe(_, __, _e) {
           const e = getEvent(_e);
 
-          const initialVector = [(container.clientWidth / 2) * x, (container.clientHeight / 2) * y];
+          const initialVector = [(container.clientWidth / 2) * x * finalTransform().scale, (container.clientHeight / 2) * y * finalTransform().scale];
           const bcr = container.getBoundingClientRect();
           const resizedVector = [bcr.left + bcr.width / 2 - e.clientX, bcr.top + bcr.height / 2 - e.clientY];
 
-          const rotation =
+          const rotationFromHorizon =
             Math.atan2(resizedVector[1], resizedVector[0]) - Math.atan2(initialVector[1], initialVector[0]) + Math.PI;
           const scale = Math.hypot(resizedVector[0], resizedVector[1]) / Math.hypot(initialVector[0], initialVector[1]);
 
-          setLayer((prev) => ({...prev, rotation}));
-          setLayer((prev) => ({...prev, scale}));
+          setLayer((prev) => ({...prev, rotation: rotationFromHorizon - rotation(), scale}));
         },
         onReset() {
           el.classList.remove('media-editor__resizable-container-circle--anti-flicker');
@@ -180,7 +187,7 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
       onReset() {
         setLayer((prev) => ({
           ...prev,
-          position: [layer().position[0] + diff()[0], layer().position[1] + diff()[1]]
+          position: normalizePoint([processedLayer().position[0] + diff()[0], processedLayer().position[1] + diff()[1]])
         }));
         setDiff([0, 0]);
         swipeStarted = false;
@@ -190,6 +197,14 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
 
   const circleOffset = '-4px';
 
+  const processPoint = useProcessPoint()
+
+  const processedLayer = createMemo(() => ({
+    position: processPoint(layer().position),
+    rotation: layer().rotation + rotation(),
+    scale: finalTransform().scale * layer().scale
+  }));
+
   return (
     <div
       class="media-editor__resizable-container"
@@ -197,10 +212,10 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
         'media-editor__resizable-container--active': layer().id === selectedResizableLayer()
       }}
       style={{
-        'left': layer().position[0] + diff()[0] + 'px',
-        'top': layer().position[1] + diff()[1] + 'px',
-        '--rotation': (layer().rotation / Math.PI) * 180 + 'deg',
-        '--scale': layer().scale
+        'left': processedLayer().position[0] + diff()[0] + 'px',
+        'top': processedLayer().position[1] + diff()[1] + 'px',
+        '--rotation': (processedLayer().rotation / Math.PI) * 180 + 'deg',
+        '--scale': processedLayer().scale
       }}
       ref={container}
     >

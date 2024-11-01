@@ -5,17 +5,16 @@ import {AdjustmentsConfig} from '../adjustments';
 import {initWebGL} from '../webgl/initWebGL';
 import {draw} from '../webgl/draw';
 
-import getFinalTransform from './getFinalTransform';
-
 function drawAdjustedImage(gl: WebGLRenderingContext) {
   const context = useContext(MediaEditorContext);
   const [renderingPayload] = context.renderingPayload;
+  const [finalTransform] = context.finalTransform;
 
   const payload = renderingPayload();
   if(!payload) return;
 
   draw(gl, payload, {
-    ...getFinalTransform(),
+    ...finalTransform(),
     imageSize: [payload.image.width, payload.image.height],
     ...(Object.fromEntries(
       context.adjustments.map(({key, signal, to100}) => {
