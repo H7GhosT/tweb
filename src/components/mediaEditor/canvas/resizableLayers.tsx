@@ -197,7 +197,7 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
 
   const circleOffset = '-4px';
 
-  const processPoint = useProcessPoint()
+  const processPoint = useProcessPoint(false)
 
   const processedLayer = createMemo(() => ({
     position: processPoint(layer().position),
