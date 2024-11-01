@@ -39,6 +39,69 @@ export function getContrastColor(color: string) {
   return hexaToHsla(color).l < 80 ? '#ffffff' : '#000000';
 }
 
+
+export function lerp(min: number, max: number, progress: number) {
+  return min + (max - min) * progress;
+}
+
+export function lerpArray(min: number[], max: number[], progress: number) {
+  return min.map((start, index) => start + (max[index] - start) * progress)
+}
+
+export function easeInOutQuad(t: number) {
+  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+}
+
+type AnimateValueOptions = {
+  easing: (progress: number) => number
+}
+
+export function animateValue<T extends number | number[]>(
+  start: T,
+  end: T,
+  duration: number,
+  callback: (value: T) => void,
+  {
+    easing
+  }: AnimateValueOptions = {
+    easing: easeInOutQuad
+  }
+) {
+  let startTime: number;
+  let canceled = false
+
+  function animateFrame(currentTime: number) {
+    if(canceled) return
+    if(!startTime) startTime = currentTime;
+
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easedProgress = easing(progress);
+
+    if(start instanceof Array && end instanceof Array) {
+      const currentValues = start.map((startVal, index) =>
+        lerp(startVal, end[index], easedProgress)
+      );
+      callback(currentValues as T);
+    } else {
+      callback(
+        lerp(start as number, end as number, easedProgress) as T
+      );
+    }
+
+    if(progress < 1) {
+      requestAnimationFrame(animateFrame);
+    }
+  }
+
+  requestAnimationFrame(animateFrame);
+
+  return () => {
+    canceled = true
+  }
+}
+
+
 export const fontInfoMap: Record<FontKey, FontInfo> = {
   roboto: {
     fontFamily: '\'Roboto\'',

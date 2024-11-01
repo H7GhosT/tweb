@@ -7,18 +7,14 @@ import RotationWheel from './rotationWheel';
 import ResizableLayers from './resizableLayers';
 import BrushCanvas from './brushCanvas';
 import ImageCanvas from './imageCanvas';
-import getFinalTransform from './getFinalTransform';
+import useFinalTransform from './useFinalTransform';
 
 export default function MainCanvas() {
   let container: HTMLDivElement;
   const context = useContext(MediaEditorContext);
   const [canvasSize, setCanvasSize] = context.canvasSize;
 
-  const [, setFinalTransform] = context.finalTransform;
-  createEffect(() => {
-    const transform = getFinalTransform()
-    transform && setFinalTransform(transform)
-  })
+  useFinalTransform()
 
   onMount(() => {
     const bcr = container.getBoundingClientRect();

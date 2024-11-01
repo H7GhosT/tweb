@@ -7,7 +7,7 @@ import {ResizableLayer, StickerRenderingInfo, TextLayerInfo, TextRenderingInfo} 
 import {RenderingPayload} from './webgl/initWebGL';
 import {BrushDrawnLine} from './canvas/brushPainter';
 import {MediaEditorProps} from './mediaEditor';
-import {FinalTransform} from './canvas/getFinalTransform';
+import {FinalTransform} from './canvas/useFinalTransform';
 
 export interface MediaEditorContextValue {
   managers: AppManagers;
