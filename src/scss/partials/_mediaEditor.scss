@@ -1091,6 +1091,7 @@
 
     &--active {
       pointer-events: initial;
+      cursor: crosshair;
     }
 
     &--invisible {

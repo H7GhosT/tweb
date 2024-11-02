@@ -170,9 +170,9 @@ export default class BrushPainter {
       const {points} = line;
       const pointsX = points.map((p) => p[0]);
       const pointsY = points.map((p) => p[1]);
-      const minX = Math.min(...pointsX) - line.size,
+      const minX = Math.max(Math.min(...pointsX) - line.size, 0),
         maxX = Math.max(...pointsX) + line.size,
-        minY = Math.min(...pointsY) - line.size,
+        minY = Math.max(Math.min(...pointsY) - line.size, 0),
         maxY = Math.max(...pointsY) + line.size;
 
       this.blurredLineCtx.strokeStyle = 'white';

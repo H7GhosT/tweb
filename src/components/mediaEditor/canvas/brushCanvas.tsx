@@ -1,7 +1,6 @@
 import {createEffect, createMemo, createSignal, onCleanup, onMount, useContext} from 'solid-js';
 
-import SwipeHandler, {getEvent} from '../../swipeHandler';
-import throttle from '../../../helpers/schedulers/throttle';
+import SwipeHandler from '../../swipeHandler';
 
 import MediaEditorContext from '../context';
 
@@ -9,7 +8,7 @@ import BrushPainter, {BrushDrawnLine} from './brushPainter';
 import useNormalizePoint from './useNormalizePoint';
 import useProcessPoint from './useProcessPoint';
 
-const THROTTLE_MS = 25;
+const REPLACE_LAST_POINT_TIMEOUT_MS = 25;
 
 export default function BrushCanvas() {
   const context = useContext(MediaEditorContext);
@@ -64,7 +63,7 @@ export default function BrushCanvas() {
     setLastLine({
       color: currentBrush().color,
       brush: currentBrush().brush,
-      size: currentBrush().size / finalTransform().scale,
+      size: currentBrush().size * context.pixelRatio / finalTransform().scale,
       points: []
     });
   }
@@ -96,57 +95,81 @@ export default function BrushCanvas() {
     context.redrawBrushes = () => {}
   })
 
+
   onMount(() => {
     let initialPosition: [number, number];
     let points: [number, number][] = [];
 
+    let shouldReplaceLastPoint = false;
+
+    function saveLastLine() {
+      const prevLines = [...lines()];
+      const newLines = [...lines(), lastLine()];
+      setLines(newLines);
+      resetLastLine();
+      brushPainter.saveLastLine();
+
+      context.pushToHistory({
+        undo() {
+          setLines(prevLines);
+          context.redrawBrushes();
+        },
+        redo() {
+          setLines(newLines);
+          context.redrawBrushes();
+        }
+      });
+
+      points = [];
+      initialPosition = undefined;
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      const bcr = canvas.getBoundingClientRect();
+
+      initialPosition = [e.clientX - bcr.left, e.clientY - bcr.top];
+      const point = normalizePoint(initialPosition);
+      points.push(point);
+
+      setLastLine((prev) => ({...prev, points}));
+      brushPainter.previewLine(processLine(lastLine()));
+
+      setSelectedTextLayer();
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      if(points.length === 1) {
+        saveLastLine();
+      }
+    })
+
+
     new SwipeHandler({
       element: canvas,
       cursor: '',
-      onSwipe: throttle(
-        (xDiff: number, yDiff: number, _e) => {
-          if(!initialPosition) {
-            const e = getEvent(_e);
-            const bcr = canvas.getBoundingClientRect();
-            initialPosition = [e.clientX - xDiff - bcr.left, e.clientY - yDiff - bcr.top];
-            setSelectedTextLayer();
-          }
+      onSwipe: (xDiff, yDiff, _e) => {
+        const point = normalizePoint([
+          (initialPosition[0] + xDiff),
+          (initialPosition[1] + yDiff)
+        ]);
 
-          const point = [
-            (initialPosition[0] + xDiff),
-            (initialPosition[1] + yDiff)
-          ] as [number, number]
+        if(shouldReplaceLastPoint) {
+          points[points.length - 1] = point;
+        } else {
+          points.push(point);
+          shouldReplaceLastPoint = true;
+          setTimeout(() => {
+            shouldReplaceLastPoint = false
+          }, REPLACE_LAST_POINT_TIMEOUT_MS)
+        }
 
-          points.push(normalizePoint(point));
-
-          setLastLine((prev) => ({...prev, points}));
-          brushPainter.previewLine(processLine({...lastLine(), points}));
-        },
-        THROTTLE_MS,
-        true
-      ),
+        setLastLine((prev) => ({...prev, points}));
+        brushPainter.previewLine(processLine(lastLine()));
+      },
       onReset() {
         setTimeout(() => {
-          const prevLines = [...lines()];
-          const newLines = [...lines(), lastLine()];
-          setLines(newLines);
-          resetLastLine();
-          brushPainter.saveLastLine();
-
-          context.pushToHistory({
-            undo() {
-              setLines(prevLines);
-              context.redrawBrushes();
-            },
-            redo() {
-              setLines(newLines);
-              context.redrawBrushes();
-            }
-          });
-
-          points = [];
-          initialPosition = undefined;
-        }, THROTTLE_MS);
+          saveLastLine();
+        }, REPLACE_LAST_POINT_TIMEOUT_MS);
       }
     });
   });
