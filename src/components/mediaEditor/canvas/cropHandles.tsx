@@ -248,7 +248,7 @@ export default function CropHandles() {
 
         boundDiff = [boundDiff[0] * r[1] - boundDiff[1] * r[0], boundDiff[1] * r[1] + boundDiff[0] * r[0]];
 
-        const resistance = 12;
+        const resistance = 4;
         setTranslation([
           initialTranslation[0] + xDiff - (boundDiff[0] - boundDiff[0] / resistance),
           initialTranslation[1] + yDiff - (boundDiff[1] - boundDiff[1] / resistance)
