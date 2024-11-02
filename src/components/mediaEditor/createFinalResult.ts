@@ -92,11 +92,15 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
 
   const cropTranslation = translation().map((x) => x * fromCroppedScale - x);
 
-  draw(gl, payload, {
+  const finalTransform = {
     flip: flip(),
     rotation: rotation(),
     scale: scale() * snappedImageScale * toCropScale,
-    translation: [cropTranslation[0] + translation()[0], cropTranslation[1] + translation()[1]],
+    translation: [cropTranslation[0] + translation()[0], cropTranslation[1] + translation()[1]] as [number, number]
+  } as const;
+
+  draw(gl, payload, {
+    ...finalTransform,
     imageSize: [payload.image.width, payload.image.height],
     ...(Object.fromEntries(
       context.adjustments.map(({key, signal, to100}) => {
@@ -108,18 +112,23 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
 
   const [lines] = context.brushDrawnLines;
 
-  const canvasScale = snappedCanvasWidth / initialCanvasWidth;
-  const linePointScale = canvasScale / context.pixelRatio;
+  function processPoint(point: [number, number]) {
+    const r = [Math.sin(-finalTransform.rotation), Math.cos(-finalTransform.rotation)];
+    point = [
+      point[0] * r[1] + point[1] * r[0],
+      point[1] * r[1] - point[0] * r[0]
+    ];
+    point = [
+      (point[0] * finalTransform.scale + scaledWidth / 2 + finalTransform.translation[0]),
+      (point[1] * finalTransform.scale + scaledHeight / 2 + finalTransform.translation[1])
+    ];
+    return point;
+  }
+
   const scaledLines = lines().map(({size, points, ...line}) => ({
     ...line,
-    size: size * linePointScale,
-    points: points.map(
-      (point) =>
-        [
-          (point[0] - (initialCanvasWidth * context.pixelRatio) / 2) * linePointScale + scaledWidth / 2,
-          (point[1] - (initialCanvasHeight * context.pixelRatio) / 2) * linePointScale + scaledHeight / 2
-        ] as [number, number]
-    )
+    size: size * finalTransform.scale,
+    points: points.map(processPoint)
   }));
 
   const brushCanvas = document.createElement('canvas');
@@ -139,13 +148,13 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
 
   const scaledLayers = resizableLayers().map((layerSignal) => {
     const layer = {...layerSignal[0]()};
-    layer.position = [
-      (layer.position[0] - initialCanvasWidth / 2) * canvasScale + scaledWidth / 2,
-      (layer.position[1] - initialCanvasHeight / 2) * canvasScale + scaledHeight / 2
-    ];
+    layer.position = processPoint(layer.position);
+    layer.rotation += finalTransform.rotation;
+    layer.scale *= finalTransform.scale;
+
     if(layer.textInfo) {
       layer.textInfo = {...layer.textInfo};
-      layer.textInfo.size *= canvasScale * layer.scale;
+      layer.textInfo.size *= finalTransform.scale * layer.scale;
     }
 
     return layer;
@@ -162,7 +171,7 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
     if(!stickerChild) return;
 
     const STICKER_SIZE = 200;
-    const size = STICKER_SIZE * layer.scale * canvasScale;
+    const size = STICKER_SIZE * layer.scale;
 
     ctx.save();
     ctx.translate(layer.position[0], layer.position[1]);
@@ -187,19 +196,19 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
   function drawTextLayer(layer: ResizableLayer) {
     if(layer.type !== 'text') return;
     const renderingInfo = {...textLayersInfo()[layer.id]};
-    renderingInfo.height *= canvasScale * layer.scale;
-    renderingInfo.width *= canvasScale * layer.scale;
+    renderingInfo.height *= layer.scale;
+    renderingInfo.width *= layer.scale;
     renderingInfo.lines = renderingInfo.lines.map((line) => ({
       ...line,
-      height: line.height * canvasScale * layer.scale,
-      left: line.left * canvasScale * layer.scale,
-      right: line.right * canvasScale * layer.scale
+      height: line.height * layer.scale,
+      left: line.left * layer.scale,
+      right: line.right * layer.scale
     }));
 
     if(renderingInfo.path) {
       const newPath = [...renderingInfo.path];
       function multiply(i: number) {
-        newPath[i] = (newPath[i] as number) * canvasScale * layer.scale;
+        newPath[i] = (newPath[i] as number) * layer.scale;
       }
       newPath.forEach((part, i) => {
         if(part === 'M' || part === 'L') {
