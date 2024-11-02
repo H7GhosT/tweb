@@ -111,12 +111,8 @@ export default function ColorPicker(props: {
   );
 
   createEffect(() => {
-    if(!collapsing()) {
+    if(!collapsing() && props.value !== colorPicker.getCurrentColor().hex)
       colorPicker.setColor(props.value);
-    } else {
-      const track = createReaction(() => colorPicker.setColor(props.value));
-      track(collapsing);
-    }
   });
 
   onMount(() => {
