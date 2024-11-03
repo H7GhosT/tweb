@@ -14,8 +14,9 @@ import ImageStickerFrameByFrameRenderer from './finalRender/imageStickerFrameByF
 import LottieStickerFrameByFrameRenderer from './finalRender/lottieStickerFrameByFrameRenderer';
 import VideoStickerFrameByFrameRenderer from './finalRender/videoStickerFrameByFrameRenderer';
 import {FRAMES_PER_SECOND} from './finalRender/constants';
-import {FFmpeg} from '@ffmpeg/ffmpeg';
-import {toBlobURL} from '@ffmpeg/util';
+// import {createFFmpeg} from '@ffmpeg/ffmpeg';
+// import Whammy from '../../vendor/whammy';
+import deferredPromise from '../../helpers/cancellablePromise';
 
 export type MediaEditorFinalResult = {
   blob: Blob;
@@ -167,7 +168,7 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
   const resultCanvas = document.createElement('canvas');
   resultCanvas.width = scaledWidth;
   resultCanvas.height = scaledHeight;
-  const ctx = resultCanvas.getContext('2d');
+  const ctx = resultCanvas.getContext('2d', {willReadFrequently: true});
 
   if(scaledLayers.find(layer => [2, 3].includes(layer.sticker?.sticker))) {
     const renderers = new Map<number, StickerFrameByFrameRenderer>();
@@ -193,35 +194,36 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
     }));
     console.log('HERE inited all');
 
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.2/dist/esm'
-    const ffmpeg = new FFmpeg();
+    // maxFrames = 25
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
+    // const ffmpeg = createFFmpeg({log: true})
+    // const encoder = new Whammy.Video(25);
 
-    ffmpeg.on('log', ({message}) => {
-      // messageRef.current.innerHTML = message;
-      console.log('message', message);
-    });
+    // ffmpeg.on('log', ({message}) => {
+    //   // messageRef.current.innerHTML = message;
+    //   console.log('message', message);
+    // });
     // toBlobURL is used to bypass CORS issue, urls with the same
     // domain can be used directly.
     console.log('HERE ffmpeg created');
     // await ffmpeg.load()
-    ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
-      // workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript')
+    // await ffmpeg.load(
+    // coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+    // wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
+    // workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript')
+    // );
+    // await delay(2000)
+    console.log('HERE ffmpeg loaded');
+
+
+    const gifDelay = 1000 / FRAMES_PER_SECOND;
+
+    const gif = new GIF({
+      quality: 15,
+      workers: 4,
+      width: scaledWidth,
+      height: scaledHeight
     });
-    await delay(2000)
-    console.log('HERE ffmpeg loaded', ffmpeg.loaded);
-
-    const frames: Uint8Array[] = []
-
-    // const gifDelay = 1000 / FRAMES_PER_SECOND * 2;
-
-    // const gif = new GIF({
-    //   quality: 15,
-    //   workers: 4,
-    //   width: scaledWidth,
-    //   height: scaledHeight
-    // });
 
     for(let frame = 0; frame <= maxFrames; frame++) {
       console.log('Rendering frame', frame);
@@ -243,56 +245,91 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
       const blob = await new Promise<Blob>(resolve => resultCanvas.toBlob(resolve, 'image/jpeg'))
       if(!blob) return;
       const frameBuffer = new Uint8Array(await blob.arrayBuffer());
-      ffmpeg.writeFile(`frame${frame}.jpg`, frameBuffer);
+      // ffmpeg.writeFile(`frame${frame}.jpg`, frameBuffer);
+      // ffmpeg.FS('writeFile', `frame${frame}.jpg`, frameBuffer);
+      // encoder.add(ctx)
 
       // frames.push()
-      // gif.addFrame(ctx, {copy: true, delay: gifDelay});
+      gif.addFrame(ctx, {copy: true, delay: gifDelay});
     }
 
-    await ffmpeg.exec([
-      '-framerate', FRAMES_PER_SECOND.toString(),
-      '-i', 'frame%d.jpg',
-      '-c:v', 'libx264',
-      '-pix_fmt', 'yuv420p',
-      'output.mp4'
-    ]);
+    // await ffmpeg.exec([
+    //   '-framerate', FRAMES_PER_SECOND.toString(),
+    //   '-i', 'frame%d.jpg',
+    //   '-c:v', 'libx264',
+    //   '-pix_fmt', 'yuv420p',
+    //   'output.mp4'
+    // ]);
+    // await ffmpeg.run(
+    //   '-framerate', FRAMES_PER_SECOND.toString(),
+    //   '-i', 'frame%d.jpg',
+    //   '-c:v', 'libx264',
+    //   '-pix_fmt', 'yuv420p',
+    //   'output.mp4'
+    // );
 
-    const data = await ffmpeg.readFile('output.mp4');
-    console.log('HERE finish');
+    // // const data = await ffmpeg.readFile('output.mp4');
+    // const data = ffmpeg.FS('readFile', 'output.mp4');
 
-    const div = document.createElement('div')
-    div.style.position = 'fixed';
-    div.style.zIndex = '1000';
-    div.style.top = '50%';
-    div.style.left = '50%';
-    div.style.transform = 'translate(-50%, -50%)';
-    const img = document.createElement('video')
-    img.src = URL.createObjectURL(new Blob([(data as Uint8Array).buffer], {type: 'video/mp4'}));
-    img.autoplay = true
-    img.controls = true
-    img.style.maxWidth = '450px'
-    div.append(img)
-    document.body.append(div)
+    const deferred = deferredPromise<Blob>()
 
-    // gif.on('finished', image => {
-    //   console.log('HERE finish');
-    //   const div = document.createElement('div')
-    //   div.style.position = 'fixed';
-    //   div.style.zIndex = '1000';
-    //   div.style.top = '50%';
-    //   div.style.left = '50%';
-    //   div.style.transform = 'translate(-50%, -50%)';
-    //   const img = new Image()
-    //   img.src = URL.createObjectURL(image)
-    //   img.style.maxWidth = '450px'
-    //   div.append(img)
-    //   document.body.append(div)
+    // encoder.compile(false, (blob) => {
+    //   deferred.resolve(blob)
     // })
 
-    // gif.render()
+    // const data = await deferred
+    // console.log('HERE finish');
+
+    // console.log('data', data)
+
+    // const div = document.createElement('div')
+    // div.style.position = 'fixed';
+    // div.style.zIndex = '1000';
+    // div.style.top = '50%';
+    // div.style.left = '50%';
+    // div.style.transform = 'translate(-50%, -50%)';
+    // const img = document.createElement('video')
+    // // img.src = URL.createObjectURL(new Blob([(data as Uint8Array).buffer], {type: 'video/mp4'}));
+    // img.src = URL.createObjectURL(data);
+    // // img.autoplay = true
+    // img.controls = true
+    // img.style.maxWidth = '450px'
+    // div.append(img)
+    // document.body.append(div)
+
+    gif.on('progress', (progress: number) => {
+      console.log('progress', progress)
+    })
+
+    gif.on('finished', image => {
+      deferred.resolve(image)
+      console.log('HERE finish');
+      return
+      const div = document.createElement('div')
+      div.style.position = 'fixed';
+      div.style.zIndex = '1000';
+      div.style.top = '50%';
+      div.style.left = '50%';
+      div.style.transform = 'translate(-50%, -50%)';
+      const img = new Image()
+      img.src = URL.createObjectURL(image)
+      img.style.maxWidth = '450px'
+      div.append(img)
+      document.body.append(div)
+    })
+
+    gif.render()
     console.log('HERE started render');
 
-    return;
+    const blob = await deferred
+
+    return {
+      blob,
+      width: scaledWidth,
+      height: scaledHeight,
+      originalSrc: context.imageSrc,
+      standaloneContext
+    }
   }
 
   ctx.drawImage(imageCanvas, 0, 0);
@@ -323,7 +360,7 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
 
     const [w, h] = snapToViewport(ratio, size, size);
 
-    ctx.drawImage(stickerChild as CanvasImageSource, -size / 2 + (size - w) / 2, -size / 2 + (size - h) / 2, w, h);
+    ctx.drawImage(source, -size / 2 + (size - w) / 2, -size / 2 + (size - h) / 2, w, h);
 
     ctx.restore();
   }

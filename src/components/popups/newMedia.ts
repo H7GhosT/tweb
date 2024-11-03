@@ -813,7 +813,7 @@ export default class PopupNewMedia extends PopupElement {
       params.width = img.naturalWidth;
       params.height = img.naturalHeight;
 
-      if(file.type === 'image/gif') {
+      if((params.editResult?.blob || file).type === 'image/gif') {
         params.noSound = true;
 
         promise = Promise.all([

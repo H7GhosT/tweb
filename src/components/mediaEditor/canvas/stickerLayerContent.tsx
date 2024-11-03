@@ -22,8 +22,8 @@ export default function StickerLayerContent(props: ResizableLayerProps) {
       group: 'none',
       width: 500,
       height: 500,
-      // play: true,
-      // loop: true,
+      play: true,
+      loop: true,
       middleware: createMiddleware().get()
     });
 
