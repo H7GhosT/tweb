@@ -1,9 +1,9 @@
 import {createEffect, createSignal, on, onCleanup, useContext} from 'solid-js';
 
 import MediaEditorContext from '../context';
-import {animateValue, getSnappedViewportsScale, lerp, lerpArray} from '../utils';
+import {animateValue, getSnappedViewportsScale, lerp, lerpArray, snapToViewport} from '../utils';
 
-import {getCropOffset} from './cropOffset';
+import {useCropOffset} from './useCropOffset';
 
 export type FinalTransform = {
   flip: [number, number];
@@ -17,12 +17,14 @@ export default function useFinalTransform() {
   const [canvasSize] = context.canvasSize;
   const [currentTab] = context.currentTab;
   const [currentImageRatio] = context.currentImageRatio;
-  const [translation] = context.translation;
-  const [scale] = context.scale;
+  const [translation, setTranslation] = context.translation;
+  const [scale, setScale] = context.scale;
   const [rotation] = context.rotation;
   const [flip] = context.flip;
   const [renderingPayload] = context.renderingPayload;
   const [, setFinalTransform] = context.finalTransform;
+
+  const cropOffset = useCropOffset();
 
   const isCroping = () => currentTab() === 'crop';
 
@@ -43,14 +45,12 @@ export default function useFinalTransform() {
     const payload = renderingPayload();
     if(!payload) return;
 
-    const cropOffset = getCropOffset();
-
     const [w, h] = canvasSize();
 
     const imageRatio = payload.image.width / payload.image.height;
 
-    let toCropScale = getSnappedViewportsScale(imageRatio, cropOffset.width, cropOffset.height, w, h);
-    const fromCroppedScale = 1 / getSnappedViewportsScale(currentImageRatio(), cropOffset.width, cropOffset.height, w, h);
+    let toCropScale = getSnappedViewportsScale(imageRatio, cropOffset().width, cropOffset().height, w, h);
+    const fromCroppedScale = 1 / getSnappedViewportsScale(currentImageRatio(), cropOffset().width, cropOffset().height, w, h);
 
     const snappedImageScale = Math.min(w / payload.image.width, h / payload.image.height);
 
@@ -58,7 +58,7 @@ export default function useFinalTransform() {
 
     const cropTranslation = lerpArray(
       translation().map((x) => x * fromCroppedScale - x),
-      [0, cropOffset.left + cropOffset.height / 2 - h / 2],
+      [0, cropOffset().left + cropOffset().height / 2 - h / 2],
       cropTabAnimationProgress()
     );
 
@@ -70,5 +70,5 @@ export default function useFinalTransform() {
         (v) => v * context.pixelRatio
       ) as [number, number]
     })
-  })
+  });
 }

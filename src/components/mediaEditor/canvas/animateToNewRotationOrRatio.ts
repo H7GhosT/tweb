@@ -3,7 +3,7 @@ import {batch, useContext} from 'solid-js';
 import MediaEditorContext from '../context';
 import {animateValue, lerp, lerpArray, snapToViewport} from '../utils';
 
-import {getCropOffset} from './cropOffset';
+import {useCropOffset} from './useCropOffset';
 
 export function animateToNewRotationOrRatio(newRotation: number) {
   const context = useContext(MediaEditorContext);
@@ -13,7 +13,7 @@ export function animateToNewRotationOrRatio(newRotation: number) {
   const [, setCurrentImageRatio] = context.currentImageRatio;
   const [fixedImageRatioKey] = context.fixedImageRatioKey;
   const [imageSize] = context.imageSize;
-  const cropOffset = getCropOffset();
+  const cropOffset = useCropOffset();
 
   const [w, h] = imageSize();
   if(!w || !h) return;
@@ -33,8 +33,8 @@ export function animateToNewRotationOrRatio(newRotation: number) {
 
   const originalRatio = w / h;
 
-  const [w1, h1] = snapToViewport(originalRatio, cropOffset.width, cropOffset.height);
-  const [w2, h2] = snapToViewport(ratio, cropOffset.width, cropOffset.height);
+  const [w1, h1] = snapToViewport(originalRatio, cropOffset().width, cropOffset().height);
+  const [w2, h2] = snapToViewport(ratio, cropOffset().width, cropOffset().height);
 
   const initialScale = scale();
   const initialTranslation = translation();

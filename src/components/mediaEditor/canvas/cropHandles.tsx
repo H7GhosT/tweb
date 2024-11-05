@@ -6,7 +6,7 @@ import {animateValue, lerp, lerpArray, snapToViewport} from '../utils';
 import MediaEditorContext from '../context';
 import {withCurrentOwner} from '../utils';
 
-import {getCropOffset} from './cropOffset';
+import {useCropOffset} from './useCropOffset';
 import _getConvenientPositioning from './getConvenientPositioning';
 
 const MAX_SCALE = 20
@@ -23,7 +23,7 @@ export default function CropHandles() {
   const [fixedImageRatioKey] = context.fixedImageRatioKey;
   const [, setIsAdjusting] = context.isAdjusting;
 
-  const cropOffset = getCropOffset();
+  const cropOffset = useCropOffset();
 
   const [leftTop, setLeftTop] = createSignal([0, 0]);
   const [leftTopDiff, setLeftTopDiff] = createSignal([0, 0]);
@@ -33,22 +33,22 @@ export default function CropHandles() {
   const getConvenientPositioning = withCurrentOwner(_getConvenientPositioning);
 
   const getNewLeftTopAndSize = () => {
-    const [width, height] = snapToViewport(currentImageRatio(), cropOffset.width, cropOffset.height);
+    const [width, height] = snapToViewport(currentImageRatio(), cropOffset().width, cropOffset().height);
 
     return {
-      leftTop: [cropOffset.left + (cropOffset.width - width) / 2, cropOffset.top + (cropOffset.height - height) / 2],
+      leftTop: [cropOffset().left + (cropOffset().width - width) / 2, cropOffset().top + (cropOffset().height - height) / 2],
       size: [width, height]
     }
   }
 
-  onMount(() => {
+  createEffect(on(cropOffset, () => {
     const {
       leftTop,
       size
     } = getNewLeftTopAndSize();
     setLeftTop(leftTop);
     setSize(size);
-  });
+  }));
 
   let cancelSizeAnimation: () => void
 
@@ -118,8 +118,8 @@ export default function CropHandles() {
           }
 
           const [w, h] = size()
-          const minW = Math.min(w, cropOffset.width / MAX_SCALE * Math.min(MAX_SCALE, initialScale))
-          const minH = Math.min(h, cropOffset.height / MAX_SCALE * Math.min(MAX_SCALE, initialScale))
+          const minW = Math.min(w, cropOffset().width / MAX_SCALE * Math.min(MAX_SCALE, initialScale))
+          const minH = Math.min(h, cropOffset().height / MAX_SCALE * Math.min(MAX_SCALE, initialScale))
           xDiff = Math.max(xDiff * left, minW - w) * left
           yDiff = Math.max(yDiff * top, minH - h) * top
 
@@ -196,7 +196,7 @@ export default function CropHandles() {
             newHeight = size()[1] + diff()[1];
           const newRatio = newWidth / newHeight;
 
-          const upScale = Math.min(cropOffset.width / newWidth, cropOffset.height / newHeight);
+          const upScale = Math.min(cropOffset().width / newWidth, cropOffset().height / newHeight);
           setCurrentImageRatio(newRatio);
           resetSizeWithAnimation();
 

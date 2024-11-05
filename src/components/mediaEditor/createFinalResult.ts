@@ -2,11 +2,11 @@ import {useContext} from 'solid-js';
 
 import MediaEditorContext, {StandaloneContext} from './context';
 import {AdjustmentsConfig} from './adjustments';
-import {delay, getSnappedViewportsScale, snapToViewport} from './utils';
+import {getSnappedViewportsScale, snapToViewport} from './utils';
 import {draw} from './webgl/draw';
 import {initWebGL} from './webgl/initWebGL';
 import BrushPainter from './canvas/brushPainter';
-import {getCropOffset} from './canvas/cropOffset';
+import {useCropOffset} from './canvas/useCropOffset';
 import {fontInfoMap, getContrastColor} from './utils';
 import {ResizableLayer} from './types';
 import {StickerFrameByFrameRenderer} from './finalRender/types';
@@ -42,7 +42,7 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
   const [stickersLayersInfo] = context.stickersLayersInfo;
   const [renderingPayload] = context.renderingPayload;
 
-  const cropOffset = getCropOffset();
+  const cropOffset = useCropOffset();
 
   const initialCanvasWidth = canvasSize()[0];
   const initialCanvasHeight = canvasSize()[1];
@@ -81,8 +81,8 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
 
   let toCropScale = getSnappedViewportsScale(
     imageRatio,
-    cropOffset.width,
-    cropOffset.height,
+    cropOffset().width,
+    cropOffset().height,
     snappedCanvasWidth,
     snappedCanvasHeight
   );
@@ -90,8 +90,8 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
     1 /
     getSnappedViewportsScale(
       currentImageRatio(),
-      cropOffset.width,
-      cropOffset.height,
+      cropOffset().width,
+      cropOffset().height,
       snappedCanvasWidth,
       snappedCanvasHeight
     );
@@ -244,7 +244,7 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
 
       const blob = await new Promise<Blob>(resolve => resultCanvas.toBlob(resolve, 'image/jpeg'))
       if(!blob) return;
-      const frameBuffer = new Uint8Array(await blob.arrayBuffer());
+      // const frameBuffer = new Uint8Array(await blob.arrayBuffer());
       // ffmpeg.writeFile(`frame${frame}.jpg`, frameBuffer);
       // ffmpeg.FS('writeFile', `frame${frame}.jpg`, frameBuffer);
       // encoder.add(ctx)
@@ -322,6 +322,8 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
     console.log('HERE started render');
 
     const blob = await deferred
+
+    Array.from(renderers.values()).forEach(renderer => renderer.destroy())
 
     return {
       blob,

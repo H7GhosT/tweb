@@ -37,9 +37,6 @@ export default function BrushCanvas() {
 
   const [lastLine, setLastLine] = createSignal<BrushDrawnLine>();
 
-  const w = canvasSize()[0] * context.pixelRatio,
-    h = canvasSize()[1] * context.pixelRatio;
-
   const canvas = (
     <canvas
       class="media-editor__brush-canvas"
@@ -49,8 +46,8 @@ export default function BrushCanvas() {
       style={{
         'opacity': isAdjusting() ? 0 : 1
       }}
-      width={w}
-      height={h}
+      width={canvasSize()[0] * context.pixelRatio}
+      height={canvasSize()[1] * context.pixelRatio}
     ></canvas>
   ) as HTMLCanvasElement;
 

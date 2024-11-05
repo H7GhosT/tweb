@@ -3,7 +3,7 @@ import {useContext} from 'solid-js';
 import MediaEditorContext from '../context';
 import {snapToViewport} from '../utils';
 
-import {getCropOffset} from './cropOffset';
+import {useCropOffset} from './useCropOffset';
 
 type Options = {
   rotation: number;
@@ -25,10 +25,10 @@ export default function getConvenientPositioning({
   const [currentImageRatio] = context.currentImageRatio;
   const [imageSize] = context.imageSize;
 
-  const cropOffset = getCropOffset();
+  const cropOffset = useCropOffset();
 
   const [w, h] = imageSize();
-  const [imageWidth, imageHeight] = snapToViewport(w / h, cropOffset.width, cropOffset.height);
+  const [imageWidth, imageHeight] = snapToViewport(w / h, cropOffset().width, cropOffset().height);
 
   const imageLeftTop = [-imageWidth / 2, imageHeight / 2];
 
@@ -46,7 +46,7 @@ export default function getConvenientPositioning({
     return point;
   });
 
-  const [cropWidth, cropHeight] = snapToViewport(currentImageRatio(), cropOffset.width, cropOffset.height);
+  const [cropWidth, cropHeight] = snapToViewport(currentImageRatio(), cropOffset().width, cropOffset().height);
 
   const cropLeftTop = [-cropWidth / 2, cropHeight / 2];
   const cropPoints = [

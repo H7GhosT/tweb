@@ -1,4 +1,4 @@
-import {createEffect, onMount, Show, useContext} from 'solid-js';
+import {createEffect, onCleanup, onMount, Show, useContext} from 'solid-js';
 
 import MediaEditorContext from '../context';
 
@@ -17,8 +17,15 @@ export default function MainCanvas() {
   useFinalTransform()
 
   onMount(() => {
-    const bcr = container.getBoundingClientRect();
-    setCanvasSize([bcr.width, bcr.height]);
+    const listener = () => {
+      const bcr = container.getBoundingClientRect();
+      setCanvasSize([bcr.width, bcr.height]);
+    }
+    listener()
+    window.addEventListener('resize', listener)
+    onCleanup(() => {
+      window.removeEventListener('resize', listener)
+    })
   });
 
   return (
