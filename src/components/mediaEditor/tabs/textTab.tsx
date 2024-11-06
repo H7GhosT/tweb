@@ -73,7 +73,12 @@ export default function TextTab() {
 
   return (
     <>
-      <ColorPicker value={layerInfo()?.color} onChange={setSavedColor} previousColor={savedColor().previous} />
+      <ColorPicker
+        value={layerInfo()?.color}
+        onChange={setSavedColor}
+        previousColor={savedColor().previous}
+        colorKey={context.selectedResizableLayer[0]() + ''}
+      />
 
       <div class="media-editor__toggle-group-row">
         <div class="media-editor__toggle-group">

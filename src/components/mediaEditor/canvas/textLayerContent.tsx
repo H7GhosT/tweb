@@ -1,4 +1,4 @@
-import {createEffect, on, onMount, useContext} from 'solid-js';
+import {batch, createEffect, on, onMount, useContext} from 'solid-js';
 
 import createElementFromMarkup from '../../../helpers/createElementFromMarkup';
 import {i18n} from '../../../lib/langPack';
@@ -20,14 +20,16 @@ export default function TextLayerContent(props: ResizableLayerProps) {
   if(!layer().textInfo) return;
 
   const onFocus = () => {
-    setSelectedResizableLayer(layer().id);
-    setCurrentTextLayerInfo({
-      color: layer().textInfo.color,
-      alignment: layer().textInfo.alignment,
-      style: layer().textInfo.style,
-      size: layer().textInfo.size,
-      font: layer().textInfo.font
-    });
+    batch(() => {
+      setSelectedResizableLayer(layer().id);
+      setCurrentTextLayerInfo({
+        color: layer().textInfo.color,
+        alignment: layer().textInfo.alignment,
+        style: layer().textInfo.style,
+        size: layer().textInfo.size,
+        font: layer().textInfo.font
+      });
+    })
   };
 
   const fontInfo = () => fontInfoMap[layer().textInfo.font];
