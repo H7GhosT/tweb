@@ -14,7 +14,11 @@ type TabContentContextValue = {
 };
 export const TabContentContext = createContext<TabContentContextValue>();
 
-export default function TabContent(props: {tabs: Record<string, () => JSX.Element>}) {
+export default function TabContent(props: {
+  tabs: Record<string, () => JSX.Element>
+  onContainer: (el: HTMLDivElement) => void
+  onScroll: () => void
+}) {
   const context = useContext(MediaEditorContext);
   const [tab] = context.currentTab;
 
@@ -71,8 +75,9 @@ export default function TabContent(props: {tabs: Record<string, () => JSX.Elemen
     // TODO: Scrollable thumb not showing
     scrollable = new Scrollable(element);
     scrollable.setListeners();
-    scrollable.container.addEventListener('scroll', (e) => {
-      setScrollAmount(scrollable.container.scrollTop)
+    scrollable.container.addEventListener('scroll', () => {
+      setScrollAmount(scrollable.container.scrollTop);
+      props.onScroll();
     });
   }
 
@@ -85,7 +90,10 @@ export default function TabContent(props: {tabs: Record<string, () => JSX.Elemen
   });
 
   return (
-    <div ref={setContainer} class="media-editor__tab-content">
+    <div ref={(el) => {
+      setContainer(el);
+      props.onContainer(el);
+    }} class="media-editor__tab-content">
       <div ref={prevElement}>
         <div class="media-editor__tab-content-scrollable-content">
           <TabContentContext.Provider value={{container, scrollAmount}}>{initialTab}</TabContentContext.Provider>

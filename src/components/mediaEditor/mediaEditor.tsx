@@ -7,21 +7,14 @@ import {AppManagers} from '../../lib/appManagers/managers';
 
 import appNavigationController from '../appNavigationController';
 
-import {delay, log} from './utils';
+import {delay} from './utils';
 import {injectMediaEditorLangPack} from './langPack';
-import Topbar from './topbar';
-import Tabs from './tabs/tabs';
-import TabContent from './tabs/tabContent';
-import AdjustmentsTab from './tabs/adjustmentsTab';
-import CropTab from './tabs/cropTab';
-import TextTab from './tabs/textTab';
-import BrushTab from './tabs/brushTab';
-import StickersTab from './tabs/stickersTab';
 import MediaEditorContext, {createStandaloneContextValue, StandaloneContext} from './context';
 import MainCanvas from './canvas/mainCanvas';
 import FinishButton from './finishButton';
 import {withCurrentOwner} from './utils';
 import {createFinalResult, MediaEditorFinalResult} from './createFinalResult';
+import Toolbar from './toolbar';
 
 export type MediaEditorProps = {
   onClose: NoneToVoidFunction;
@@ -50,7 +43,7 @@ export function MediaEditor(props: MediaEditorProps) {
 
     appNavigationController.pushItem({
       type: 'popup',
-      onPop: () => props.onClose()
+      onPop: () => void handleClose()
     });
 
     overlay.focus();
@@ -67,27 +60,22 @@ export function MediaEditor(props: MediaEditorProps) {
     <MediaEditorContext.Provider value={standaloneContext.value}>
       <div ref={overlay} class="media-editor__overlay night">
         <div class="media-editor__container">
-          <MainCanvas />
-          <div class="media-editor__toolbar">
-            <Topbar onClose={handleClose} />
-            <Tabs />
-            <TabContent
-              tabs={{
-                adjustments: () => <AdjustmentsTab />,
-                crop: () => <CropTab />,
-                text: () => <TextTab />,
-                brush: () => <BrushTab />,
-                stickers: () => <StickersTab />
-              }}
-            />
-          </div>
-          <FinishButton
-            onClick={withCurrentOwner(async() => {
+          {(() => {
+            // Need to be inside context
+            const handleFinish = withCurrentOwner(async() => {
               const result = await createFinalResult(standaloneContext);
               props.onEditFinish(result);
               handleClose(true);
-            })}
-          />
+            });
+
+            return <>
+              <MainCanvas />
+              <Toolbar onClose={handleClose} onFinish={handleFinish} />
+              <FinishButton
+                onClick={handleFinish}
+              />
+            </>
+          })()}
         </div>
       </div>
     </MediaEditorContext.Provider>

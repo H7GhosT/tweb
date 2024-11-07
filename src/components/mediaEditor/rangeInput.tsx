@@ -8,6 +8,8 @@ function nMap(value: number, min: number, max: number, tMin: number, tMax: numbe
 }
 
 export default function RangeInput(props: {
+  ref?: (el: HTMLDivElement) => void;
+  style?: JSX.CSSProperties;
   label: JSX.Element;
   value: number;
   min: number;
@@ -26,6 +28,7 @@ export default function RangeInput(props: {
 
   return (
     <div
+      ref={props.ref}
       class="media-editor__range-input"
       classList={{
         'media-editor__range-input--passive': props.passiveLabel,
@@ -37,7 +40,8 @@ export default function RangeInput(props: {
         '--normalized': normalizedValue(),
         '--w': (Math.abs(props.value - Math.max(0, props.min)) / (props.max - props.min)) * 100 + '%',
         '--bar-left': props.value >= 0 ? Math.max(0, mappedCenter()) + '%' : undefined,
-        '--bar-right': props.value < 0 ? mappedCenter() + '%' : undefined
+        '--bar-right': props.value < 0 ? mappedCenter() + '%' : undefined,
+        ...props.style
       }}
     >
       <div class="media-editor__range-input-row">

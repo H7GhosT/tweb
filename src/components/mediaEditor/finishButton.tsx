@@ -4,7 +4,7 @@ import ripple from '../ripple';
 
 import MediaEditorContext from './context';
 
-export default function FinishButton(props: {onClick: () => void}) {
+export function useCanFinish() {
   const context = useContext(MediaEditorContext);
   const [history] = context.history;
   const [rotation] = context.rotation;
@@ -14,13 +14,7 @@ export default function FinishButton(props: {onClick: () => void}) {
   const [currentImageRatio] = context.currentImageRatio;
   const [imageSize] = context.imageSize;
 
-  let container: HTMLDivElement;
-
-  onMount(() => {
-    ripple(container);
-  });
-
-  const canFinish = () => {
+  return () => {
     function approximateCompare(value: number, toWhat: number) {
       return Math.abs(value - toWhat) < 0.00001;
     }
@@ -37,6 +31,16 @@ export default function FinishButton(props: {onClick: () => void}) {
       history().length > 0
     );
   };
+}
+
+export default function FinishButton(props: {onClick: () => void}) {
+  let container: HTMLDivElement;
+
+  onMount(() => {
+    ripple(container);
+  });
+
+  const canFinish = useCanFinish();
 
   return (
     <div

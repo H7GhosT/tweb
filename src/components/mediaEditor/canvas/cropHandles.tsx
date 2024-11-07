@@ -21,7 +21,6 @@ export default function CropHandles() {
   const [rotation] = context.rotation;
   const [translation, setTranslation] = context.translation;
   const [fixedImageRatioKey] = context.fixedImageRatioKey;
-  const [, setIsAdjusting] = context.isAdjusting;
 
   const cropOffset = useCropOffset();
 
@@ -105,7 +104,6 @@ export default function CropHandles() {
           initialScale = scale();
           initialTranslation = translation();
           el.classList.add('media-editor__crop-handles-circle--anti-flicker');
-          setIsAdjusting(true)
         },
         onSwipe(xDiff, yDiff) {
           const fixed = fixedImageRatioKey();
@@ -216,8 +214,6 @@ export default function CropHandles() {
             })
           })
 
-          setIsAdjusting(false);
-
           el.classList.remove('media-editor__crop-handles-circle--anti-flicker');
         }
       });
@@ -227,7 +223,6 @@ export default function CropHandles() {
       element: cropArea,
       onStart() {
         initialTranslation = translation();
-        setIsAdjusting(true);
       },
       onSwipe(xDiff, yDiff) {
         const {cropMinX, cropMaxX, cropMinY, cropMaxY, imageMinX, imageMaxX, imageMinY, imageMaxY} =
@@ -258,7 +253,6 @@ export default function CropHandles() {
       onReset() {
         const prevTranslation = translation();
         animateValue(prevTranslation, [prevTranslation[0] - boundDiff[0], prevTranslation[1] - boundDiff[1]], 120, setTranslation);
-        setIsAdjusting(false);
       }
     });
 

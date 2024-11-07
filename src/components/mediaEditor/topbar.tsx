@@ -1,12 +1,18 @@
-import {useContext} from 'solid-js';
+import {onMount, useContext} from 'solid-js';
 
 import {i18n} from '../../lib/langPack';
-import {NoneToVoidFunction} from '../../types';
 import {ButtonIconTsx} from '../buttonIconTsx';
 
 import MediaEditorContext from './context';
+import {useCanFinish} from './finishButton';
+import ripple from '../ripple';
 
-export default function Topbar(props: {onClose: NoneToVoidFunction}) {
+export default function Topbar(props: {
+  onClose: () => void;
+  onFinish: () => void;
+}) {
+  let doneButton: HTMLDivElement
+
   const context = useContext(MediaEditorContext);
   const [history, setHistory] = context.history;
   const [redoHistory, setRedoHistory] = context.redoHistory;
@@ -33,6 +39,12 @@ export default function Topbar(props: {onClose: NoneToVoidFunction}) {
     item.redo();
   }
 
+  const canFinish = useCanFinish();
+
+  onMount(() => {
+    ripple(doneButton);
+  })
+
   return (
     <div class="media-editor__topbar">
       <ButtonIconTsx icon="cross" onClick={props.onClose} />
@@ -41,6 +53,14 @@ export default function Topbar(props: {onClose: NoneToVoidFunction}) {
         <ButtonIconTsx disabled={!history().length} onClick={onUndo} icon="undo" />
         <ButtonIconTsx disabled={!redoHistory().length} onClick={onRedo} icon="redo" />
       </div>
+      <div
+        ref={doneButton}
+        class="media-editor__topbar-done"
+        classList={{
+          'media-editor__topbar-done-mobile--disabled': !canFinish()
+        }}
+        onClick={props.onFinish}
+      >{i18n('Done')}</div>
     </div>
   );
 }

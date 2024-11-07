@@ -1,10 +1,11 @@
-import {createEffect, createReaction, createSignal, on, onMount} from 'solid-js';
+import {createEffect, createSignal, on, onMount, useContext} from 'solid-js';
 
 import {hexToRgb} from '../../helpers/color';
 import _ColorPicker from '../colorPicker';
 import ripple from '../ripple';
 
 import {delay} from './utils';
+import MediaEditorContext from './context';
 
 export const colorPickerSwatches = [
   '#ffffff',
@@ -27,6 +28,8 @@ export default function ColorPicker(props: {
   colorKey?: string; // Just for reaction, not used to access anything
   previousColor?: string;
 }) {
+  const context = useContext(MediaEditorContext);
+
   const [collapsed, setCollapsed] = createSignal(colorPickerSwatches.includes(props.value));
   const [collapsing, setCollapsing] = createSignal(false);
 
@@ -118,6 +121,7 @@ export default function ColorPicker(props: {
   onMount(() => {
     colorPicker.onChange = (color) => {
       if(color.hex !== props.value) props.onChange(color.hex);
+      context.abortDrawerSlide();
     };
     colorPicker.container.querySelectorAll('.media-editor__color-picker-swatch').forEach((element) => {
       ripple(element as HTMLElement);

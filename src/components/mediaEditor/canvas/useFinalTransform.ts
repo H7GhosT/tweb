@@ -39,7 +39,7 @@ export default function useFinalTransform() {
     );
 
     onCleanup(cancel);
-  }))
+  }));
 
   createEffect(() => {
     const payload = renderingPayload();

@@ -31,7 +31,6 @@ export default function RotationWheel() {
   const [movedDiff, setMovedDiff] = createSignal(0);
   const [scale, setScale] = context.scale;
   const [translation, setTranslation] = context.translation;
-  const [, setIsAdjusting] = context.isAdjusting;
 
   let swiperEl: HTMLDivElement;
 
@@ -44,7 +43,6 @@ export default function RotationWheel() {
       element: swiperEl,
       onStart() {
         initialScale = scale();
-        setIsAdjusting(true);
       },
       onSwipe(xDiff) {
         setMovedDiff(clamp(moved() + xDiff, -MAX_DEGREES_DIST_PX, MAX_DEGREES_DIST_PX) - moved());
@@ -58,7 +56,6 @@ export default function RotationWheel() {
         }
         setMoved(newMoved);
         setMovedDiff(0);
-        setIsAdjusting(false);
       }
     });
   });
