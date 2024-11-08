@@ -13,7 +13,7 @@ import MediaEditorContext, {createStandaloneContextValue, StandaloneContext} fro
 import MainCanvas from './canvas/mainCanvas';
 import FinishButton from './finishButton';
 import {withCurrentOwner} from './utils';
-import {createFinalResult, MediaEditorFinalResult} from './createFinalResult';
+import {createFinalResult, MediaEditorFinalResult} from './finalRender/createFinalResult';
 import Toolbar from './toolbar';
 
 export type MediaEditorProps = {

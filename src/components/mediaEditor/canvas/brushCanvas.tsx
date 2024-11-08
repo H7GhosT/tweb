@@ -108,6 +108,7 @@ export default function BrushCanvas() {
       ctx.restore();
     } else {
       redraw();
+      redrawFull();
     }
   });
 
@@ -142,7 +143,7 @@ export default function BrushCanvas() {
     fullImageBrushPainter = new BrushPainter({
       imageCanvas: imageCanvas(),
       targetCanvas: fullImageCanvas,
-      blurAmount: BrushPainter.defaultBlurAmount * fullImageMultiplier() * context.pixelRatio,
+      blurAmount: BrushPainter.defaultBlurAmount * fullImageMultiplier(),
       drawImageCanvas(ctx) {
         const transform = finalTransform();
         ctx.save();
@@ -279,8 +280,5 @@ export default function BrushCanvas() {
 
   return <>
     {canvas}
-    <div style={{'position': 'absolute', 'right': '20px', 'bottom': '20px', 'width': '200px', 'height': '200px', 'z-index': 1000}}>
-      {fullImageCanvas}
-    </div>
   </>;
 }

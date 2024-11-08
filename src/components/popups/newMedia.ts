@@ -56,7 +56,7 @@ import {Accessor, createRoot, createSignal, Setter} from 'solid-js';
 import SelectedEffect from '../chat/selectedEffect';
 import Icon from '../icon';
 import {openMediaEditor} from '../mediaEditor/mediaEditor';
-import {MediaEditorFinalResult} from '../mediaEditor/createFinalResult';
+import {MediaEditorFinalResult} from '../mediaEditor/finalRender/createFinalResult';
 
 type SendFileParams = SendFileDetails & {
   file?: File,
@@ -750,7 +750,7 @@ export default class PopupNewMedia extends PopupElement {
     const {itemDiv} = params;
     itemDiv.classList.add('popup-item-media');
 
-    const file = params.file;
+    const file = params.editResult?.blob || params.file;
     const isVideo = file.type.startsWith('video/');
 
     let promise: Promise<void>;

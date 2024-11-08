@@ -197,7 +197,8 @@ export default function CropHandles() {
           setTranslation([initialTranslation[0] - boundDiff[0] / 2, initialTranslation[1] - boundDiff[1] / 2]);
         },
         onReset() {
-          if(firstTarget !== el) return;
+          if(firstTarget !== el) return firstTarget = undefined;
+          firstTarget = undefined;
 
           const newWidth = size()[0] + diff()[0],
             newHeight = size()[1] + diff()[1];
@@ -225,7 +226,6 @@ export default function CropHandles() {
             onEnd: () => setIsMoving(false)
           });
 
-          firstTarget = undefined;
           el.classList.remove('media-editor__crop-handles-circle--anti-flicker');
         }
       });
@@ -267,7 +267,8 @@ export default function CropHandles() {
         boundDiff = [boundDiff[0] / resistance, boundDiff[1] / resistance];
       },
       onReset() {
-        if(firstTarget !== cropArea) return;
+        if(firstTarget !== cropArea) return firstTarget = undefined;
+        firstTarget = undefined;
 
         const prevTranslation = translation();
         animateValue(
@@ -279,7 +280,6 @@ export default function CropHandles() {
             onEnd: () => setIsMoving(false)
           }
         );
-        firstTarget = undefined;
       }
     });
 

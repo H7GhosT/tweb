@@ -1,22 +1,21 @@
 import {useContext} from 'solid-js';
+import {ArrayBufferTarget, Muxer} from 'mp4-muxer';
 
-import MediaEditorContext, {StandaloneContext} from './context';
-import {AdjustmentsConfig} from './adjustments';
-import {getSnappedViewportsScale, snapToViewport} from './utils';
-import {draw} from './webgl/draw';
-import {initWebGL} from './webgl/initWebGL';
-import BrushPainter from './canvas/brushPainter';
-import {useCropOffset} from './canvas/useCropOffset';
-import {fontInfoMap, getContrastColor} from './utils';
-import {ResizableLayer} from './types';
-import {StickerFrameByFrameRenderer} from './finalRender/types';
-import ImageStickerFrameByFrameRenderer from './finalRender/imageStickerFrameByFrameRenderer';
-import LottieStickerFrameByFrameRenderer from './finalRender/lottieStickerFrameByFrameRenderer';
-import VideoStickerFrameByFrameRenderer from './finalRender/videoStickerFrameByFrameRenderer';
-import {FRAMES_PER_SECOND} from './finalRender/constants';
-// import {createFFmpeg} from '@ffmpeg/ffmpeg';
-// import Whammy from '../../vendor/whammy';
-import deferredPromise from '../../helpers/cancellablePromise';
+import MediaEditorContext, {StandaloneContext} from '../context';
+import {AdjustmentsConfig} from '../adjustments';
+import {getSnappedViewportsScale, snapToViewport} from '../utils';
+import {draw} from '../webgl/draw';
+import {initWebGL} from '../webgl/initWebGL';
+import BrushPainter from '../canvas/brushPainter';
+import {useCropOffset} from '../canvas/useCropOffset';
+import {fontInfoMap, getContrastColor} from '../utils';
+import {ResizableLayer} from '../types';
+
+import {StickerFrameByFrameRenderer} from './types';
+import ImageStickerFrameByFrameRenderer from './imageStickerFrameByFrameRenderer';
+import LottieStickerFrameByFrameRenderer from './lottieStickerFrameByFrameRenderer';
+import VideoStickerFrameByFrameRenderer from './videoStickerFrameByFrameRenderer';
+import {FRAMES_PER_SECOND} from './constants';
 
 export type MediaEditorFinalResult = {
   blob: Blob;
@@ -52,17 +51,29 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
 
   const newRatio = currentImageRatio();
 
+  const hasAnimatedStickers = resizableLayers().find(layerSignal =>
+    [2, 3].includes(layerSignal[0]().sticker?.sticker))
+
   const SIDE_MAX = 2560;
-  const SIDE_MIN = 100;
+  const SIDE_MIN = 400;
   let scaledWidth = imageWidth / scale(),
     scaledHeight = scaledWidth / newRatio;
 
-  if(Math.max(scaledWidth, scaledHeight) > SIDE_MAX) {
-    [scaledWidth, scaledHeight] = snapToViewport(newRatio, SIDE_MAX, SIDE_MAX);
-  }
   if(Math.max(scaledWidth, scaledHeight) < SIDE_MIN) {
     [scaledWidth, scaledHeight] = snapToViewport(newRatio, SIDE_MIN, SIDE_MIN);
   }
+  if(hasAnimatedStickers && (scaledWidth > 1280 || scaledHeight > 720)) {
+    [scaledWidth, scaledHeight] = snapToViewport(newRatio, 1280, 720);
+    scaledWidth = Math.floor(scaledWidth);
+    scaledHeight = Math.floor(scaledHeight);
+  }
+  if(!hasAnimatedStickers && Math.max(scaledWidth, scaledHeight) > SIDE_MAX) {
+    [scaledWidth, scaledHeight] = snapToViewport(newRatio, SIDE_MAX, SIDE_MAX);
+  }
+
+
+  scaledWidth = scaledWidth % 2 == 0 ? scaledWidth : scaledWidth - 1;
+  scaledHeight = scaledHeight % 2 == 0 ? scaledHeight : scaledHeight - 1;
 
   const canvasRatio = initialCanvasWidth / initialCanvasHeight;
   let snappedCanvasWidth = scaledWidth,
@@ -149,6 +160,7 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
   brushCanvas.height = scaledHeight;
 
   const brushPainter = new BrushPainter({targetCanvas: brushCanvas, imageCanvas});
+  brushPainter.saveLastLine();
   scaledLines.forEach((line) => brushPainter.drawLine(line));
 
   const scaledLayers = resizableLayers().map((layerSignal) => {
@@ -159,7 +171,7 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
 
     if(layer.textInfo) {
       layer.textInfo = {...layer.textInfo};
-      layer.textInfo.size *= finalTransform.scale * layer.scale;
+      layer.textInfo.size *= layer.scale * context.pixelRatio;
     }
 
     return layer;
@@ -170,12 +182,10 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
   resultCanvas.height = scaledHeight;
   const ctx = resultCanvas.getContext('2d', {willReadFrequently: true});
 
-  if(scaledLayers.find(layer => [2, 3].includes(layer.sticker?.sticker))) {
+  if(hasAnimatedStickers) {
     const renderers = new Map<number, StickerFrameByFrameRenderer>();
 
     let maxFrames = 0;
-
-    console.log('HERE start');
 
     await Promise.all(scaledLayers.map(async(layer) => {
       if(!layer.sticker) return;
@@ -189,45 +199,36 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
       if(!renderer) return;
 
       renderers.set(layer.id, renderer)
-      await renderer.init(layer.sticker!, STICKER_SIZE * layer.scale);
+      await renderer.init(layer.sticker!, STICKER_SIZE * layer.scale * context.pixelRatio);
       maxFrames = Math.max(maxFrames, renderer.getTotalFrames());
     }));
-    console.log('HERE inited all');
 
-    // maxFrames = 25
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
-    // const ffmpeg = createFFmpeg({log: true})
-    // const encoder = new Whammy.Video(25);
-
-    // ffmpeg.on('log', ({message}) => {
-    //   // messageRef.current.innerHTML = message;
-    //   console.log('message', message);
-    // });
-    // toBlobURL is used to bypass CORS issue, urls with the same
-    // domain can be used directly.
-    console.log('HERE ffmpeg created');
-    // await ffmpeg.load()
-    // await ffmpeg.load(
-    // coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    // wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
-    // workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript')
-    // );
-    // await delay(2000)
-    console.log('HERE ffmpeg loaded');
-
-
-    const gifDelay = 1000 / FRAMES_PER_SECOND;
-
-    const gif = new GIF({
-      quality: 15,
-      workers: 4,
-      width: scaledWidth,
-      height: scaledHeight
+    const muxer = new Muxer({
+      target: new ArrayBufferTarget(),
+      video: {
+        codec: 'avc',
+        width: scaledWidth,
+        height: scaledHeight,
+        frameRate: FRAMES_PER_SECOND
+      },
+      fastStart: 'in-memory'
     });
 
-    for(let frame = 0; frame <= maxFrames; frame++) {
-      console.log('Rendering frame', frame);
-      const promises = Array.from(renderers.values()).map(renderer => renderer.renderFrame(frame % (renderer.getTotalFrames() + 1)));
+    const encoder = new VideoEncoder({
+      output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
+      error: e => console.error(e)
+    });
+
+    encoder.configure({
+      codec: 'avc1.42001f',
+      width: scaledWidth,
+      height: scaledHeight,
+      bitrate: 1e6
+    });
+
+    for(let frameNo = 0; frameNo <= maxFrames; frameNo++) {
+      // console.log('rendering frameNo', frameNo)
+      const promises = Array.from(renderers.values()).map(renderer => renderer.renderFrame(frameNo % (renderer.getTotalFrames() + 1)));
       await Promise.all(promises);
 
       ctx.clearRect(0, 0, scaledWidth, scaledHeight);
@@ -242,45 +243,20 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
         }
       });
 
-      const blob = await new Promise<Blob>(resolve => resultCanvas.toBlob(resolve, 'image/jpeg'))
-      if(!blob) return;
-      // const frameBuffer = new Uint8Array(await blob.arrayBuffer());
-      // ffmpeg.writeFile(`frame${frame}.jpg`, frameBuffer);
-      // ffmpeg.FS('writeFile', `frame${frame}.jpg`, frameBuffer);
-      // encoder.add(ctx)
-
-      // frames.push()
-      gif.addFrame(ctx, {copy: true, delay: gifDelay});
+      const videoFrame = new VideoFrame(resultCanvas, {
+        timestamp: frameNo * 1e6 / FRAMES_PER_SECOND,
+        duration: 1e6 / FRAMES_PER_SECOND
+      });
+      encoder.encode(videoFrame);
     }
 
-    // await ffmpeg.exec([
-    //   '-framerate', FRAMES_PER_SECOND.toString(),
-    //   '-i', 'frame%d.jpg',
-    //   '-c:v', 'libx264',
-    //   '-pix_fmt', 'yuv420p',
-    //   'output.mp4'
-    // ]);
-    // await ffmpeg.run(
-    //   '-framerate', FRAMES_PER_SECOND.toString(),
-    //   '-i', 'frame%d.jpg',
-    //   '-c:v', 'libx264',
-    //   '-pix_fmt', 'yuv420p',
-    //   'output.mp4'
-    // );
+    await encoder.flush();
+    muxer.finalize();
 
-    // // const data = await ffmpeg.readFile('output.mp4');
-    // const data = ffmpeg.FS('readFile', 'output.mp4');
+    Array.from(renderers.values()).forEach(renderer => renderer.destroy())
 
-    const deferred = deferredPromise<Blob>()
-
-    // encoder.compile(false, (blob) => {
-    //   deferred.resolve(blob)
-    // })
-
-    // const data = await deferred
-    // console.log('HERE finish');
-
-    // console.log('data', data)
+    const {buffer} = muxer.target
+    const blob = new Blob([buffer], {type: 'video/mp4'})
 
     // const div = document.createElement('div')
     // div.style.position = 'fixed';
@@ -289,41 +265,13 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
     // div.style.left = '50%';
     // div.style.transform = 'translate(-50%, -50%)';
     // const img = document.createElement('video')
-    // // img.src = URL.createObjectURL(new Blob([(data as Uint8Array).buffer], {type: 'video/mp4'}));
-    // img.src = URL.createObjectURL(data);
-    // // img.autoplay = true
+    // img.src = URL.createObjectURL(blob)
     // img.controls = true
+    // img.autoplay = true
+    // img.loop = true
     // img.style.maxWidth = '450px'
     // div.append(img)
     // document.body.append(div)
-
-    gif.on('progress', (progress: number) => {
-      console.log('progress', progress)
-    })
-
-    gif.on('finished', image => {
-      deferred.resolve(image)
-      console.log('HERE finish');
-      return
-      const div = document.createElement('div')
-      div.style.position = 'fixed';
-      div.style.zIndex = '1000';
-      div.style.top = '50%';
-      div.style.left = '50%';
-      div.style.transform = 'translate(-50%, -50%)';
-      const img = new Image()
-      img.src = URL.createObjectURL(image)
-      img.style.maxWidth = '450px'
-      div.append(img)
-      document.body.append(div)
-    })
-
-    gif.render()
-    console.log('HERE started render');
-
-    const blob = await deferred
-
-    Array.from(renderers.values()).forEach(renderer => renderer.destroy())
 
     return {
       blob,
@@ -336,7 +284,6 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
 
   ctx.drawImage(imageCanvas, 0, 0);
   ctx.drawImage(brushCanvas, 0, 0);
-
 
   scaledLayers.forEach((layer) => {
     if(layer.type === 'text') drawTextLayer(layer);
@@ -354,7 +301,7 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
     const stickerChild = container?.lastElementChild;
     if(!stickerChild) return;
 
-    const size = STICKER_SIZE * layer.scale;
+    const size = STICKER_SIZE * layer.scale * context.pixelRatio;
 
     ctx.save();
     ctx.translate(layer.position[0], layer.position[1]);
@@ -370,13 +317,14 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
   function drawTextLayer(layer: ResizableLayer) {
     if(layer.type !== 'text') return;
     const renderingInfo = {...textLayersInfo()[layer.id]};
-    renderingInfo.height *= layer.scale;
-    renderingInfo.width *= layer.scale;
+    const scale = layer.scale * context.pixelRatio;
+    renderingInfo.height *= scale;
+    renderingInfo.width *= scale;
     renderingInfo.lines = renderingInfo.lines.map((line) => ({
       ...line,
-      height: line.height * layer.scale,
-      left: line.left * layer.scale,
-      right: line.right * layer.scale
+      height: line.height * scale,
+      left: line.left * scale,
+      right: line.right * scale
     }));
 
     if(renderingInfo.path) {
@@ -457,37 +405,3 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
     );
   });
 }
-
-/*
-  // const gif = new GIF({
-  //   quality: 15,
-  //   workers: 4,
-  //   width: 400,
-  //   height: 400
-  // })
-  // const canvas = document.createElement('canvas')
-  // canvas.width = 400
-  // canvas.height = 400
-  // const ctx = canvas.getContext('2d')
-  // const delay = Math.round(1000 / 30)
-  // const frames = 20
-  // for(let i = 0; i < frames; i++) {
-  //   ctx.clearRect(0, 0, 400, 400)
-  //   ctx.fillStyle = 'red'
-  //   ctx.fillRect(i * 10, i * 10, 150, 150)
-  //   gif.addFrame(ctx, {copy: true, delay})
-  // }
-  // gif.on('finished', (image) => {
-  //   console.log('HERE 2');
-  //   console.timeEnd('gif rendering4')
-  //   const img = <img src={URL.createObjectURL(image)} style={{
-  //     'position': 'fixed',
-  //     'left': '50%',
-  //     'top': '50%',
-  //     'transform': 'translate(-50%, -50%)',
-  //     'z-index': 1000
-  //   }} /> as HTMLImageElement;
-  //   document.body.append(img)
-  // })
-  // gif.render()
-*/
