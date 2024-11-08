@@ -130,6 +130,8 @@ export default function BrushCanvas() {
   }
 
   function redrawFull() {
+    if(!fullImageBrushPainter) return;
+
     fullImageBrushPainter.clear();
     fullImageBrushPainter.saveLastLine();
 
