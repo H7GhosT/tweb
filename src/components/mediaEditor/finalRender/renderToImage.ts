@@ -13,7 +13,7 @@ export type RenderToImageArgs = {
   resultCanvas: HTMLCanvasElement;
 }
 
-export default function renderToImage({
+export default async function renderToImage({
   context,
   scaledLayers,
   ctx,
@@ -37,6 +37,12 @@ export default function renderToImage({
     }
   });
 
-  return new Promise<Blob>((resolve) =>
+  const result = await new Promise<Blob>((resolve) =>
     resultCanvas.toBlob(resolve));
+
+  return {
+    preview: result,
+    isGif: false,
+    getResult: () => result
+  }
 }

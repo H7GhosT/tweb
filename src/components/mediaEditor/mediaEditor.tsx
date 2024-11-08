@@ -1,7 +1,6 @@
 import {onMount} from 'solid-js';
 import {render} from 'solid-js/web';
 
-import {NoneToVoidFunction} from '../../types';
 import {doubleRaf} from '../../helpers/schedulers';
 import {AppManagers} from '../../lib/appManagers/managers';
 
@@ -17,7 +16,7 @@ import {createFinalResult, MediaEditorFinalResult} from './finalRender/createFin
 import Toolbar from './toolbar';
 
 export type MediaEditorProps = {
-  onClose: NoneToVoidFunction;
+  onClose: (hasGif: boolean) => void;
   managers: AppManagers;
   onEditFinish: (result: MediaEditorFinalResult) => void;
   imageURL: string;
@@ -49,10 +48,10 @@ export function MediaEditor(props: MediaEditorProps) {
     overlay.focus();
   });
 
-  async function handleClose(finished = false) {
+  async function handleClose(finished = false, hasGif = false) {
     overlay.classList.add('media-editor__overlay--hidden');
     await delay(200);
-    props.onClose();
+    props.onClose(hasGif);
     if(!finished && !props.standaloneContext) standaloneContext.dispose();
   }
 
@@ -65,7 +64,7 @@ export function MediaEditor(props: MediaEditorProps) {
             const handleFinish = withCurrentOwner(async() => {
               const result = await createFinalResult(standaloneContext);
               props.onEditFinish(result);
-              handleClose(true);
+              handleClose(true, result.isGif);
             });
 
             return <>
@@ -90,8 +89,8 @@ export function openMediaEditor(props: MediaEditorProps) {
 
   const dispose = render(() => <MediaEditor {...props} onClose={onClose} />, element);
 
-  function onClose() {
-    props.onClose();
+  function onClose(hasGif: boolean) {
+    props.onClose(hasGif);
     dispose();
   }
 }

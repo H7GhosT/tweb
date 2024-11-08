@@ -35,6 +35,8 @@ export default async function renderToVideo(
     resultCanvas
   }: RenderToVideoArgs
 ) {
+  const [, setProgress] = context.gifCreationProgress;
+
   const renderers = new Map<number, StickerFrameByFrameRenderer>();
 
   let maxFrames = 0;
@@ -78,8 +80,7 @@ export default async function renderToVideo(
     bitrate: 1e6
   });
 
-  for(let frameNo = 0; frameNo <= maxFrames; frameNo++) {
-    // console.log('rendering frameNo', frameNo)
+  async function renderFrame(frameNo: number) {
     const promises = Array.from(renderers.values()).map(renderer => renderer.renderFrame(frameNo % (renderer.getTotalFrames() + 1)));
     await Promise.all(promises);
 
@@ -102,13 +103,40 @@ export default async function renderToVideo(
     encoder.encode(videoFrame);
   }
 
-  await encoder.flush();
-  muxer.finalize();
+  setProgress(0);
 
-  Array.from(renderers.values()).forEach(renderer => renderer.destroy())
+  await renderFrame(0);
 
-  const {buffer} = muxer.target
-  return new Blob([buffer], {type: 'video/mp4'});
+  const preview = await new Promise<Blob>(resolve =>
+    resultCanvas.toBlob(resolve));
+
+  const resultPromise = new Promise<Blob>(async(resolve) => {
+    for(let frameNo = 1; frameNo <= maxFrames; frameNo++) {
+      // console.log('rendering frameNo', frameNo)
+      await renderFrame(frameNo);
+      setProgress(frameNo / maxFrames);
+    }
+
+    await encoder.flush();
+    muxer.finalize();
+
+    Array.from(renderers.values()).forEach(renderer => renderer.destroy())
+
+    const {buffer} = muxer.target
+    resolve(new Blob([buffer], {type: 'video/mp4'}));
+  });
+
+  let result: Blob;
+
+  resultPromise.then(blob => result = blob);
+
+  return {
+    preview,
+    isGif: true,
+    getResult: () => {
+      return result ?? resultPromise;
+    }
+  }
 
   // const div = document.createElement('div')
   // div.style.position = 'fixed';

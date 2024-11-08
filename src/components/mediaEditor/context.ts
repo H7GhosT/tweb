@@ -52,6 +52,8 @@ export interface MediaEditorContextValue {
 
   redrawBrushes: () => void;
   abortDrawerSlide: () => void;
+
+  gifCreationProgress: Signal<number>;
 }
 
 export type HistoryItem = {
@@ -125,7 +127,9 @@ function createContextValue(props: MediaEditorProps): MediaEditorContextValue {
     isMoving: createSignal(false),
 
     redrawBrushes: () => {},
-    abortDrawerSlide: () => {}
+    abortDrawerSlide: () => {},
+
+    gifCreationProgress: createSignal(0)
   };
 }
 

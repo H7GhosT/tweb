@@ -207,6 +207,15 @@
     }
   }
 
+  .popup-item-media-extend-full {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
   .popup-item-media-action-menu {
     position: absolute;
     --size: 20px;

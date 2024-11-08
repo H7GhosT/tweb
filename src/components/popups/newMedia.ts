@@ -4,6 +4,8 @@
  * https://github.com/morethanwords/tweb/blob/master/LICENSE
  */
 
+import {render} from 'solid-js/web';
+
 import type Chat from '../chat/chat';
 import type {SendFileDetails} from '../../lib/appManagers/appMessagesManager';
 import type {ChatRights} from '../../lib/appManagers/appChatsManager';
@@ -57,6 +59,7 @@ import SelectedEffect from '../chat/selectedEffect';
 import Icon from '../icon';
 import {openMediaEditor} from '../mediaEditor/mediaEditor';
 import {MediaEditorFinalResult} from '../mediaEditor/finalRender/createFinalResult';
+import RenderProgressCircle from '../mediaEditor/renderProgressCircle';
 
 type SendFileParams = SendFileDetails & {
   file?: File,
@@ -681,9 +684,12 @@ export default class PopupNewMedia extends PopupElement {
       const d: SendFileDetails[] = sendFileParams.map((params) => {
         params.editResult?.standaloneContext?.dispose();
 
+        let editBlob = params.editResult?.getResult();
+        if(editBlob instanceof Promise) editBlob = undefined;
+
         return {
           ...params,
-          file: params.editResult?.blob || params.scaledBlob || params.file,
+          file: (editBlob as Blob) || params.scaledBlob || params.file,
           width: params.editResult?.width || params.width,
           height: params.editResult?.height || params.height,
           spoiler: !!params.mediaSpoiler,
@@ -750,12 +756,76 @@ export default class PopupNewMedia extends PopupElement {
     const {itemDiv} = params;
     itemDiv.classList.add('popup-item-media');
 
-    const file = params.editResult?.blob || params.file;
+    const file = params.file;
     const isVideo = file.type.startsWith('video/');
+
+    const editResult = params.editResult;
 
     let promise: Promise<void>;
 
-    if(isVideo) {
+    if(editResult) {
+      const resultBlob = editResult.getResult();
+
+      if(resultBlob instanceof Blob) {
+        if(editResult.isGif) {
+          await putImage(editResult.preview);
+          await putVideo(resultBlob);
+        } else {
+          await putImage(resultBlob);
+        }
+      } else {
+        await putImage(editResult.preview);
+
+        const div = document.createElement('div');
+        const dispose = render(() => RenderProgressCircle({context: editResult.standaloneContext.value}), div);
+        itemDiv.append(div);
+
+        (this.btnConfirmOnEnter as HTMLButtonElement).disabled = true;
+        resultBlob.then(async(videoBlob) => {
+          dispose();
+          await putVideo(videoBlob);
+          (this.btnConfirmOnEnter as HTMLButtonElement).disabled = false;
+        });
+      }
+
+      async function putImage(blob: Blob) {
+        const url = params.objectURL = await apiManagerProxy.invoke('createObjectURL', blob);
+
+        const img = new Image();
+        await renderImageFromUrlPromise(img, url);
+
+        img.className = 'popup-item-media-extend-full';
+
+        itemDiv.append(img);
+
+        params.width = editResult.width;
+        params.height = editResult.height;
+
+
+        return img;
+      }
+
+      async function putVideo(blob: Blob) {
+        const video = createVideo({middleware: params.middlewareHelper.get()});
+        const url = await apiManagerProxy.invoke('createObjectURL', blob);
+        video.src = params.objectURL = url;
+        video.autoplay = true;
+        video.controls = false;
+        video.muted = true;
+        video.loop = true;
+
+        video.className = 'popup-item-media-extend-full';
+
+        itemDiv.append(video);
+
+        await onMediaLoad(video as HTMLMediaElement)
+
+        params.width = editResult.width;
+        params.height = editResult.height;
+        params.duration = video.duration;
+        params.noSound = true;
+      }
+    } else if(isVideo) {
       const video = createVideo({middleware: params.middlewareHelper.get()});
       video.src = params.objectURL = await apiManagerProxy.invoke('createObjectURL', file);
       video.autoplay = true;
@@ -798,22 +868,20 @@ export default class PopupNewMedia extends PopupElement {
       const img = new Image();
       itemDiv.append(img);
 
-      const url = params.objectURL = await apiManagerProxy.invoke('createObjectURL', params.editResult?.blob || file);
+      const url = params.objectURL = await apiManagerProxy.invoke('createObjectURL', file);
       await renderImageFromUrlPromise(img, url);
 
-      if(!params.editResult) {
-        const mimeType = params.file.type as MTMimeType;
-        const scaled = await this.scaleImageForTelegram(img, mimeType, true);
-        if(scaled) {
-          params.objectURL = scaled.url;
-          params.scaledBlob = scaled.blob;
-        }
+      const mimeType = params.file.type as MTMimeType;
+      const scaled = await this.scaleImageForTelegram(img, mimeType, true);
+      if(scaled) {
+        params.objectURL = scaled.url;
+        params.scaledBlob = scaled.blob;
       }
 
       params.width = img.naturalWidth;
       params.height = img.naturalHeight;
 
-      if((params.editResult?.blob || file).type === 'image/gif') {
+      if(file.type === 'image/gif') {
         params.noSound = true;
 
         promise = Promise.all([
@@ -848,8 +916,9 @@ export default class PopupNewMedia extends PopupElement {
               this.attachFiles();
             },
             standaloneContext: params.editResult?.standaloneContext,
-            onClose: () => {
-              (this.btnConfirmOnEnter as HTMLButtonElement).disabled = false;
+            onClose: (hasGif) => {
+              if(!hasGif)
+                (this.btnConfirmOnEnter as HTMLButtonElement).disabled = false;
             }
           });
         });

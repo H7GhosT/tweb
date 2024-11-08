@@ -15,14 +15,16 @@ import renderToImage from './renderToImage';
 
 
 export type MediaEditorFinalResult = {
-  blob: Blob;
+  preview: Blob;
+  getResult: () => Blob | Promise<Blob>;
+  isGif: boolean;
   width: number;
   height: number;
   originalSrc: string;
   standaloneContext: StandaloneContext;
 };
 
-export async function createFinalResult(standaloneContext: StandaloneContext) {
+export async function createFinalResult(standaloneContext: StandaloneContext): Promise<MediaEditorFinalResult> {
   const context = useContext(MediaEditorContext);
   const [resizableLayers] = context.resizableLayers;
 
@@ -82,7 +84,7 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
   resultCanvas.height = scaledHeight;
   const ctx = resultCanvas.getContext('2d', {willReadFrequently: true});
 
-  const blobPromise = hasAnimatedStickers ? renderToVideo({
+  const renderPromise = hasAnimatedStickers ? renderToVideo({
     context,
     scaledWidth,
     scaledHeight,
@@ -101,7 +103,7 @@ export async function createFinalResult(standaloneContext: StandaloneContext) {
   })
 
   return {
-    blob: await blobPromise,
+    ...(await renderPromise),
     width: scaledWidth,
     height: scaledHeight,
     originalSrc: context.imageSrc,
