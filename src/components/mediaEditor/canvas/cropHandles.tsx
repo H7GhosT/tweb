@@ -9,7 +9,7 @@ import {withCurrentOwner} from '../utils';
 import {useCropOffset} from './useCropOffset';
 import _getConvenientPositioning from './getConvenientPositioning';
 
-const MAX_SCALE = 20
+const MAX_SCALE = 20;
 
 export default function CropHandles() {
   const context = useContext(MediaEditorContext);
@@ -96,16 +96,21 @@ export default function CropHandles() {
     let boundDiff: [number, number];
     let initialScale: number;
     let initialTranslation: [number, number];
+    let firstTarget: EventTarget
 
     const resizeSwipeHandlers = multipliers.map(({el, left, top}) => {
       return new SwipeHandler({
         element: el,
+        setCursorTo: document.body,
         onStart() {
           initialScale = scale();
           initialTranslation = translation();
           el.classList.add('media-editor__crop-handles-circle--anti-flicker');
         },
-        onSwipe(xDiff, yDiff) {
+        onSwipe(xDiff, yDiff, e) {
+          if(!firstTarget) firstTarget = e.target;
+          if(firstTarget !== el) return;
+
           const fixed = fixedImageRatioKey();
           let ratio = currentImageRatio();
           if(left < 0) {
@@ -190,6 +195,8 @@ export default function CropHandles() {
           setTranslation([initialTranslation[0] - boundDiff[0] / 2, initialTranslation[1] - boundDiff[1] / 2]);
         },
         onReset() {
+          if(firstTarget !== el) return;
+
           const newWidth = size()[0] + diff()[0],
             newHeight = size()[1] + diff()[1];
           const newRatio = newWidth / newHeight;
@@ -214,6 +221,7 @@ export default function CropHandles() {
             })
           })
 
+          firstTarget = undefined;
           el.classList.remove('media-editor__crop-handles-circle--anti-flicker');
         }
       });
@@ -224,7 +232,10 @@ export default function CropHandles() {
       onStart() {
         initialTranslation = translation();
       },
-      onSwipe(xDiff, yDiff) {
+      onSwipe(xDiff, yDiff, e) {
+        if(!firstTarget) firstTarget = e.target;
+        if(firstTarget !== cropArea) return;
+
         const {cropMinX, cropMaxX, cropMinY, cropMaxY, imageMinX, imageMaxX, imageMinY, imageMaxY} =
           getConvenientPositioning({
             scale: scale(),
@@ -251,8 +262,11 @@ export default function CropHandles() {
         boundDiff = [boundDiff[0] / resistance, boundDiff[1] / resistance];
       },
       onReset() {
+        if(firstTarget !== cropArea) return;
+
         const prevTranslation = translation();
         animateValue(prevTranslation, [prevTranslation[0] - boundDiff[0], prevTranslation[1] - boundDiff[1]], 120, setTranslation);
+        firstTarget = undefined;
       }
     });
 

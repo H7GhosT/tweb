@@ -53,7 +53,6 @@ export default function Toolbar(props: {
       if(!isMobile()) return;
       startY = y;
       isAborted = false
-      // startTime
     }
     function dragMove(y: number) {
       if(!isMobile()) return;
@@ -73,30 +72,29 @@ export default function Toolbar(props: {
 
     container().addEventListener('input', () => {
       resetMove();
-    })
+    });
 
     toolbar.addEventListener('touchstart', (e) => {
-      // e.stopPropagation()
-      startDrag(e.touches[0].clientY)
-    }, true)
+      startDrag(e.touches[0].clientY);
+    });
     toolbar.addEventListener('touchmove', (e) => {
-      // e.preventDefault()
-      dragMove(e.touches[0].clientY)
-    })
+      dragMove(e.touches[0].clientY);
+    });
     toolbar.addEventListener('touchend', (e) => {
-      dragEnd()
-    })
+      dragEnd();
+    });
     toolbar.addEventListener('mousedown', (e) => {
-      // e.stopPropagation()
-      startDrag(e.clientY)
-    }, true)
+      startDrag(e.clientY);
+    });
     toolbar.addEventListener('mousemove', (e) => {
-      // e.preventDefault()
-      dragMove(e.clientY)
-    })
+      dragMove(e.clientY);
+    });
+    toolbar.addEventListener('mouseup', (e) => {
+      dragEnd();
+    });
     toolbar.addEventListener('mouseout', (e) => {
-      dragEnd()
-    })
+      dragEnd();
+    });
   });
 
   createEffect(() => {

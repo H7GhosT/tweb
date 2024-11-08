@@ -1,4 +1,4 @@
-import {createEffect, createMemo, createSignal, onCleanup, onMount, useContext} from 'solid-js';
+import {createEffect, createMemo, createSignal, on, onCleanup, onMount, useContext} from 'solid-js';
 
 import SwipeHandler from '../../swipeHandler';
 
@@ -51,10 +51,18 @@ export default function BrushCanvas() {
     ></canvas>
   ) as HTMLCanvasElement;
 
-  const brushPainter = new BrushPainter({
+  let brushPainter = new BrushPainter({
     imageCanvas: imageCanvas(),
     targetCanvas: canvas
   });
+
+  createEffect(on(canvasSize, () => {
+    brushPainter = new BrushPainter({
+      imageCanvas: imageCanvas(),
+      targetCanvas: canvas
+    });
+    reDraw();
+  }));
 
   function resetLastLine() {
     setLastLine({
@@ -70,7 +78,7 @@ export default function BrushCanvas() {
   });
   createEffect(() => {
     reDraw()
-  })
+  });
 
   function reDraw() {
     brushPainter.clear();
@@ -121,24 +129,38 @@ export default function BrushCanvas() {
       initialPosition = undefined;
     }
 
-    canvas.addEventListener('mousedown', (e) => {
+    function startSwipe(x: number, y: number) {
       const bcr = canvas.getBoundingClientRect();
 
-      initialPosition = [e.clientX - bcr.left, e.clientY - bcr.top];
+      initialPosition = [x - bcr.left, y - bcr.top];
       const point = normalizePoint(initialPosition);
-      points.push(point);
+      points = [point];
 
       setLastLine((prev) => ({...prev, points}));
       brushPainter.previewLine(processLine(lastLine()));
 
       setSelectedTextLayer();
-    });
+    }
 
-    canvas.addEventListener('mouseup', () => {
+    function endSwipe() {
       if(points.length === 1) {
         saveLastLine();
       }
-    })
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+      startSwipe(e.clientX, e.clientY);
+    });
+    canvas.addEventListener('touchstart', (e) => {
+      startSwipe(e.touches[0].clientX, e.touches[0].clientY);
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      endSwipe();
+    });
+    canvas.addEventListener('touchend', () => {
+      endSwipe();
+    });
 
 
     new SwipeHandler({

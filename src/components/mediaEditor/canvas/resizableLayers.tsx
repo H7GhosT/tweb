@@ -1,4 +1,4 @@
-import {createEffect, createMemo, createSignal, For, on, onMount, ParentProps, Show, Signal, useContext} from 'solid-js';
+import {batch, createEffect, createMemo, createSignal, For, on, onMount, ParentProps, Show, Signal, useContext} from 'solid-js';
 
 import SwipeHandler, {getEvent} from '../../swipeHandler';
 
@@ -65,7 +65,11 @@ export default function ResizableLayers() {
       type: 'text',
       textInfo: currentTextLayerInfo()
     } as ResizableLayer;
-    setLayers((prev) => [...prev, createSignal<ResizableLayer>({...newResizableLayer})]);
+
+    batch(() => {
+      setLayers((prev) => [...prev, createSignal<ResizableLayer>({...newResizableLayer})]);
+      setSelectedResizableLayer(newResizableLayer.id)
+    });
 
     let position = -1;
     let deletedLayer: ResizableLayer;
@@ -146,6 +150,8 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
       {el: rightBottomEl, x: 1, y: 1}
     ];
 
+    let firstTarget: EventTarget
+
     multipliers.forEach(({el, x, y}) => {
       new SwipeHandler({
         element: el,
@@ -154,6 +160,9 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
         },
         onSwipe(_, __, _e) {
           const e = getEvent(_e);
+
+          if(!firstTarget) firstTarget = e.target;
+          if(firstTarget !== el) return;
 
           const initialVector = [(container.clientWidth / 2) * x * finalTransform().scale, (container.clientHeight / 2) * y * finalTransform().scale];
           const bcr = container.getBoundingClientRect();
@@ -167,6 +176,7 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
         },
         onReset() {
           el.classList.remove('media-editor__resizable-container-circle--anti-flicker');
+          firstTarget = undefined;
         }
       });
     });
@@ -175,7 +185,10 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
 
     new SwipeHandler({
       element: container,
-      onSwipe(xDiff, yDiff) {
+      onSwipe(xDiff, yDiff, e) {
+        if(!firstTarget) firstTarget = e.target;
+        if(multipliers.find(({el}) => el === firstTarget)) return;
+
         if(!swipeStarted) {
           // onStart messes up the typing
           swipeStarted = true;
@@ -191,6 +204,7 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
         }));
         setDiff([0, 0]);
         swipeStarted = false;
+        firstTarget = undefined;
       }
     });
   });

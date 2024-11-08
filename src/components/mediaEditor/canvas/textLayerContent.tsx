@@ -109,7 +109,8 @@ export default function TextLayerContent(props: ResizableLayerProps) {
   });
 
   onMount(() => {
-    selectAll();
+    if(layer().id === selectedResizableLayer())
+      selectAll();
   });
 
   createEffect(
