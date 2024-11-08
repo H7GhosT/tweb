@@ -13,6 +13,7 @@ const REPLACE_LAST_POINT_TIMEOUT_MS = 25;
 export default function BrushCanvas() {
   const context = useContext(MediaEditorContext);
   const [imageCanvas] = context.imageCanvas;
+  const [imageSize] = context.imageSize;
   const [canvasSize] = context.canvasSize;
   const [currentBrush] = context.currentBrush;
   const [currentTab] = context.currentTab;
@@ -20,6 +21,7 @@ export default function BrushCanvas() {
   const [lines, setLines] = context.brushDrawnLines;
   const [isAdjusting] = context.isAdjusting;
   const [finalTransform] = context.finalTransform
+  const [isMoving] = context.isMoving;
 
   const normalizePoint = useNormalizePoint();
   const processPoint = useProcessPoint()
@@ -50,18 +52,31 @@ export default function BrushCanvas() {
       height={canvasSize()[1] * context.pixelRatio}
     ></canvas>
   ) as HTMLCanvasElement;
+  const ctx = canvas.getContext('2d');
+
+  const fullImageMultiplier = () => Math.min(
+    canvasSize()[0] / imageSize()[0],
+    canvasSize()[1] / imageSize()[1]
+  ) * 2 * context.pixelRatio;
+
+  const fullImageCanvas = <canvas
+    width={imageSize()[0] * fullImageMultiplier()}
+    height={imageSize()[1] * fullImageMultiplier()}
+  /> as HTMLCanvasElement;
 
   let brushPainter = new BrushPainter({
     imageCanvas: imageCanvas(),
     targetCanvas: canvas
   });
 
+  let fullImageBrushPainter: BrushPainter;
+
   createEffect(on(canvasSize, () => {
     brushPainter = new BrushPainter({
       imageCanvas: imageCanvas(),
       targetCanvas: canvas
     });
-    reDraw();
+    redraw();
   }));
 
   function resetLastLine() {
@@ -76,29 +91,92 @@ export default function BrushCanvas() {
   createEffect(() => {
     resetLastLine();
   });
+
   createEffect(() => {
-    reDraw()
+    if(isMoving()) {
+      const transform = finalTransform();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+
+      ctx.translate(transform.translation[0] + canvas.width / 2, transform.translation[1] + canvas.height / 2);
+      ctx.rotate(transform.rotation);
+      ctx.scale(transform.scale, transform.scale);
+
+      const [w, h] = imageSize();
+      ctx.drawImage(fullImageCanvas, -(w / 2), -(h / 2), w, h);
+
+      ctx.restore();
+    } else {
+      redraw();
+    }
   });
 
-  function reDraw() {
+  function redraw() {
     brushPainter.clear();
+    brushPainter.saveLastLine();
     processedLines().forEach((line) => brushPainter.drawLine(line));
   }
-  onMount(() => {
-    reDraw();
-  });
+
+  function processLineForFullImage(line: BrushDrawnLine) {
+    return {
+      ...line,
+      size: line.size * fullImageMultiplier(),
+      points: line.points.map(point => [
+        (point[0] + imageSize()[0] / 2) * fullImageMultiplier(),
+        (point[1] + imageSize()[1] / 2) * fullImageMultiplier()
+      ] as [number, number])
+    }
+  }
+
+  function redrawFull() {
+    fullImageBrushPainter.clear();
+    fullImageBrushPainter.saveLastLine();
+
+    lines().forEach((line) => fullImageBrushPainter.drawLine(
+      processLineForFullImage(line))
+    );
+  }
+
+  createEffect(on(imageSize, () => {
+    if(!imageSize()?.[0]) return;
+    fullImageBrushPainter = new BrushPainter({
+      imageCanvas: imageCanvas(),
+      targetCanvas: fullImageCanvas,
+      blurAmount: BrushPainter.defaultBlurAmount * fullImageMultiplier() * context.pixelRatio,
+      drawImageCanvas(ctx) {
+        const transform = finalTransform();
+        ctx.save();
+        ctx.translate(
+          ctx.canvas.width / 2 + transform.translation[0] / transform.scale * fullImageMultiplier(),
+          ctx.canvas.height / 2 - transform.translation[1] / transform.scale * fullImageMultiplier()
+        );
+        ctx.rotate(-transform.rotation);
+        ctx.scale(1 / transform.scale * fullImageMultiplier(), 1 / transform.scale * fullImageMultiplier());
+        ctx.drawImage(imageCanvas(), -imageCanvas().width / 2, -imageCanvas().height / 2);
+        ctx.restore();
+      }
+    });
+
+    redraw();
+    redrawFull();
+  }));
+
   createEffect(() => {
     if(isAdjusting() || currentTab() === 'crop') {
       onCleanup(() => {
-        reDraw()
+        redraw();
+        redrawFull();
       })
     }
   })
 
-  context.redrawBrushes = reDraw;
+  context.redrawBrushes = () => {
+    redraw();
+    redrawFull();
+  };
   onCleanup(() => {
     context.redrawBrushes = () => {}
-  })
+  });
 
 
   onMount(() => {
@@ -111,6 +189,8 @@ export default function BrushCanvas() {
       const prevLines = [...lines()];
       const newLines = [...lines(), lastLine()];
       setLines(newLines);
+      fullImageBrushPainter.updateBlurredImage()
+      fullImageBrushPainter.drawLine(processLineForFullImage(lastLine()));
       resetLastLine();
       brushPainter.saveLastLine();
 
@@ -137,6 +217,7 @@ export default function BrushCanvas() {
       points = [point];
 
       setLastLine((prev) => ({...prev, points}));
+      brushPainter.updateBlurredImage();
       brushPainter.previewLine(processLine(lastLine()));
 
       setSelectedTextLayer();
@@ -186,12 +267,20 @@ export default function BrushCanvas() {
         brushPainter.previewLine(processLine(lastLine()));
       },
       onReset() {
-        setTimeout(() => {
+        setTimeout(async() => {
+          if(lastLine().brush === 'arrow') {
+            await brushPainter.animateArrowBrush(processLine(lastLine()));
+          }
           saveLastLine();
         }, REPLACE_LAST_POINT_TIMEOUT_MS);
       }
     });
   });
 
-  return <>{canvas}</>;
+  return <>
+    {canvas}
+    <div style={{'position': 'absolute', 'right': '20px', 'bottom': '20px', 'width': '200px', 'height': '200px', 'z-index': 1000}}>
+      {fullImageCanvas}
+    </div>
+  </>;
 }

@@ -31,6 +31,7 @@ export default function RotationWheel() {
   const [movedDiff, setMovedDiff] = createSignal(0);
   const [scale, setScale] = context.scale;
   const [translation, setTranslation] = context.translation;
+  const [, setIsMoving] = context.isMoving;
 
   let swiperEl: HTMLDivElement;
 
@@ -43,6 +44,7 @@ export default function RotationWheel() {
       element: swiperEl,
       onStart() {
         initialScale = scale();
+        setIsMoving(true);
       },
       onSwipe(xDiff) {
         setMovedDiff(clamp(moved() + xDiff, -MAX_DEGREES_DIST_PX, MAX_DEGREES_DIST_PX) - moved());
@@ -56,6 +58,7 @@ export default function RotationWheel() {
         }
         setMoved(newMoved);
         setMovedDiff(0);
+        setIsMoving(false);
       }
     });
   });
@@ -133,10 +136,12 @@ export default function RotationWheel() {
   }
 
   function flipImage() {
+    setIsMoving(true);
     const isReversedRatio = Math.abs(Math.round((rotation() / Math.PI) * 2)) & 1;
     const targetFlip = [flip()[0] * (isReversedRatio ? 1 : -1), flip()[1] * (isReversedRatio ? -1 : 1)];
-    animateValue(flip(), targetFlip, 200, setFlip);
-    context.redrawBrushes()
+    animateValue(flip(), targetFlip, 200, setFlip, {
+      onEnd: () => setIsMoving(false)
+    });
   }
 
   const value = () => ((-(moved() + movedDiff()) / DEGREE_DIST_PX) * DEGREE_STEP).toFixed(1).replace(/\.0$/, '');

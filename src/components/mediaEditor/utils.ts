@@ -53,7 +53,8 @@ export function easeInOutQuad(t: number) {
 }
 
 type AnimateValueOptions = {
-  easing: (progress: number) => number
+  easing?: (progress: number) => number;
+  onEnd?: () => void;
 }
 
 export function animateValue<T extends number | number[]>(
@@ -62,10 +63,9 @@ export function animateValue<T extends number | number[]>(
   duration: number,
   callback: (value: T) => void,
   {
-    easing
-  }: AnimateValueOptions = {
-    easing: easeInOutQuad
-  }
+    easing = easeInOutQuad,
+    onEnd = () => {}
+  }: AnimateValueOptions = {}
 ) {
   let startTime: number;
   let canceled = false
@@ -91,6 +91,8 @@ export function animateValue<T extends number | number[]>(
 
     if(progress < 1) {
       requestAnimationFrame(animateFrame);
+    } else {
+      onEnd();
     }
   }
 

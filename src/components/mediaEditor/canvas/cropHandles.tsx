@@ -21,6 +21,7 @@ export default function CropHandles() {
   const [rotation] = context.rotation;
   const [translation, setTranslation] = context.translation;
   const [fixedImageRatioKey] = context.fixedImageRatioKey;
+  const [, setIsMoving] = context.isMoving;
 
   const cropOffset = useCropOffset();
 
@@ -105,6 +106,7 @@ export default function CropHandles() {
         onStart() {
           initialScale = scale();
           initialTranslation = translation();
+          setIsMoving(true);
           el.classList.add('media-editor__crop-handles-circle--anti-flicker');
         },
         onSwipe(xDiff, yDiff, e) {
@@ -219,7 +221,9 @@ export default function CropHandles() {
               setScale(lerp(initialScale, targetScale, progress));
               setTranslation(lerpArray(initialTranslation, targetTranslation, progress) as [number, number]);
             })
-          })
+          }, {
+            onEnd: () => setIsMoving(false)
+          });
 
           firstTarget = undefined;
           el.classList.remove('media-editor__crop-handles-circle--anti-flicker');
@@ -231,6 +235,7 @@ export default function CropHandles() {
       element: cropArea,
       onStart() {
         initialTranslation = translation();
+        setIsMoving(true);
       },
       onSwipe(xDiff, yDiff, e) {
         if(!firstTarget) firstTarget = e.target;
@@ -265,7 +270,15 @@ export default function CropHandles() {
         if(firstTarget !== cropArea) return;
 
         const prevTranslation = translation();
-        animateValue(prevTranslation, [prevTranslation[0] - boundDiff[0], prevTranslation[1] - boundDiff[1]], 120, setTranslation);
+        animateValue(
+          prevTranslation,
+          [prevTranslation[0] - boundDiff[0], prevTranslation[1] - boundDiff[1]],
+          120,
+          setTranslation,
+          {
+            onEnd: () => setIsMoving(false)
+          }
+        );
         firstTarget = undefined;
       }
     });

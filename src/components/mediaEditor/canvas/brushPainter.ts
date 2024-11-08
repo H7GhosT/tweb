@@ -1,6 +1,6 @@
 import {hexaToRgba} from '../../../helpers/color';
 
-import {distance} from '../utils';
+import {animateValue, delay, distance} from '../utils';
 
 export type BrushDrawnLine = {
   color: string;
@@ -12,6 +12,8 @@ export type BrushDrawnLine = {
 type BrushPainterOptions = {
   targetCanvas: HTMLCanvasElement;
   imageCanvas: HTMLCanvasElement;
+  blurAmount?: number;
+  drawImageCanvas?: (ctx: CanvasRenderingContext2D) => void;
 };
 
 export default class BrushPainter {
@@ -28,9 +30,17 @@ export default class BrushPainter {
   private width: number;
   private height: number;
 
-  constructor({targetCanvas, imageCanvas}: BrushPainterOptions) {
+  private blurAmount: number;
+
+  private drawImageCanvas?: (ctx: CanvasRenderingContext2D) => void;
+
+  static defaultBlurAmount = 10;
+
+  constructor({targetCanvas, imageCanvas, drawImageCanvas, blurAmount = BrushPainter.defaultBlurAmount}: BrushPainterOptions) {
     this.targetCtx = targetCanvas.getContext('2d');
     this.imageCanvas = imageCanvas;
+    this.drawImageCanvas = drawImageCanvas;
+    this.blurAmount = blurAmount;
 
     this.cacheCanvas = document.createElement('canvas');
     this.blurredImageCanvas = document.createElement('canvas');
@@ -52,30 +62,34 @@ export default class BrushPainter {
     this.blurredLineCtx = this.blurredLineCanvas.getContext('2d');
   }
 
-  previewLine(line: BrushDrawnLine) {
+  previewLine(line: BrushDrawnLine, shouldFinish = false) {
     this.targetCtx.clearRect(0, 0, this.width, this.height);
-
-    if(line.brush === 'blur') {
-      this.blurredImageCtx.clearRect(0, 0, this.width, this.height);
-      this.blurredImageCtx.filter = 'blur(10px)';
-      this.blurredImageCtx.drawImage(this.imageCanvas, 0, 0);
-      this.blurredImageCtx.drawImage(this.cacheCanvas, 0, 0);
-    }
 
     this.targetCtx.drawImage(this.cacheCanvas, 0, 0);
     const brushFn = this.brushes[line.brush];
     this.targetCtx.save();
-    brushFn(line, this.targetCtx);
+    brushFn(line, this.targetCtx, shouldFinish);
     this.targetCtx.restore();
   }
 
   saveLastLine() {
     this.cacheCtx.clearRect(0, 0, this.width, this.height);
     this.cacheCtx.drawImage(this.targetCtx.canvas, 0, 0);
+    this.updateBlurredImage();
+  }
+
+  updateBlurredImage() {
+    this.blurredImageCtx.clearRect(0, 0, this.width, this.height);
+    this.blurredImageCtx.filter = `blur(${this.blurAmount}px)`;
+    this.drawImageCanvas ?
+      this.drawImageCanvas(this.blurredImageCtx) :
+      this.blurredImageCtx.drawImage(this.imageCanvas, 0, 0);
+
+    this.blurredImageCtx.drawImage(this.cacheCanvas, 0, 0);
   }
 
   drawLine(line: BrushDrawnLine) {
-    this.previewLine(line);
+    this.previewLine(line, true);
     this.saveLastLine();
   }
 
@@ -115,17 +129,60 @@ export default class BrushPainter {
     ctx.stroke();
   }
 
-  private brushes: Record<string, (line: BrushDrawnLine, ctx: CanvasRenderingContext2D) => void> = {
+  async animateArrowBrush(line: BrushDrawnLine) {
+    const {points} = line;
+    if(points.length < 2) return;
+
+    const ctx = this.targetCtx;
+
+    const i = points.length - 1;
+
+    let i2 = i;
+    for(; i2 > 0; i2--) {
+      if(distance(points[i], points[i2]) > line.size * 1.5) break;
+    }
+    const finalArrowLength = line.size * 5;
+
+    function drawArrowHead(arrowLen: number) {
+      const angle = Math.atan2(points[i][0] - points[i2][0], points[i][1] - points[i2][1]) + Math.PI;
+
+      const angle1 = angle + Math.PI / 4;
+      const angle2 = angle - Math.PI / 4;
+
+      const vec1 = [arrowLen * Math.sin(angle1), arrowLen * Math.cos(angle1)];
+      const vec2 = [arrowLen * Math.sin(angle2), arrowLen * Math.cos(angle2)];
+
+      ctx.strokeStyle = line.color;
+      ctx.lineWidth = line.size;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(points[i][0], points[i][1]);
+      ctx.lineTo(points[i][0] + vec1[0], points[i][1] + vec1[1]);
+      ctx.moveTo(points[i][0], points[i][1]);
+      ctx.lineTo(points[i][0] + vec2[0], points[i][1] + vec2[1]);
+      ctx.stroke();
+    }
+
+
+    const duration = 200;
+    animateValue(0.1, finalArrowLength, duration, drawArrowHead);
+    await delay(duration);
+  }
+
+  private brushes: Record<string, (line: BrushDrawnLine, ctx: CanvasRenderingContext2D, shouldFinish: boolean) => void> = {
     pen: (line, ctx) => {
       ctx.strokeStyle = line.color;
       this.drawLinePath(line, ctx);
     },
-    arrow: (line, ctx) => {
+    arrow: (line, ctx, shouldFinish) => {
       const {points} = line;
 
       ctx.strokeStyle = line.color;
       this.drawLinePath(line, ctx);
 
+      if(!shouldFinish) return;
       if(points.length < 2) return;
 
       const i = points.length - 1;

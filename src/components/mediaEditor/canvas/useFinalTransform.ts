@@ -17,12 +17,13 @@ export default function useFinalTransform() {
   const [canvasSize] = context.canvasSize;
   const [currentTab] = context.currentTab;
   const [currentImageRatio] = context.currentImageRatio;
-  const [translation, setTranslation] = context.translation;
-  const [scale, setScale] = context.scale;
+  const [translation] = context.translation;
+  const [scale] = context.scale;
   const [rotation] = context.rotation;
   const [flip] = context.flip;
   const [renderingPayload] = context.renderingPayload;
   const [, setFinalTransform] = context.finalTransform;
+  const [, setIsMoving] = context.isMoving;
 
   const cropOffset = useCropOffset();
 
@@ -30,12 +31,22 @@ export default function useFinalTransform() {
 
   const [cropTabAnimationProgress, setCropTabAnimationProgress] = createSignal(0);
 
+  let isFirstEffect = true;
   createEffect(on(isCroping, () => {
+    if(isFirstEffect) {
+      isFirstEffect = false;
+      return;
+    }
+
+    setIsMoving(true);
     const cancel = animateValue(
       cropTabAnimationProgress(),
       isCroping() ? 1 : 0,
       200,
-      setCropTabAnimationProgress
+      setCropTabAnimationProgress,
+      {
+        onEnd: () => setIsMoving(false)
+      }
     );
 
     onCleanup(cancel);
