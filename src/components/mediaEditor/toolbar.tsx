@@ -68,6 +68,8 @@ export default function Toolbar(props: {
     }
     function dragEnd() {
       if(!isMobile()) return;
+      if(isAborted) return;
+      isAborted = true;
       if(Math.abs(move()) > 100) {
         setIsCollapsed(prev => !prev);
       } else {
