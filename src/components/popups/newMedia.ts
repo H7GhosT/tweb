@@ -1010,7 +1010,7 @@ export default class PopupNewMedia extends PopupElement {
             hideActions();
             this.files.splice(idx, 1);
             params.editResult?.standaloneContext?.dispose();
-            this.files.length ? this.attachFiles() : this.btnClose.click();
+            this.files.length ? this.attachFiles() : this.destroy();
           }
         });
 
