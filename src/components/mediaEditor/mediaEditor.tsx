@@ -1,11 +1,11 @@
-import {createEffect, onMount} from 'solid-js';
+import {createEffect, onCleanup, onMount} from 'solid-js';
 import {render} from 'solid-js/web';
 
 import {doubleRaf} from '../../helpers/schedulers';
 import {AppManagers} from '../../lib/appManagers/managers';
 import {i18n} from '../../lib/langPack';
 
-import appNavigationController from '../appNavigationController';
+import appNavigationController, {NavigationItem} from '../appNavigationController';
 
 import {delay} from './utils';
 import {injectMediaEditorLangPack} from './langPack';
@@ -42,17 +42,24 @@ export function MediaEditor(props: MediaEditorProps) {
 
   let overlay: HTMLDivElement;
 
-  onMount(async() => {
-    overlay.classList.add('media-editor__overlay--hidden');
-    await doubleRaf();
-    overlay.classList.remove('media-editor__overlay--hidden');
+  onMount(() => {
+    (async() => {
+      overlay.classList.add('media-editor__overlay--hidden');
+      await doubleRaf();
+      overlay.classList.remove('media-editor__overlay--hidden');
+    })();
 
-    appNavigationController.pushItem({
+    const navigationItem: NavigationItem = {
       type: 'popup',
       onPop: () => handleClose()
-    });
+    };
+    appNavigationController.pushItem(navigationItem);
 
     overlay.focus();
+
+    onCleanup(() => {
+      appNavigationController.removeItem(navigationItem);
+    });
   });
 
   createEffect(() => {
@@ -87,10 +94,9 @@ export function MediaEditor(props: MediaEditorProps) {
       button: {
         text: i18n('Discard')
       }
-    }).then(confirmed => {
-      if(!confirmed) return;
+    }).then(() => {
       performClose(true);
-    });
+    }).catch(() => {});
     return false;
   }
 

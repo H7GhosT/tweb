@@ -3,15 +3,14 @@ import {createEffect, createMemo, createSignal, on, onCleanup, onMount, useConte
 import SwipeHandler from '../../swipeHandler';
 
 import MediaEditorContext from '../context';
+import {initWebGL, RenderingPayload} from '../webgl/initWebGL';
+import {draw} from '../webgl/draw';
+import {AdjustmentsConfig} from '../adjustments';
+import {distance} from '../utils';
 
 import BrushPainter, {BrushDrawnLine} from './brushPainter';
 import useNormalizePoint from './useNormalizePoint';
 import useProcessPoint from './useProcessPoint';
-import {initWebGL, RenderingPayload} from '../webgl/initWebGL';
-import {draw} from '../webgl/draw';
-import {AdjustmentsConfig} from '../adjustments';
-
-const REPLACE_LAST_POINT_TIMEOUT_MS = 25;
 
 function drawAdjustedImage(gl: WebGLRenderingContext, payload: RenderingPayload) {
   const context = useContext(MediaEditorContext);
@@ -218,7 +217,7 @@ export default function BrushCanvas() {
     let initialPosition: [number, number];
     let points: [number, number][] = [];
 
-    let shouldReplaceLastPoint = false;
+    let builtUpDistance = 0;
 
     function saveLastLine() {
       const prevLines = [...lines()];
@@ -288,26 +287,28 @@ export default function BrushCanvas() {
           (initialPosition[1] + yDiff)
         ]);
 
-        if(shouldReplaceLastPoint) {
+        if(points.length > 0) {
+          const lastPoint = points[points.length - 1];
+          builtUpDistance += distance(processPoint(lastPoint), processPoint(point));
+        }
+        if(builtUpDistance < 40 / context.pixelRatio && points.length > 1) {
           points[points.length - 1] = point;
         } else {
           points.push(point);
-          shouldReplaceLastPoint = true;
-          setTimeout(() => {
-            shouldReplaceLastPoint = false
-          }, REPLACE_LAST_POINT_TIMEOUT_MS)
+          builtUpDistance = 0;
         }
 
         setLastLine((prev) => ({...prev, points}));
         brushPainter.previewLine(processLine(lastLine()));
       },
       onReset() {
-        setTimeout(async() => {
+        (async() => {
+          builtUpDistance = 0;
           if(lastLine().brush === 'arrow') {
             await brushPainter.animateArrowBrush(processLine(lastLine()));
           }
           saveLastLine();
-        }, REPLACE_LAST_POINT_TIMEOUT_MS);
+        })();
       }
     });
   });
