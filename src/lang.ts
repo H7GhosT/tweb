@@ -2878,7 +2878,9 @@ const lang = {
   'MediaEditor.Adjustments.Shadows': 'Shadows',
   'MediaEditor.Adjustments.Vignette': 'Vignette',
   'MediaEditor.Adjustments.Grain': 'Grain',
-  'MediaEditor.Adjustments.Sharpen': 'Sharpen'
+  'MediaEditor.Adjustments.Sharpen': 'Sharpen',
+  'MediaEditor.DiscardChanges': 'Discard Changes',
+  'MediaEditor.DiscardWarning': 'Are you sure you want to discard your changes?'
 };
 
 export default lang;

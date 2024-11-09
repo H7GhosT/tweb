@@ -3,6 +3,7 @@ import {render} from 'solid-js/web';
 
 import {doubleRaf} from '../../helpers/schedulers';
 import {AppManagers} from '../../lib/appManagers/managers';
+import {i18n} from '../../lib/langPack';
 
 import appNavigationController from '../appNavigationController';
 
@@ -14,6 +15,7 @@ import FinishButton from './finishButton';
 import {withCurrentOwner} from './utils';
 import {createFinalResult, MediaEditorFinalResult} from './finalRender/createFinalResult';
 import Toolbar from './toolbar';
+import confirmationPopup from '../confirmationPopup';
 
 export type MediaEditorProps = {
   onClose: (hasGif: boolean) => void;
@@ -64,10 +66,28 @@ export function MediaEditor(props: MediaEditorProps) {
   });
 
   async function handleClose(finished = false, hasGif = false) {
-    overlay.classList.add('media-editor__overlay--hidden');
-    await delay(200);
-    props.onClose(hasGif);
-    if(!finished && !props.standaloneContext) standaloneContext.dispose();
+    async function performClose() {
+      overlay.classList.add('media-editor__overlay--hidden');
+      await delay(200);
+      props.onClose(hasGif);
+    }
+
+    if(!finished && !props.standaloneContext) {
+      if(standaloneContext.value.history[0]().length > 0) {
+        const confirmed = await confirmationPopup({
+          title: i18n('MediaEditor.DiscardChanges'),
+          description: i18n('MediaEditor.DiscardWarning'),
+          button: {
+            text: i18n('Discard')
+          }
+        });
+        if(!confirmed) return;
+      }
+      standaloneContext.dispose();
+      performClose();
+    } else {
+      await performClose();
+    }
   }
 
   return (

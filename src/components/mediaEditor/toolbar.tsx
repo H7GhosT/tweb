@@ -155,7 +155,7 @@ export default function Toolbar(props: {
       }}
     >
       <div class="media-editor__toolbar-draggable" />
-      <Topbar onClose={props.onClose} onFinish={props.onFinish} />
+      <Topbar onClose={() => props.onClose()} onFinish={props.onFinish} />
       <Tabs />
       <TabContent
         onContainer={setContainer}
