@@ -1,5 +1,6 @@
 import {batch, createEffect, createMemo, createSignal, For, on, onMount, ParentProps, Show, Signal, useContext} from 'solid-js';
 
+import createContextMenu from '../../../helpers/dom/createContextMenu';
 import SwipeHandler, {getEvent} from '../../swipeHandler';
 
 import {withCurrentOwner} from '../utils';
@@ -129,6 +130,7 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
   const [rotation] = context.rotation
   const [selectedResizableLayer, setSelectedResizableLayer] = context.selectedResizableLayer;
   const [finalTransform] = context.finalTransform
+  const [, setLayers] = context.resizableLayers;
 
   const [layer, setLayer] = props.layerSignal;
 
@@ -206,6 +208,44 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
         swipeStarted = false;
         firstTarget = undefined;
       }
+    });
+
+    createContextMenu({
+      buttons: [{
+        icon: 'delete',
+        className: 'danger',
+        text: 'Delete',
+        onClick: () => {
+          let position = -1;
+          let deletedLayer: ResizableLayer;
+
+          setLayers((prev) => {
+            prev = [...prev];
+            position = prev.findIndex(other => other[0]().id === layer().id);
+            if(position > -1) deletedLayer = prev.splice(position, 1)?.[0][0]?.();
+            return prev;
+          });
+
+          context.pushToHistory({
+            undo() {
+              setLayers((prev) => {
+                prev = [...prev];
+                if(position > -1) prev.splice(position, 0, createSignal({...deletedLayer}));
+                return prev;
+              });
+            },
+            redo() {
+              setLayers((prev) => {
+                prev = [...prev];
+                position = prev.findIndex((layer) => layer[0]().id === deletedLayer.id);
+                if(position > -1) deletedLayer = prev.splice(position, 1)[0]?.[0]();
+                return prev;
+              });
+            }
+          });
+        }
+      }],
+      listenTo: container
     });
   });
 

@@ -189,7 +189,7 @@ export default function BrushCanvas() {
     fullBrushPainter = new BrushPainter({
       imageCanvas: fullImageCanvas,
       targetCanvas: fullBrushesCanvas,
-      blurAmount: BrushPainter.defaultBlurAmount / fullImageMultiplier()
+      blurAmount: BrushPainter.defaultBlurAmount * fullImageMultiplier()
     });
 
     redraw();

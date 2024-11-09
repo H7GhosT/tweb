@@ -1,11 +1,12 @@
-import {onMount, useContext} from 'solid-js';
+import {onCleanup, onMount, useContext} from 'solid-js';
 
 import {i18n} from '../../lib/langPack';
 import {ButtonIconTsx} from '../buttonIconTsx';
+import ripple from '../ripple';
 
 import MediaEditorContext from './context';
 import {useCanFinish} from './finishButton';
-import ripple from '../ripple';
+import {addShortcutListener} from './shortcutListener';
 
 export default function Topbar(props: {
   onClose: () => void;
@@ -43,6 +44,16 @@ export default function Topbar(props: {
 
   onMount(() => {
     ripple(doneButton);
+
+    const removeListeners = addShortcutListener(['ctrl+z', 'ctrl+shift+z', 'ctrl+y'], (combo) => {
+      if(combo === 'ctrl+z') {
+        onUndo();
+      } else {
+        onRedo();
+      }
+    });
+
+    onCleanup(() => removeListeners());
   })
 
   return (

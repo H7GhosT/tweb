@@ -30,8 +30,6 @@ import onMediaLoad from '../../helpers/onMediaLoad';
 import apiManagerProxy from '../../lib/mtproto/mtprotoworker';
 import {SEND_WHEN_ONLINE_TIMESTAMP, SERVER_IMAGE_MIME_TYPES, THUMB_TYPE_FULL} from '../../lib/mtproto/mtproto_config';
 import wrapDocument from '../wrappers/document';
-import createContextMenu from '../../helpers/dom/createContextMenu';
-import findUpClassName from '../../helpers/dom/findUpClassName';
 import wrapMediaSpoiler, {toggleMediaSpoiler} from '../wrappers/mediaSpoiler';
 import {MiddlewareHelper} from '../../helpers/middleware';
 import animationIntersector, {AnimationItemGroup} from '../animationIntersector';
