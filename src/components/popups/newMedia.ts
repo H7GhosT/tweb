@@ -61,6 +61,7 @@ import {openMediaEditor} from '../mediaEditor/mediaEditor';
 import {MediaEditorFinalResult} from '../mediaEditor/finalRender/createFinalResult';
 import RenderProgressCircle from '../mediaEditor/renderProgressCircle';
 import {animateValue, delay, lerp, snapToViewport} from '../mediaEditor/utils';
+import {IS_MOBILE} from '../../environment/userAgent';
 
 type SendFileParams = SendFileDetails & {
   file?: File,
@@ -907,95 +908,131 @@ export default class PopupNewMedia extends PopupElement {
       }
     }
     {
-      const actions = document.createElement('div');
-      actions.classList.add('popup-item-media-action-menu');
-      const itemCls = 'popup-item-media-action';
+      const showActions = async() => {
+        hideActions();
+        const actions = document.createElement('div');
+        actions.classList.add('popup-item-media-action-menu');
+        const itemCls = 'popup-item-media-action';
 
-      let equalizeIcon: HTMLSpanElement;
-      if(!isVideo && file.type !== 'image/gif') {
-        equalizeIcon = Icon('equalizer', itemCls);
-        equalizeIcon.addEventListener('click', () => {
-          (this.btnConfirmOnEnter as HTMLButtonElement).disabled = true;
-          const img = itemDiv.querySelector('img');
-          if(!img) return;
-          const animatedImg = img.cloneNode() as HTMLImageElement;
-          const bcr = itemDiv.getBoundingClientRect();
-          animatedImg.style.position = 'fixed';
-          const left = bcr.left + bcr.width / 2, top = bcr.top + bcr.height / 2, width = bcr.width, height = bcr.height;
-          animatedImg.style.left = left + 'px';
-          animatedImg.style.top = top + 'px';
-          animatedImg.style.width = width + 'px';
-          animatedImg.style.height = height + 'px';
-          animatedImg.style.transform = 'translate(-50%, -50%)';
-          animatedImg.style.objectFit = 'cover';
-          animatedImg.style.zIndex = '1000';
+        let equalizeIcon: HTMLSpanElement;
+        if(!isVideo && file.type !== 'image/gif') {
+          equalizeIcon = Icon('equalizer', itemCls);
+          equalizeIcon.addEventListener('click', () => {
+            hideActions();
 
-          document.body.append(animatedImg);
+            (this.btnConfirmOnEnter as HTMLButtonElement).disabled = true;
+            const img = itemDiv.querySelector('img');
+            if(!img) return;
+            const animatedImg = img.cloneNode() as HTMLImageElement;
+            const bcr = itemDiv.getBoundingClientRect();
+            animatedImg.style.position = 'fixed';
+            const left = bcr.left + bcr.width / 2, top = bcr.top + bcr.height / 2, width = bcr.width, height = bcr.height;
+            animatedImg.style.left = left + 'px';
+            animatedImg.style.top = top + 'px';
+            animatedImg.style.width = width + 'px';
+            animatedImg.style.height = height + 'px';
+            animatedImg.style.transform = 'translate(-50%, -50%)';
+            animatedImg.style.objectFit = 'cover';
+            animatedImg.style.zIndex = '1000';
 
-          openMediaEditor({
-            imageURL: params.editResult?.originalSrc || params.objectURL,
-            managers: this.managers,
-            onEditFinish: (result) => {
-              params.editResult = result;
-              this.attachFiles();
-            },
-            onCanvasReady: (canvas) => {
-              const canvasBcr = canvas.getBoundingClientRect();
-              const leftDiff = (canvasBcr.left + canvasBcr.width / 2) - left;
-              const topDiff = (canvasBcr.top + canvasBcr.height / 2) - top;
-              const [scaledWidth, scaledHeight] = snapToViewport(img.naturalWidth / img.naturalHeight, canvasBcr.width, canvasBcr.height);
-              animateValue(
-                0, 1, 200,
-                (progress) => {
-                  animatedImg.style.transform = `translate(calc(${
-                    progress * leftDiff
-                  }px - 50%), calc(${
-                    progress * topDiff
-                  }px - 50%))`;
-                  animatedImg.style.width = lerp(width, scaledWidth, progress) + 'px';
-                  animatedImg.style.height = lerp(height, scaledHeight, progress) + 'px';
-                }
-              )
-            },
-            onImageRendered: async() => {
-              animatedImg.style.opacity = '1';
-              animatedImg.style.transition = '.12s';
-              await doubleRaf();
-              animatedImg.style.opacity = '0';
-              await delay(120);
-              animatedImg.remove();
-            },
-            standaloneContext: params.editResult?.standaloneContext,
-            onClose: (hasGif) => {
-              if(!hasGif)
-                (this.btnConfirmOnEnter as HTMLButtonElement).disabled = false;
-            }
+            document.body.append(animatedImg);
+
+            openMediaEditor({
+              imageURL: params.editResult?.originalSrc || params.objectURL,
+              managers: this.managers,
+              onEditFinish: (result) => {
+                params.editResult = result;
+                this.attachFiles();
+              },
+              onCanvasReady: (canvas) => {
+                const canvasBcr = canvas.getBoundingClientRect();
+                const leftDiff = (canvasBcr.left + canvasBcr.width / 2) - left;
+                const topDiff = (canvasBcr.top + canvasBcr.height / 2) - top;
+                const [scaledWidth, scaledHeight] = snapToViewport(img.naturalWidth / img.naturalHeight, canvasBcr.width, canvasBcr.height);
+                animateValue(
+                  0, 1, 200,
+                  (progress) => {
+                    animatedImg.style.transform = `translate(calc(${
+                      progress * leftDiff
+                    }px - 50%), calc(${
+                      progress * topDiff
+                    }px - 50%))`;
+                    animatedImg.style.width = lerp(width, scaledWidth, progress) + 'px';
+                    animatedImg.style.height = lerp(height, scaledHeight, progress) + 'px';
+                  }
+                )
+              },
+              onImageRendered: async() => {
+                animatedImg.style.opacity = '1';
+                animatedImg.style.transition = '.12s';
+                await doubleRaf();
+                animatedImg.style.opacity = '0';
+                await delay(120);
+                animatedImg.remove();
+              },
+              standaloneContext: params.editResult?.standaloneContext,
+              onClose: (hasGif) => {
+                if(!hasGif)
+                  (this.btnConfirmOnEnter as HTMLButtonElement).disabled = false;
+              }
+            });
           });
+        }
+
+        const spoilerToggle = document.createElement('span');
+        spoilerToggle.classList.add(itemCls, 'spoiler-toggle');
+        if(params.mediaSpoiler) spoilerToggle.dataset.toggled = 'true';
+        spoilerToggle.append(Icon('mediaspoiler'), Icon('mediaspoileroff'));
+        spoilerToggle.addEventListener('click', () => {
+          if(spoilerToggle.dataset.disabled) return; // Prevent double clicks
+          spoilerToggle.dataset.toggled = spoilerToggle.dataset.toggled === 'true' ? 'false' : 'true'
+          !params.mediaSpoiler ? this.applyMediaSpoiler(params) : this.removeMediaSpoiler(params);
+        });
+
+        const deleteIcon = Icon('delete', itemCls);
+        deleteIcon.addEventListener('click', () => {
+          const idx = this.files.findIndex((file) => file === params.file);
+          if(idx >= 0) {
+            hideActions();
+            this.files.splice(idx, 1);
+            params.editResult?.standaloneContext?.dispose();
+            this.files.length ? this.attachFiles() : this.btnClose.click();
+          }
+        });
+
+        actions.append(...[equalizeIcon, spoilerToggle, deleteIcon].filter(Boolean));
+
+        const bcr = itemDiv.getBoundingClientRect();
+        actions.style.left = bcr.left + bcr.width / 2 + 'px';
+        actions.style.top = bcr.bottom + 'px';
+
+        document.body.append(actions);
+        await doubleRaf();
+        actions.style.opacity = '1';
+
+        const listener = (e: MouseEvent) => {
+          if((e.target as HTMLElement)?.closest?.('.popup-item-media-action-menu') || e.target === itemDiv || itemDiv.contains(e.target as Node)) return;
+          hideActions();
+          document.removeEventListener('pointermove', listener);
+          if(IS_MOBILE) {
+            document.body.removeEventListener('pointerdown', listener);
+          }
+        }
+        document.addEventListener('pointermove', listener);
+        if(IS_MOBILE) {
+          document.body.addEventListener('pointerdown', listener);
+        }
+      }
+
+      const hideActions = () => {
+        document.querySelectorAll('.popup-item-media-action-menu')?.forEach(async(el) => {
+          (el as HTMLElement).style.opacity = '0';
+          await delay(200);
+          el?.remove();
         });
       }
 
-      const spoilerToggle = document.createElement('span');
-      spoilerToggle.classList.add(itemCls, 'spoiler-toggle');
-      if(params.mediaSpoiler) spoilerToggle.dataset.toggled = 'true';
-      spoilerToggle.append(Icon('mediaspoiler'), Icon('mediaspoileroff'));
-      spoilerToggle.addEventListener('click', () => {
-        if(spoilerToggle.dataset.disabled) return; // Prevent double clicks
-        !params.mediaSpoiler ? this.applyMediaSpoiler(params) : this.removeMediaSpoiler(params);
-      });
-
-      const deleteIcon = Icon('delete', itemCls);
-      deleteIcon.addEventListener('click', () => {
-        const idx = this.files.findIndex((file) => file === params.file);
-        if(idx >= 0) {
-          this.files.splice(idx, 1);
-          params.editResult?.standaloneContext?.dispose();
-          this.files.length ? this.attachFiles() : this.btnClose.click();
-        }
-      });
-
-      actions.append(...[equalizeIcon, spoilerToggle, deleteIcon].filter(Boolean));
-
-      itemDiv.append(actions);
+      itemDiv.addEventListener('pointerenter', showActions);
     }
 
     return promise;
@@ -1277,7 +1314,6 @@ export default class PopupNewMedia extends PopupElement {
   }
 
   private afterRender() {
-    const mediaContainerBCR = this.mediaContainer.getBoundingClientRect();
     this.willAttach.sendFileDetails.forEach((params) => {
       const editResult = params.editResult;
       if(editResult?.animatedPreview) {
@@ -1305,22 +1341,6 @@ export default class PopupNewMedia extends PopupElement {
             }
           }
         )
-      }
-
-      const actions: HTMLDivElement = params.itemDiv.querySelector('.popup-item-media-action-menu');
-
-      if(!actions) return;
-      const actionsBCR = actions.getBoundingClientRect();
-
-      const padding = 4;
-      if(mediaContainerBCR.left + padding > actionsBCR.left) {
-        actions.style.setProperty('--move', mediaContainerBCR.left + padding - actionsBCR.left + 'px');
-      } else if(mediaContainerBCR.right - padding < actionsBCR.right) {
-        console.log(
-          'mediaContainerBCR.right - padding - actionsBCR.right',
-          mediaContainerBCR.right - padding - actionsBCR.right
-        );
-        actions.style.setProperty('--move', mediaContainerBCR.right - padding - actionsBCR.right + 'px');
       }
     });
   }

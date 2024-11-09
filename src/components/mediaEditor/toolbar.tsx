@@ -1,5 +1,7 @@
 import {batch, createEffect, createSignal, on, onCleanup, onMount, useContext} from 'solid-js';
 
+import {doubleRaf} from '../../helpers/schedulers';
+
 import Topbar from './topbar';
 import Tabs from './tabs/tabs';
 import TabContent from './tabs/tabContent';
@@ -9,7 +11,7 @@ import TextTab from './tabs/textTab';
 import BrushTab from './tabs/brushTab';
 import StickersTab from './tabs/stickersTab';
 import MediaEditorContext from './context';
-import {animateValue, lerp} from './utils';
+import {animateValue, delay, lerp} from './utils';
 import useMediaQuery from './useMediaQuery';
 
 
@@ -22,6 +24,7 @@ export default function Toolbar(props: {
   const context = useContext(MediaEditorContext);
   const [isAdjusting] = context.isAdjusting;
   const [currentTab] = context.currentTab;
+  const [renderingPayload] = context.renderingPayload;
 
   const [move, setMove] = createSignal(0)
   const [isCollapsed, setIsCollapsed] = createSignal(false);
@@ -29,7 +32,9 @@ export default function Toolbar(props: {
   const [containerHeight, setContainerHeight] = createSignal(0);
   const [extraMove, setExtraMove] = createSignal(0);
 
-  const isMobile = useMediaQuery('(max-width: 800px)')
+  const isMobile = useMediaQuery('(max-width: 800px)');
+
+  const [shouldHide, setShouldHide] = createSignal(isMobile());
 
   let startY = 0;
   let isAborted = true;
@@ -119,17 +124,32 @@ export default function Toolbar(props: {
 
   createEffect(() => {
     if(currentTab() !== 'crop') setIsCollapsed(false);
+  });
+
+  createEffect(() => {
+    if(renderingPayload() && shouldHide()) {
+      (async() => {
+        toolbar.style.transition = '.2s';
+        await doubleRaf();
+        setShouldHide(false);
+        await delay(200);
+        toolbar.style.removeProperty('transition');
+      })();
+    }
   })
 
-  const totalMove = () => extraMove() + move()
+  const totalMove = () => extraMove() + move();
 
   return (
     <div
       ref={toolbar}
       class="media-editor__toolbar"
       style={{
-        opacity: isMobile() && isAdjusting() ? 0 : 1,
-        transform: isMobile() ? `translate(-50%, ${totalMove()}px)` : undefined
+        'opacity': isMobile() && isAdjusting() ? 0 : 1,
+        'transform': shouldHide() && isMobile() ?
+          'translate(-50%, 100%)' :
+           isMobile() ?
+            `translate(-50%, ${totalMove()}px)` : undefined
       }}
     >
       <div class="media-editor__toolbar-draggable" />

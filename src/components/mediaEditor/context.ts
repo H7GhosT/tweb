@@ -77,7 +77,7 @@ function createContextValue(props: MediaEditorProps): MediaEditorContextValue {
   return {
     managers: props.managers,
     imageSrc: props.imageURL,
-    pixelRatio: window.devicePixelRatio,
+    pixelRatio: Math.min(2, window.devicePixelRatio),
     renderingPayload: createSignal(),
 
     adjustments: createAdjustmentsConfig(),
