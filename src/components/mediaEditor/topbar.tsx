@@ -57,9 +57,11 @@ export default function Topbar(props: {
         ref={doneButton}
         class="media-editor__topbar-done"
         classList={{
-          'media-editor__topbar-done-mobile--disabled': !canFinish()
+          'media-editor__topbar-done--disabled': !canFinish()
         }}
-        onClick={props.onFinish}
+        onClick={() => {
+          if(canFinish()) props.onFinish()
+        }}
       >{i18n('Done')}</div>
     </div>
   );

@@ -206,6 +206,7 @@
     &--disabled {
       color: rgba(var(--primary-color-rgb), .2);
       cursor: default;
+      pointer-events: none;
     }
 
     @include media-editor-mobile {

@@ -1,6 +1,7 @@
 import {ArrayBufferTarget, Muxer} from 'mp4-muxer';
 
 import {MediaEditorContextValue} from '../context';
+import {delay} from '../utils';
 
 import {StickerFrameByFrameRenderer} from './types';
 import ImageStickerFrameByFrameRenderer from './imageStickerFrameByFrameRenderer';
@@ -101,6 +102,7 @@ export default async function renderToVideo(
       duration: 1e6 / FRAMES_PER_SECOND
     });
     encoder.encode(videoFrame);
+    videoFrame.close();
   }
 
   setProgress(0);
@@ -111,6 +113,7 @@ export default async function renderToVideo(
     resultCanvas.toBlob(resolve));
 
   const resultPromise = new Promise<Blob>(async(resolve) => {
+    await delay(200);
     for(let frameNo = 1; frameNo <= maxFrames; frameNo++) {
       // console.log('rendering frameNo', frameNo)
       await renderFrame(frameNo);
