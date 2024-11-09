@@ -49,7 +49,7 @@ export function MediaEditor(props: MediaEditorProps) {
 
     appNavigationController.pushItem({
       type: 'popup',
-      onPop: () => void handleClose()
+      onPop: () => handleClose()
     });
 
     overlay.focus();
@@ -65,29 +65,33 @@ export function MediaEditor(props: MediaEditorProps) {
     props.onImageRendered();
   });
 
-  async function handleClose(finished = false, hasGif = false) {
-    async function performClose() {
+  function handleClose(finished = false, hasGif = false) {
+    async function performClose(dispose = false) {
       overlay.classList.add('media-editor__overlay--hidden');
       await delay(200);
       props.onClose(hasGif);
+      if(dispose) standaloneContext.dispose();
     }
 
-    if(!finished && !props.standaloneContext) {
-      if(standaloneContext.value.history[0]().length > 0) {
-        const confirmed = await confirmationPopup({
-          title: i18n('MediaEditor.DiscardChanges'),
-          description: i18n('MediaEditor.DiscardWarning'),
-          button: {
-            text: i18n('Discard')
-          }
-        });
-        if(!confirmed) return;
-      }
-      standaloneContext.dispose();
+    if(finished || props.standaloneContext) {
       performClose();
-    } else {
-      await performClose();
+      return;
     }
+    if(!standaloneContext.value.history[0]().length) {
+      performClose(true);
+      return;
+    }
+    confirmationPopup({
+      title: i18n('MediaEditor.DiscardChanges'),
+      description: i18n('MediaEditor.DiscardWarning'),
+      button: {
+        text: i18n('Discard')
+      }
+    }).then(confirmed => {
+      if(!confirmed) return;
+      performClose(true);
+    });
+    return false;
   }
 
   return (
