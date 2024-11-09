@@ -7,8 +7,32 @@ import MediaEditorContext from '../context';
 import BrushPainter, {BrushDrawnLine} from './brushPainter';
 import useNormalizePoint from './useNormalizePoint';
 import useProcessPoint from './useProcessPoint';
+import {initWebGL, RenderingPayload} from '../webgl/initWebGL';
+import {draw} from '../webgl/draw';
+import {AdjustmentsConfig} from '../adjustments';
 
 const REPLACE_LAST_POINT_TIMEOUT_MS = 25;
+
+function drawAdjustedImage(gl: WebGLRenderingContext, payload: RenderingPayload) {
+  const context = useContext(MediaEditorContext);
+  const [flip] = context.flip;
+
+  if(!payload) return;
+
+  draw(gl, payload, {
+    flip: flip(),
+    rotation: 0,
+    scale: 1,
+    translation: [0, 0],
+    imageSize: [payload.image.width, payload.image.height],
+    ...(Object.fromEntries(
+      context.adjustments.map(({key, signal, to100}) => {
+        const value = signal[0]();
+        return [key, value / (to100 ? 100 : 50)];
+      })
+    ) as Record<AdjustmentsConfig[number]['key'], number>)
+  });
+}
 
 export default function BrushCanvas() {
   const context = useContext(MediaEditorContext);
@@ -22,6 +46,8 @@ export default function BrushCanvas() {
   const [isAdjusting] = context.isAdjusting;
   const [finalTransform] = context.finalTransform
   const [isMoving] = context.isMoving;
+
+  const [fullImageGLPayload, setFullImageGLPayload] = createSignal<RenderingPayload>()
 
   const normalizePoint = useNormalizePoint();
   const processPoint = useProcessPoint()
@@ -60,16 +86,34 @@ export default function BrushCanvas() {
   ) * 2 * context.pixelRatio;
 
   const fullImageCanvas = <canvas
+    width={imageSize()[0]}
+    height={imageSize()[1]}
+  /> as HTMLCanvasElement;
+  const gl = fullImageCanvas.getContext('webgl', {
+    preserveDrawingBuffer: true
+  });
+
+  const fullBrushesCanvas = <canvas
     width={imageSize()[0] * fullImageMultiplier()}
     height={imageSize()[1] * fullImageMultiplier()}
   /> as HTMLCanvasElement;
+
 
   let brushPainter = new BrushPainter({
     imageCanvas: imageCanvas(),
     targetCanvas: canvas
   });
 
-  let fullImageBrushPainter: BrushPainter;
+  let fullBrushPainter: BrushPainter;
+
+  onMount(async() => {
+    setFullImageGLPayload(await initWebGL(gl, context));
+  });
+
+  createEffect(() => {
+    const payload = fullImageGLPayload();
+    drawAdjustedImage(gl, payload)
+  });
 
   createEffect(on(canvasSize, () => {
     brushPainter = new BrushPainter({
@@ -103,7 +147,7 @@ export default function BrushCanvas() {
       ctx.scale(transform.scale, transform.scale);
 
       const [w, h] = imageSize();
-      ctx.drawImage(fullImageCanvas, -(w / 2), -(h / 2), w, h);
+      ctx.drawImage(fullBrushesCanvas, -(w / 2), -(h / 2), w, h);
 
       ctx.restore();
     } else {
@@ -130,34 +174,22 @@ export default function BrushCanvas() {
   }
 
   function redrawFull() {
-    if(!fullImageBrushPainter) return;
+    if(!fullBrushPainter) return;
 
-    fullImageBrushPainter.clear();
-    fullImageBrushPainter.saveLastLine();
+    fullBrushPainter.clear();
+    fullBrushPainter.saveLastLine();
 
-    lines().forEach((line) => fullImageBrushPainter.drawLine(
+    lines().forEach((line) => fullBrushPainter.drawLine(
       processLineForFullImage(line))
     );
   }
 
   createEffect(on(imageSize, () => {
     if(!imageSize()?.[0]) return;
-    fullImageBrushPainter = new BrushPainter({
-      imageCanvas: imageCanvas(),
-      targetCanvas: fullImageCanvas,
-      blurAmount: BrushPainter.defaultBlurAmount * fullImageMultiplier(),
-      drawImageCanvas(ctx) {
-        const transform = finalTransform();
-        ctx.save();
-        ctx.translate(
-          ctx.canvas.width / 2 + transform.translation[0] / transform.scale * fullImageMultiplier(),
-          ctx.canvas.height / 2 - transform.translation[1] / transform.scale * fullImageMultiplier()
-        );
-        ctx.rotate(-transform.rotation);
-        ctx.scale(1 / transform.scale * fullImageMultiplier(), 1 / transform.scale * fullImageMultiplier());
-        ctx.drawImage(imageCanvas(), -imageCanvas().width / 2, -imageCanvas().height / 2);
-        ctx.restore();
-      }
+    fullBrushPainter = new BrushPainter({
+      imageCanvas: fullImageCanvas,
+      targetCanvas: fullBrushesCanvas,
+      blurAmount: BrushPainter.defaultBlurAmount / fullImageMultiplier()
     });
 
     redraw();
@@ -192,8 +224,8 @@ export default function BrushCanvas() {
       const prevLines = [...lines()];
       const newLines = [...lines(), lastLine()];
       setLines(newLines);
-      fullImageBrushPainter.updateBlurredImage()
-      fullImageBrushPainter.drawLine(processLineForFullImage(lastLine()));
+      fullBrushPainter.updateBlurredImage()
+      fullBrushPainter.drawLine(processLineForFullImage(lastLine()));
       resetLastLine();
       brushPainter.saveLastLine();
 

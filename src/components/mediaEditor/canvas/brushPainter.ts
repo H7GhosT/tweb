@@ -13,7 +13,6 @@ type BrushPainterOptions = {
   targetCanvas: HTMLCanvasElement;
   imageCanvas: HTMLCanvasElement;
   blurAmount?: number;
-  drawImageCanvas?: (ctx: CanvasRenderingContext2D) => void;
 };
 
 export default class BrushPainter {
@@ -32,14 +31,11 @@ export default class BrushPainter {
 
   private blurAmount: number;
 
-  private drawImageCanvas?: (ctx: CanvasRenderingContext2D) => void;
-
   static defaultBlurAmount = 10;
 
-  constructor({targetCanvas, imageCanvas, drawImageCanvas, blurAmount = BrushPainter.defaultBlurAmount}: BrushPainterOptions) {
+  constructor({targetCanvas, imageCanvas, blurAmount = BrushPainter.defaultBlurAmount}: BrushPainterOptions) {
     this.targetCtx = targetCanvas.getContext('2d');
     this.imageCanvas = imageCanvas;
-    this.drawImageCanvas = drawImageCanvas;
     this.blurAmount = blurAmount;
 
     this.cacheCanvas = document.createElement('canvas');
@@ -81,9 +77,7 @@ export default class BrushPainter {
   updateBlurredImage() {
     this.blurredImageCtx.clearRect(0, 0, this.width, this.height);
     this.blurredImageCtx.filter = `blur(${this.blurAmount}px)`;
-    this.drawImageCanvas ?
-      this.drawImageCanvas(this.blurredImageCtx) :
-      this.blurredImageCtx.drawImage(this.imageCanvas, 0, 0);
+    this.blurredImageCtx.drawImage(this.imageCanvas, 0, 0, this.width, this.height);
 
     this.blurredImageCtx.drawImage(this.cacheCanvas, 0, 0);
   }
