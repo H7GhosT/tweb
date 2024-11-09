@@ -101,6 +101,9 @@ export default class PopupNewMedia extends PopupElement {
   private _scrollable: Scrollable;
   private inputContainer: HTMLDivElement;
 
+  private activeActionsMenu: HTMLElement;
+  private canShowActions = false;
+
   constructor(
     private chat: Chat,
     private files: File[],
@@ -211,12 +214,12 @@ export default class PopupNewMedia extends PopupElement {
         icon: 'groupmedia',
         text: 'Popup.Attach.GroupMedia',
         onClick: () => this.changeGroup(true),
-        verify: () => !this.willAttach.group && this.canGroupSomething()
+        verify: () => !this.hasGif() && !this.willAttach.group && this.canGroupSomething()
       }, {
         icon: 'groupmediaoff',
         text: 'Popup.Attach.UngroupMedia',
         onClick: () => this.changeGroup(false),
-        verify: () => this.willAttach.group && this.canGroupSomething()
+        verify: () => !this.hasGif() && this.willAttach.group && this.canGroupSomething()
       }, {
         icon: 'mediaspoiler',
         text: 'EnablePhotoSpoiler',
@@ -355,6 +358,14 @@ export default class PopupNewMedia extends PopupElement {
     if(input.scrollTop > 0 && input.scrollHeight > 130) {
       this.scrollable.container.classList.remove('scrolled-bottom');
     }
+
+    this.scrollable.container.addEventListener('scroll', () => {
+      const actions = document.querySelector('.popup-item-media-action-menu') as HTMLElement;
+      if(!actions || !this.activeActionsMenu) return;
+      const bcr = this.activeActionsMenu.getBoundingClientRect();
+      actions.style.left = bcr.left + bcr.width / 2 + 'px';
+      actions.style.top = bcr.bottom + 'px';
+    });
   };
 
   private async applyMediaSpoiler(item: SendFileParams, noAnimation?: boolean) {
@@ -809,9 +820,6 @@ export default class PopupNewMedia extends PopupElement {
 
         params.width = editResult.width;
         params.height = editResult.height;
-
-
-        return img;
       }
 
       async function putVideo(blob: Blob) {
@@ -833,6 +841,12 @@ export default class PopupNewMedia extends PopupElement {
         params.height = editResult.height;
         params.duration = video.duration;
         params.noSound = true;
+
+        const thumb = await createPosterFromVideo(video);
+        params.thumb = {
+          url: await apiManagerProxy.invoke('createObjectURL', thumb.blob),
+          ...thumb
+        };
       }
     } else if(isVideo) {
       const video = createVideo({middleware: params.middlewareHelper.get()});
@@ -909,7 +923,9 @@ export default class PopupNewMedia extends PopupElement {
     }
     {
       const showActions = async() => {
+        if(this.activeActionsMenu === itemDiv || !this.canShowActions) return;
         hideActions();
+        this.activeActionsMenu = itemDiv;
         const actions = document.createElement('div');
         actions.classList.add('popup-item-media-action-menu');
         const itemCls = 'popup-item-media-action';
@@ -1026,13 +1042,15 @@ export default class PopupNewMedia extends PopupElement {
 
       const hideActions = () => {
         document.querySelectorAll('.popup-item-media-action-menu')?.forEach(async(el) => {
+          this.activeActionsMenu = undefined;
           (el as HTMLElement).style.opacity = '0';
           await delay(200);
           el?.remove();
         });
       }
 
-      itemDiv.addEventListener('pointerenter', showActions);
+      itemDiv.addEventListener('pointermove', showActions);
+      itemDiv.addEventListener('pointerup', showActions);
     }
 
     return promise;
@@ -1218,9 +1236,15 @@ export default class PopupNewMedia extends PopupElement {
     this.mediaContainer.append(params.itemDiv);
   }
 
+  private hasGif() {
+    const {sendFileDetails} = this.willAttach;
+    return sendFileDetails.some(params => params.editResult?.isGif);
+  }
+
   private iterate(cb: (sendFileDetails: SendFileParams[]) => void) {
     const {sendFileDetails} = this.willAttach;
-    if(!this.willAttach.group) {
+
+    if(!this.willAttach.group || this.hasGif()) {
       sendFileDetails.forEach((p) => cb([p]));
       return;
     }
@@ -1259,6 +1283,8 @@ export default class PopupNewMedia extends PopupElement {
         } : undefined
       );
     });
+
+    this.canShowActions = false;
 
     Promise.all(promises).then(() => {
       mediaContainer.replaceChildren();
@@ -1314,6 +1340,10 @@ export default class PopupNewMedia extends PopupElement {
   }
 
   private afterRender() {
+    setTimeout(() => {
+      this.canShowActions = true;
+    }, 200);
+
     this.willAttach.sendFileDetails.forEach((params) => {
       const editResult = params.editResult;
       if(editResult?.animatedPreview) {
