@@ -21,7 +21,7 @@ export default function drawTextLayer(context: MediaEditorContextValue, ctx: Can
   if(renderingInfo.path) {
     const newPath = [...renderingInfo.path];
     function multiply(i: number) {
-      newPath[i] = (newPath[i] as number) * layer.scale;
+      newPath[i] = (newPath[i] as number) * scale;
     }
     newPath.forEach((part, i) => {
       if(part === 'M' || part === 'L') {

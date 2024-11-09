@@ -769,6 +769,12 @@
 
       --offset: -5px;
 
+      @include media-editor-mobile() {
+        width: 12px;
+        height: 12px;
+        --offset: -7px;
+      }
+
       &--nw {
         cursor: nw-resize;
         left: var(--offset);
@@ -815,6 +821,10 @@
         width: 8px;
         height: 100%;
         top: 0;
+
+        @include media-editor-mobile() {
+          width: 12px;
+        }
       }
 
       &--w {
@@ -1129,6 +1139,11 @@
 
       opacity: var(--opacity);
       pointer-events: var(--pointer-events);
+
+      @include media-editor-mobile() {
+        width: 12px;
+        height: 12px;
+      }
 
       &--anti-flicker::before {
         cursor: grabbing;

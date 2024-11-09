@@ -11,6 +11,7 @@ import TextLayerContent from './textLayerContent';
 import StickerLayerContent from './stickerLayerContent';
 import useNormalizePoint from './useNormalizePoint';
 import useProcessPoint from './useProcessPoint';
+import useMediaQuery from '../useMediaQuery';
 
 type ResizableContainerProps = {
   layerSignal: Signal<ResizableLayer>;
@@ -136,7 +137,9 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
 
   const [diff, setDiff] = createSignal([0, 0]);
 
-  const normalizePoint = useNormalizePoint()
+  const normalizePoint = useNormalizePoint();
+
+  const isMobile = useMediaQuery('(max-width: 800px');
 
   let container: HTMLDivElement;
   let leftTopEl: HTMLDivElement;
@@ -249,7 +252,7 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
     });
   });
 
-  const circleOffset = '-4px';
+  const circleOffset = () => isMobile ? '-6px' : '-4px';
 
   const processPoint = useProcessPoint(false)
 
@@ -293,22 +296,22 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
       <div
         ref={leftTopEl}
         class="media-editor__resizable-container-circle"
-        style={{left: circleOffset, top: circleOffset}}
+        style={{left: circleOffset(), top: circleOffset()}}
       />
       <div
         ref={rightTopEl}
         class="media-editor__resizable-container-circle"
-        style={{right: circleOffset, top: circleOffset}}
+        style={{right: circleOffset(), top: circleOffset()}}
       />
       <div
         ref={leftBottomEl}
         class="media-editor__resizable-container-circle"
-        style={{left: circleOffset, bottom: circleOffset}}
+        style={{left: circleOffset(), bottom: circleOffset()}}
       />
       <div
         ref={rightBottomEl}
         class="media-editor__resizable-container-circle"
-        style={{right: circleOffset, bottom: circleOffset}}
+        style={{right: circleOffset(), bottom: circleOffset()}}
       />
     </div>
   );
