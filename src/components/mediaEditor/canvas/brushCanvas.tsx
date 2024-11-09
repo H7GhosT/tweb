@@ -291,7 +291,7 @@ export default function BrushCanvas() {
           const lastPoint = points[points.length - 1];
           builtUpDistance += distance(processPoint(lastPoint), processPoint(point));
         }
-        if(builtUpDistance < 40 / context.pixelRatio && points.length > 1) {
+        if(builtUpDistance < 20 * context.pixelRatio && points.length > 1) {
           points[points.length - 1] = point;
         } else {
           points.push(point);

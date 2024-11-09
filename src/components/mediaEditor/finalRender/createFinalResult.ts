@@ -29,6 +29,7 @@ export type MediaEditorFinalResult = {
 export async function createFinalResult(standaloneContext: StandaloneContext): Promise<MediaEditorFinalResult> {
   const context = useContext(MediaEditorContext);
   const [resizableLayers] = context.resizableLayers;
+  const [currentTab] = context.currentTab;
 
   const cropOffset = useCropOffset();
 
@@ -106,13 +107,21 @@ export async function createFinalResult(standaloneContext: StandaloneContext): P
 
   const renderResult = await renderPromise;
 
+  const isCroping = currentTab() === 'crop';
+
   const [positionCanvas] = context.imageCanvas;
   const bcr = positionCanvas().getBoundingClientRect();
   const animatedImg = new Image();
   animatedImg.src = URL.createObjectURL(renderResult.preview);
   animatedImg.style.position = 'fixed';
-  const left = bcr.left + bcr.width / 2, top = bcr.top + bcr.height / 2;
-  const [width, height] = snapToViewport(scaledWidth / scaledHeight, bcr.width, bcr.height);
+  const left = bcr.left + (isCroping ? cropOffset().left + cropOffset().width / 2 : bcr.left + bcr.width / 2),
+    top = bcr.top + (isCroping ? cropOffset().top + cropOffset().height / 2 : bcr.top + bcr.height / 2);
+
+  const [width, height] = snapToViewport(
+    scaledWidth / scaledHeight,
+    isCroping ? cropOffset().width : bcr.width,
+    isCroping ? cropOffset().height : bcr.height
+  );
   animatedImg.style.left = left + 'px';
   animatedImg.style.top = top + 'px';
   animatedImg.style.width = width + 'px';
