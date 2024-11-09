@@ -216,6 +216,24 @@
     object-fit: contain;
   }
 
+  .gif-label {
+    --height: calc(var(--messages-time-text-size) + .375rem);
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    border-radius: var(--height);
+    background-color: var(--message-time-background);
+    padding: 0px 6px;
+    z-index: 2;
+    font-size: var(--messages-time-text-size);
+    color: white;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    height: var(--height);
+    line-height: 1;
+  }
+
   .popup-item-media-action-menu {
     position: absolute;
     --size: 20px;

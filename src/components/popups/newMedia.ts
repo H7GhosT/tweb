@@ -60,6 +60,7 @@ import Icon from '../icon';
 import {openMediaEditor} from '../mediaEditor/mediaEditor';
 import {MediaEditorFinalResult} from '../mediaEditor/finalRender/createFinalResult';
 import RenderProgressCircle from '../mediaEditor/renderProgressCircle';
+import {animateValue, delay, lerp, snapToViewport} from '../mediaEditor/utils';
 
 type SendFileParams = SendFileDetails & {
   file?: File,
@@ -682,10 +683,10 @@ export default class PopupNewMedia extends PopupElement {
       }
 
       const d: SendFileDetails[] = sendFileParams.map((params) => {
-        params.editResult?.standaloneContext?.dispose();
-
         let editBlob = params.editResult?.getResult();
         if(editBlob instanceof Promise) editBlob = undefined;
+
+        params.editResult?.standaloneContext?.dispose();
 
         return {
           ...params,
@@ -768,10 +769,13 @@ export default class PopupNewMedia extends PopupElement {
 
       if(resultBlob instanceof Blob) {
         if(editResult.isGif) {
-          await putImage(editResult.preview);
-          await putVideo(resultBlob);
+          await putImage(editResult.preview),
+          await putVideo(resultBlob)
+          const gifLabel = i18n('AttachGif');
+          gifLabel.classList.add('gif-label');
+          itemDiv.append(gifLabel);
         } else {
-          await putImage(resultBlob);
+          await putImage(resultBlob, true);
         }
       } else {
         await putImage(editResult.preview);
@@ -784,12 +788,16 @@ export default class PopupNewMedia extends PopupElement {
         resultBlob.then(async(videoBlob) => {
           dispose();
           await putVideo(videoBlob);
+          const gifLabel = i18n('AttachGif');
+          gifLabel.classList.add('gif-label');
+          itemDiv.append(gifLabel);
           (this.btnConfirmOnEnter as HTMLButtonElement).disabled = false;
         });
       }
 
-      async function putImage(blob: Blob) {
-        const url = params.objectURL = await apiManagerProxy.invoke('createObjectURL', blob);
+      async function putImage(blob: Blob, saveObjectURL = false) {
+        const url = await apiManagerProxy.invoke('createObjectURL', blob);
+        if(saveObjectURL) params.objectURL = url;
 
         const img = new Image();
         await renderImageFromUrlPromise(img, url);
@@ -908,12 +916,54 @@ export default class PopupNewMedia extends PopupElement {
         equalizeIcon = Icon('equalizer', itemCls);
         equalizeIcon.addEventListener('click', () => {
           (this.btnConfirmOnEnter as HTMLButtonElement).disabled = true;
+          const img = itemDiv.querySelector('img');
+          if(!img) return;
+          const animatedImg = img.cloneNode() as HTMLImageElement;
+          const bcr = itemDiv.getBoundingClientRect();
+          animatedImg.style.position = 'fixed';
+          const left = bcr.left + bcr.width / 2, top = bcr.top + bcr.height / 2, width = bcr.width, height = bcr.height;
+          animatedImg.style.left = left + 'px';
+          animatedImg.style.top = top + 'px';
+          animatedImg.style.width = width + 'px';
+          animatedImg.style.height = height + 'px';
+          animatedImg.style.transform = 'translate(-50%, -50%)';
+          animatedImg.style.objectFit = 'cover';
+          animatedImg.style.zIndex = '1000';
+
+          document.body.append(animatedImg);
+
           openMediaEditor({
             imageURL: params.editResult?.originalSrc || params.objectURL,
             managers: this.managers,
             onEditFinish: (result) => {
               params.editResult = result;
               this.attachFiles();
+            },
+            onCanvasReady: (canvas) => {
+              const canvasBcr = canvas.getBoundingClientRect();
+              const leftDiff = (canvasBcr.left + canvasBcr.width / 2) - left;
+              const topDiff = (canvasBcr.top + canvasBcr.height / 2) - top;
+              const [scaledWidth, scaledHeight] = snapToViewport(img.naturalWidth / img.naturalHeight, canvasBcr.width, canvasBcr.height);
+              animateValue(
+                0, 1, 200,
+                (progress) => {
+                  animatedImg.style.transform = `translate(calc(${
+                    progress * leftDiff
+                  }px - 50%), calc(${
+                    progress * topDiff
+                  }px - 50%))`;
+                  animatedImg.style.width = lerp(width, scaledWidth, progress) + 'px';
+                  animatedImg.style.height = lerp(height, scaledHeight, progress) + 'px';
+                }
+              )
+            },
+            onImageRendered: async() => {
+              animatedImg.style.opacity = '1';
+              animatedImg.style.transition = '.12s';
+              await doubleRaf();
+              animatedImg.style.opacity = '0';
+              await delay(120);
+              animatedImg.remove();
             },
             standaloneContext: params.editResult?.standaloneContext,
             onClose: (hasGif) => {
@@ -1222,13 +1272,41 @@ export default class PopupNewMedia extends PopupElement {
     }).then(() => {
       this.onRender();
       this.onScroll();
-      doubleRaf().then(() => this.adjustActionsPosition());
+      doubleRaf().then(() => this.afterRender());
     });
   }
 
-  private adjustActionsPosition() {
+  private afterRender() {
     const mediaContainerBCR = this.mediaContainer.getBoundingClientRect();
     this.willAttach.sendFileDetails.forEach((params) => {
+      const editResult = params.editResult;
+      if(editResult?.animatedPreview) {
+        const img = editResult.animatedPreview;
+        const bcr = img.getBoundingClientRect();
+        const left = bcr.left + bcr.width / 2, top = bcr.top + bcr.height / 2, width = bcr.width, height = bcr.height;
+        const targetBcr = params.itemDiv.getBoundingClientRect();
+        const leftDiff = (targetBcr.left + targetBcr.width / 2) - left;
+        const topDiff = (targetBcr.top + targetBcr.height / 2) - top;
+        animateValue(
+          0, 1, 200,
+          (progress) => {
+            img.style.transform = `translate(calc(${
+              progress * leftDiff
+            }px - 50%), calc(${
+              progress * topDiff
+            }px - 50%))`;
+            img.style.width = lerp(width, targetBcr.width, progress) + 'px';
+            img.style.height = lerp(height, targetBcr.height, progress) + 'px';
+          },
+          {
+            onEnd: () => {
+              img.remove();
+              editResult.animatedPreview = undefined;
+            }
+          }
+        )
+      }
+
       const actions: HTMLDivElement = params.itemDiv.querySelector('.popup-item-media-action-menu');
 
       if(!actions) return;

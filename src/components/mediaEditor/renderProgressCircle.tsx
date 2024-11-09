@@ -33,7 +33,8 @@ export default function RenderProgressCircle(props: {
         'border-radius': '64px',
         'max-width': '80%',
         'max-height': '80%',
-        'aspect-ratio': '1 / 1'
+        'aspect-ratio': '1 / 1',
+        'z-index': 4
       })
     }}>
       <svg width="100%" height="100%" viewBox="0 0 120 120">

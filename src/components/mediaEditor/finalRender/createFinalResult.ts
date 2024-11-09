@@ -6,6 +6,7 @@ import {draw} from '../webgl/draw';
 import {initWebGL} from '../webgl/initWebGL';
 import BrushPainter from '../canvas/brushPainter';
 import {useCropOffset} from '../canvas/useCropOffset';
+import {snapToViewport} from '../utils';
 
 import getResultSize from './getResultSize';
 import getResultTransform from './getResultTransform';
@@ -22,6 +23,7 @@ export type MediaEditorFinalResult = {
   height: number;
   originalSrc: string;
   standaloneContext: StandaloneContext;
+  animatedPreview?: HTMLImageElement;
 };
 
 export async function createFinalResult(standaloneContext: StandaloneContext): Promise<MediaEditorFinalResult> {
@@ -102,8 +104,28 @@ export async function createFinalResult(standaloneContext: StandaloneContext): P
     ctx
   })
 
+  const renderResult = await renderPromise;
+
+  const [positionCanvas] = context.imageCanvas;
+  const bcr = positionCanvas().getBoundingClientRect();
+  const animatedImg = new Image();
+  animatedImg.src = URL.createObjectURL(renderResult.preview);
+  animatedImg.style.position = 'fixed';
+  const left = bcr.left + bcr.width / 2, top = bcr.top + bcr.height / 2;
+  const [width, height] = snapToViewport(scaledWidth / scaledHeight, bcr.width, bcr.height);
+  animatedImg.style.left = left + 'px';
+  animatedImg.style.top = top + 'px';
+  animatedImg.style.width = width + 'px';
+  animatedImg.style.height = height + 'px';
+  animatedImg.style.transform = 'translate(-50%, -50%)';
+  animatedImg.style.objectFit = 'cover';
+  animatedImg.style.zIndex = '1000';
+
+  document.body.append(animatedImg);
+
   return {
-    ...(await renderPromise),
+    ...(renderResult),
+    animatedPreview: animatedImg,
     width: scaledWidth,
     height: scaledHeight,
     originalSrc: context.imageSrc,

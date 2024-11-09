@@ -1,4 +1,4 @@
-import {onMount} from 'solid-js';
+import {createEffect, onMount} from 'solid-js';
 import {render} from 'solid-js/web';
 
 import {doubleRaf} from '../../helpers/schedulers';
@@ -19,6 +19,8 @@ export type MediaEditorProps = {
   onClose: (hasGif: boolean) => void;
   managers: AppManagers;
   onEditFinish: (result: MediaEditorFinalResult) => void;
+  onCanvasReady: (canvas: HTMLCanvasElement) => void;
+  onImageRendered: () => void;
   imageURL: string;
   standaloneContext?: StandaloneContext;
 };
@@ -33,6 +35,9 @@ export function MediaEditor(props: MediaEditorProps) {
   setCanvasSize();
   setCurretTab('adjustments');
 
+  const [imageCanvas] = standaloneContext.value.imageCanvas;
+  const [renderingPayload] = standaloneContext.value.renderingPayload;
+
   let overlay: HTMLDivElement;
 
   onMount(async() => {
@@ -46,6 +51,16 @@ export function MediaEditor(props: MediaEditorProps) {
     });
 
     overlay.focus();
+  });
+
+  createEffect(() => {
+    if(!imageCanvas()) return;
+    props.onCanvasReady(imageCanvas());
+  });
+
+  createEffect(() => {
+    if(!renderingPayload()) return;
+    props.onImageRendered();
   });
 
   async function handleClose(finished = false, hasGif = false) {

@@ -320,14 +320,14 @@ export default function CropHandles() {
   let bottomHandle: HTMLDivElement;
 
   const coverAnimatedStyle = () => ({
-    'transition': '0.2s',
+    'transition': 'opacity 0.2s',
     'transition-timing-function': isCroping() ? 'ease-in' : 'ease-out',
     'pointer-events': isCroping() ? 'none' : undefined,
     'opacity': isCroping() ? 0 : 1
   } as const);
 
   const controlsAnimatedStyle = () => ({
-    'transition': '0.2s',
+    'transition': 'transform 0.2s, opacity 0.2s',
     'transition-timing-function': isCroping() ? 'ease-out' : 'ease-in',
     'pointer-events': isCroping() ? undefined : 'none',
     'opacity': isCroping() ? 1 : 0,

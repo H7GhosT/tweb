@@ -13,8 +13,11 @@ export function useCanFinish() {
   const [scale] = context.scale;
   const [currentImageRatio] = context.currentImageRatio;
   const [imageSize] = context.imageSize;
+  const [renderingPayload] = context.renderingPayload;
 
   return () => {
+    if(!renderingPayload()) return false;
+
     function approximateCompare(value: number, toWhat: number) {
       return Math.abs(value - toWhat) < 0.00001;
     }
