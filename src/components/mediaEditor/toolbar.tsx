@@ -28,6 +28,8 @@ export default function Toolbar(props: {onFinish: () => void; onClose: () => voi
   const [containerHeight, setContainerHeight] = createSignal(0);
   const [extraMove, setExtraMove] = createSignal(0);
 
+  const [scrollAmount, setScrollAmount] = createSignal(0);
+
   const isMobile = useMediaQuery('(max-width: 800px)');
 
   const [shouldHide, setShouldHide] = createSignal(isMobile());
@@ -35,7 +37,7 @@ export default function Toolbar(props: {onFinish: () => void; onClose: () => voi
   let startY = 0;
   let isAborted = true;
   let isResetting = false;
-  let canMove = false;
+  let checkedScroll: boolean;
 
   function resetMove() {
     if(isResetting) return;
@@ -55,15 +57,15 @@ export default function Toolbar(props: {onFinish: () => void; onClose: () => voi
       if(!isMobile()) return;
       startY = y;
       isAborted = false;
-      canMove = false;
-      setTimeout(() => {
-        canMove = true;
-      }, 100); // wait for scroll to trigger first
+      checkedScroll = false;
     }
     function dragMove(y: number) {
       if(!isMobile()) return;
+      if(!checkedScroll) {
+        if(scrollAmount() > 0 && y - startY > 0) isAborted = true;
+        checkedScroll = true;
+      }
       if(isAborted) return;
-      if(!canMove) return;
       const diff = y - startY;
       if(isCollapsed()) setMove(Math.min(Math.max(-containerHeight(), diff), 0));
       else setMove(Math.max(Math.min(containerHeight(), diff), 0));
@@ -165,9 +167,7 @@ export default function Toolbar(props: {onFinish: () => void; onClose: () => voi
       <Tabs />
       <TabContent
         onContainer={setContainer}
-        onScroll={() => {
-          resetMove();
-        }}
+        onScroll={(v) => setScrollAmount(v)}
         tabs={{
           adjustments: () => <AdjustmentsTab />,
           crop: () => <CropTab />,
