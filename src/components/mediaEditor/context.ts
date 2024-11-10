@@ -41,6 +41,7 @@ export interface MediaEditorContextValue {
     size: number;
     brush: string;
   }>;
+  previewBrushSize: Signal<number>;
   brushDrawnLines: Signal<BrushDrawnLine[]>;
 
   history: Signal<HistoryItem[]>;
@@ -118,6 +119,7 @@ function createContextValue(props: MediaEditorProps): MediaEditorContextValue {
       color: '#fe4438',
       size: 18
     }),
+    previewBrushSize: createSignal(),
 
     history,
     redoHistory,

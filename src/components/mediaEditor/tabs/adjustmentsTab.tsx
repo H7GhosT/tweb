@@ -62,6 +62,14 @@ export default function AdjustmentsTab() {
           });
         }));
 
+        let timeoutId = 0;
+        const removeGhost = () => {
+          window.clearTimeout(timeoutId);
+          timeoutId = window.setTimeout(() => {
+            setShowGhost(false);
+          }, ADJUST_TIMEOUT);
+        }
+
         return (
           <>
             <RangeInput
@@ -71,6 +79,7 @@ export default function AdjustmentsTab() {
                 setValue(v);
                 setShowGhost(true);
                 setIsAdjusting(true);
+                removeGhost();
                 removeIsAdjusting();
               }}
               label={item.label()}

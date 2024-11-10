@@ -38,6 +38,7 @@
     &.night {
       --primary-color: inherit;
       --dark-primary-color: inherit;
+      --primary-color-rgb: inherit;
     }
   }
 
@@ -1172,6 +1173,11 @@
         top: 0;
         width: 1px;
         height: 100%;
+
+        @include media-editor-mobile() {
+          background-size: 3px 18px;
+          width: 3px;
+        }
       }
 
       &--horizontal {
@@ -1180,6 +1186,11 @@
         left: 0;
         height: 1px;
         width: 100%;
+
+        @include media-editor-mobile() {
+          background-size: 18px 18px;
+          height: 3px;
+        }
       }
     }
 
@@ -1208,6 +1219,21 @@
       visibility: hidden;
       pointer-events: none;
     }
+  }
+
+  &__preview-brush-size {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 100%;
+
+    --color: 230, 230, 230;
+
+    border: 2px solid rgba(var(--color), .75);
+    background-color: rgba(var(--color), .45);
+
+    box-shadow: 0 0 2px rgba(0, 0, 0, .15);
   }
 
   &__sticker-layer-content {

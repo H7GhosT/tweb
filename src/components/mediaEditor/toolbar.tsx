@@ -39,6 +39,7 @@ export default function Toolbar(props: {
   let startY = 0;
   let isAborted = true;
   let isResetting = false;
+  let canMove = false;
 
   function resetMove() {
     if(isResetting) return;
@@ -57,11 +58,14 @@ export default function Toolbar(props: {
     function startDrag(y: number) {
       if(!isMobile()) return;
       startY = y;
-      isAborted = false
+      isAborted = false;
+      canMove = false;
+      setTimeout(() => {canMove = true}, 50); // wait for scroll to trigger first
     }
     function dragMove(y: number) {
       if(!isMobile()) return;
       if(isAborted) return;
+      if(!canMove) return;
       const diff = y - startY;
       if(isCollapsed()) setMove(Math.min(Math.max(-containerHeight(), diff), 0));
       else setMove(Math.max(Math.min(containerHeight(), diff), 0))

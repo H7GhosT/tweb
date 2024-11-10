@@ -1,4 +1,4 @@
-import {createEffect, JSX, useContext} from 'solid-js';
+import {createEffect, createMemo, JSX, useContext} from 'solid-js';
 
 import {i18n} from '../../../lib/langPack';
 
@@ -13,6 +13,7 @@ import {createStoredColor} from '../createStoredColor';
 export default function BrushTab() {
   const context = useContext(MediaEditorContext);
   const [currentBrush, setCurrentBrush] = context.currentBrush;
+  const [, setPreviewBrushSize] = context.previewBrushSize;
 
   const savedBrushColors = {
     pen: createStoredColor('media-editor-pen-color', '#fe4438'),
@@ -60,6 +61,14 @@ export default function BrushTab() {
 
   const hasColor = () => currentBrush().brush in savedBrushColors;
 
+  let timeoutId = 0;
+  function removeSizePreview() {
+    window.clearTimeout(timeoutId);
+    timeoutId = window.setTimeout(() => {
+      setPreviewBrushSize();
+    }, 400);
+  }
+
   return (
     <>
       <div
@@ -71,7 +80,7 @@ export default function BrushTab() {
         <ColorPicker
           value={currentBrush().color}
           onChange={setColor}
-          colorKey={currentBrush().brush}
+          colorKey={createMemo(() => currentBrush().brush)()}
           previousColor={savedBrushSignal(currentBrush().brush)?.[0]().previous}
         />
       </div>
@@ -81,7 +90,14 @@ export default function BrushTab() {
         min={2}
         max={32}
         value={currentBrush().size}
-        onChange={(size) => setCurrentBrush((prev) => ({...prev, size}))}
+        onChange={(size) => {
+          setCurrentBrush((prev) => ({...prev, size}));
+          setPreviewBrushSize(size);
+          removeSizePreview();
+        }}
+        onChangeFinish={() => {
+          setPreviewBrushSize();
+        }}
         passiveLabel
         color={hasColor() ? currentBrush().color : undefined}
       />

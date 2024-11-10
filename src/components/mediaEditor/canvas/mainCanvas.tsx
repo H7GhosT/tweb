@@ -1,4 +1,6 @@
-import {createEffect, onCleanup, onMount, Show, useContext} from 'solid-js';
+import {onCleanup, onMount, Show, useContext} from 'solid-js';
+
+import {hexToRgb} from '../../../helpers/color';
 
 import MediaEditorContext from '../context';
 
@@ -13,8 +15,10 @@ export default function MainCanvas() {
   let container: HTMLDivElement;
   const context = useContext(MediaEditorContext);
   const [canvasSize, setCanvasSize] = context.canvasSize;
+  const [previewBrushSize] = context.previewBrushSize;
+  const [currentBrush] = context.currentBrush;
 
-  useFinalTransform()
+  useFinalTransform();
 
   onMount(() => {
     const listener = () => {
@@ -34,6 +38,16 @@ export default function MainCanvas() {
         <ImageCanvas />
         <BrushCanvas />
         <ResizableLayers />
+        {previewBrushSize() && <div
+          class="media-editor__preview-brush-size"
+          style={{
+            '--color': !['blur', 'eraser'].includes(currentBrush().brush) ?
+              hexToRgb(currentBrush().color).join(',') :
+              undefined,
+            'width': previewBrushSize() + 'px',
+            'height': previewBrushSize() + 'px'
+          }}
+        />}
         <CropHandles />
         <RotationWheel />
       </Show>
