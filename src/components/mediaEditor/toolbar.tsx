@@ -58,7 +58,7 @@ export default function Toolbar(props: {onFinish: () => void; onClose: () => voi
       canMove = false;
       setTimeout(() => {
         canMove = true;
-      }, 50); // wait for scroll to trigger first
+      }, 65); // wait for scroll to trigger first
     }
     function dragMove(y: number) {
       if(!isMobile()) return;

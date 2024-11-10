@@ -1230,10 +1230,14 @@
 
     --color: 230, 230, 230;
 
-    border: 2px solid rgba(var(--color), .75);
-    background-color: rgba(var(--color), .45);
+    // background-color: rgba(var(--color), .45);
+    background-color: white;
 
-    box-shadow: 0 0 2px rgba(0, 0, 0, .15);
+    box-shadow: 0 0 4px rgba(0, 0, 0, .25);
+
+    @include media-editor-mobile() {
+      top: 45%;
+    }
   }
 
   &__sticker-layer-content {
