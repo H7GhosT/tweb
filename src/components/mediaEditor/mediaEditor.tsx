@@ -100,6 +100,8 @@ export function MediaEditor(props: MediaEditorProps) {
     return false;
   }
 
+  let isFinishing = false;
+
   return (
     <MediaEditorContext.Provider value={standaloneContext.value}>
       <div ref={overlay} class="media-editor__overlay night">
@@ -107,7 +109,12 @@ export function MediaEditor(props: MediaEditorProps) {
           {(() => {
             // Need to be inside context
             const handleFinish = withCurrentOwner(async() => {
-              const result = await createFinalResult(standaloneContext);
+              if(isFinishing) return;
+              isFinishing = true;
+
+              const result = await createFinalResult(standaloneContext)
+              .finally(() => isFinishing = false);
+
               props.onEditFinish(result);
               handleClose(true, result.isGif);
             });

@@ -252,7 +252,7 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
     });
   });
 
-  const circleOffset = () => isMobile ? '-6px' : '-4px';
+  const circleOffset = () => isMobile() ? '-6px' : '-4px';
 
   const processPoint = useProcessPoint(false)
 

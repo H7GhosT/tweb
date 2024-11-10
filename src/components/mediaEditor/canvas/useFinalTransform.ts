@@ -27,7 +27,7 @@ export default function useFinalTransform() {
 
   const cropOffset = useCropOffset();
 
-  const isCroping = () => currentTab() === 'crop';
+  const isCroping = createMemo(() => currentTab() === 'crop');
 
   const [cropTabAnimationProgress, setCropTabAnimationProgress] = createSignal(0);
 
