@@ -17,7 +17,7 @@ export const TabContentContext = createContext<TabContentContextValue>();
 export default function TabContent(props: {
   tabs: Record<string, () => JSX.Element>;
   onContainer: (el: HTMLDivElement) => void;
-  onScroll: (amount: number) => void;
+  onScroll: () => void;
 }) {
   const context = useContext(MediaEditorContext);
   const [tab] = context.currentTab;
@@ -78,7 +78,7 @@ export default function TabContent(props: {
     scrollable = new Scrollable(element);
     scrollable.setListeners();
     scrollable.container.addEventListener('scroll', () => {
-      props.onScroll(scrollable.container.scrollTop);
+      props.onScroll();
       setScrollAmount(scrollable.container.scrollTop);
     });
   }
