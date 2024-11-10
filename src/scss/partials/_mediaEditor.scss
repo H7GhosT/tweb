@@ -774,6 +774,17 @@
         width: 12px;
         height: 12px;
         --offset: -7px;
+
+        &::after {
+          content: '';
+          display: block;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          height: 24px;
+          width: 24px;
+          transform: translate(-50%, -50%);
+        }
       }
 
       &--nw {
@@ -822,20 +833,22 @@
         width: 8px;
         height: 100%;
         top: 0;
+        --amount: -4px;
 
         @include media-editor-mobile() {
-          width: 12px;
+          --amount: -12px;
+          width: 24px;
         }
       }
 
       &--w {
         cursor: w-resize;
-        left: -4px;
+        left: var(--amount);
       }
 
       &--e {
         cursor: e-resize;
-        right: -4px;
+        right: var(--amount);
       }
 
       &--n,
@@ -843,16 +856,22 @@
         height: 8px;
         width: 100%;
         left: 0;
+        --amount: -4px;
+        
+        @include media-editor-mobile() {
+          --amount: -12px;
+          height: 24px;
+        }
       }
 
       &--n {
         cursor: n-resize;
-        top: -4px;
+        top: var(--amount);
       }
 
       &--s {
         cursor: s-resize;
-        bottom: -4px;
+        bottom: var(--amount);
       }
     }
 
@@ -1144,6 +1163,17 @@
       @include media-editor-mobile() {
         width: 12px;
         height: 12px;
+
+        &::after {
+          content: '';
+          display: block;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          height: 24px;
+          width: 24px;
+          transform: translate(-50%, -50%);
+        }
       }
 
       &--anti-flicker::before {
