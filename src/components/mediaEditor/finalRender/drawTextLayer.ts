@@ -2,7 +2,11 @@ import {MediaEditorContextValue} from '../context';
 import {fontInfoMap, getContrastColor} from '../utils';
 import {ResizableLayer} from '../types';
 
-export default function drawTextLayer(context: MediaEditorContextValue, ctx: CanvasRenderingContext2D, layer: ResizableLayer) {
+export default function drawTextLayer(
+  context: MediaEditorContextValue,
+  ctx: CanvasRenderingContext2D,
+  layer: ResizableLayer
+) {
   if(layer.type !== 'text') return;
 
   const [textLayersInfo] = context.textLayersInfo;

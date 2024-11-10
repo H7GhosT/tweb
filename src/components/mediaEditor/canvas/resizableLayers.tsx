@@ -1,4 +1,16 @@
-import {batch, createEffect, createMemo, createSignal, For, on, onMount, ParentProps, Show, Signal, useContext} from 'solid-js';
+import {
+  batch,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  on,
+  onMount,
+  ParentProps,
+  Show,
+  Signal,
+  useContext
+} from 'solid-js';
 
 import createContextMenu from '../../../helpers/dom/createContextMenu';
 import SwipeHandler, {getEvent} from '../../swipeHandler';
@@ -26,7 +38,7 @@ export default function ResizableLayers() {
   const [currentTextLayerInfo] = context.currentTextLayerInfo;
   const [selectedResizableLayer, setSelectedResizableLayer] = context.selectedResizableLayer;
   const [isAdjusting] = context.isAdjusting;
-  const [finalTransform] = context.finalTransform
+  const [finalTransform] = context.finalTransform;
 
   createEffect(
     on(selectedResizableLayer, () => {
@@ -50,14 +62,14 @@ export default function ResizableLayers() {
 
   let container: HTMLDivElement;
 
-  const normalizePoint = useNormalizePoint()
+  const normalizePoint = useNormalizePoint();
 
   function addLayer(e: MouseEvent) {
     if(e.target !== container) return;
     if(!isTextTab()) return;
 
     const bcr = container.getBoundingClientRect();
-    const transform = finalTransform()
+    const transform = finalTransform();
 
     const newResizableLayer = {
       id: context.resizableLayersSeed++,
@@ -70,7 +82,7 @@ export default function ResizableLayers() {
 
     batch(() => {
       setLayers((prev) => [...prev, createSignal<ResizableLayer>({...newResizableLayer})]);
-      setSelectedResizableLayer(newResizableLayer.id)
+      setSelectedResizableLayer(newResizableLayer.id);
     });
 
     let position = -1;
@@ -128,9 +140,9 @@ export default function ResizableLayers() {
 
 export function ResizableContainer(props: ParentProps<ResizableContainerProps>) {
   const context = useContext(MediaEditorContext);
-  const [rotation] = context.rotation
+  const [rotation] = context.rotation;
   const [selectedResizableLayer, setSelectedResizableLayer] = context.selectedResizableLayer;
-  const [finalTransform] = context.finalTransform
+  const [finalTransform] = context.finalTransform;
   const [, setLayers] = context.resizableLayers;
 
   const [layer, setLayer] = props.layerSignal;
@@ -155,7 +167,7 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
       {el: rightBottomEl, x: 1, y: 1}
     ];
 
-    let firstTarget: EventTarget
+    let firstTarget: EventTarget;
 
     multipliers.forEach(({el, x, y}) => {
       new SwipeHandler({
@@ -169,7 +181,10 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
           if(!firstTarget) firstTarget = e.target;
           if(firstTarget !== el) return;
 
-          const initialVector = [(container.clientWidth / 2) * x * finalTransform().scale, (container.clientHeight / 2) * y * finalTransform().scale];
+          const initialVector = [
+            (container.clientWidth / 2) * x * finalTransform().scale,
+            (container.clientHeight / 2) * y * finalTransform().scale
+          ];
           const bcr = container.getBoundingClientRect();
           const resizedVector = [bcr.left + bcr.width / 2 - e.clientX, bcr.top + bcr.height / 2 - e.clientY];
 
@@ -214,47 +229,49 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
     });
 
     createContextMenu({
-      buttons: [{
-        icon: 'delete',
-        className: 'danger',
-        text: 'Delete',
-        onClick: () => {
-          let position = -1;
-          let deletedLayer: ResizableLayer;
+      buttons: [
+        {
+          icon: 'delete',
+          className: 'danger',
+          text: 'Delete',
+          onClick: () => {
+            let position = -1;
+            let deletedLayer: ResizableLayer;
 
-          setLayers((prev) => {
-            prev = [...prev];
-            position = prev.findIndex(other => other[0]().id === layer().id);
-            if(position > -1) deletedLayer = prev.splice(position, 1)?.[0][0]?.();
-            return prev;
-          });
+            setLayers((prev) => {
+              prev = [...prev];
+              position = prev.findIndex((other) => other[0]().id === layer().id);
+              if(position > -1) deletedLayer = prev.splice(position, 1)?.[0][0]?.();
+              return prev;
+            });
 
-          context.pushToHistory({
-            undo() {
-              setLayers((prev) => {
-                prev = [...prev];
-                if(position > -1) prev.splice(position, 0, createSignal({...deletedLayer}));
-                return prev;
-              });
-            },
-            redo() {
-              setLayers((prev) => {
-                prev = [...prev];
-                position = prev.findIndex((layer) => layer[0]().id === deletedLayer.id);
-                if(position > -1) deletedLayer = prev.splice(position, 1)[0]?.[0]();
-                return prev;
-              });
-            }
-          });
+            context.pushToHistory({
+              undo() {
+                setLayers((prev) => {
+                  prev = [...prev];
+                  if(position > -1) prev.splice(position, 0, createSignal({...deletedLayer}));
+                  return prev;
+                });
+              },
+              redo() {
+                setLayers((prev) => {
+                  prev = [...prev];
+                  position = prev.findIndex((layer) => layer[0]().id === deletedLayer.id);
+                  if(position > -1) deletedLayer = prev.splice(position, 1)[0]?.[0]();
+                  return prev;
+                });
+              }
+            });
+          }
         }
-      }],
+      ],
       listenTo: container
     });
   });
 
-  const circleOffset = () => isMobile() ? '-6px' : '-4px';
+  const circleOffset = () => (isMobile() ? '-6px' : '-4px');
 
-  const processPoint = useProcessPoint(false)
+  const processPoint = useProcessPoint(false);
 
   const processedLayer = createMemo(() => ({
     position: processPoint(layer().position),

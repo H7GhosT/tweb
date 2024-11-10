@@ -15,15 +15,15 @@ type TabContentContextValue = {
 export const TabContentContext = createContext<TabContentContextValue>();
 
 export default function TabContent(props: {
-  tabs: Record<string, () => JSX.Element>
-  onContainer: (el: HTMLDivElement) => void
-  onScroll: () => void
+  tabs: Record<string, () => JSX.Element>;
+  onContainer: (el: HTMLDivElement) => void;
+  onScroll: () => void;
 }) {
   const context = useContext(MediaEditorContext);
   const [tab] = context.currentTab;
 
   const [container, setContainer] = createSignal<HTMLDivElement>();
-  const [scrollAmount, setScrollAmount] = createSignal(0)
+  const [scrollAmount, setScrollAmount] = createSignal(0);
   let prevElement: HTMLDivElement;
   let prevTab = tab();
   let scrollable: Scrollable;
@@ -38,7 +38,9 @@ export default function TabContent(props: {
     const newElement = (
       <div>
         <div class="media-editor__tab-content-scrollable-content">
-          <TabContentContext.Provider value={{container, scrollAmount}}>{props.tabs[tab()]()}</TabContentContext.Provider>
+          <TabContentContext.Provider value={{container, scrollAmount}}>
+            {props.tabs[tab()]()}
+          </TabContentContext.Provider>
         </div>
       </div>
     ) as HTMLDivElement;
@@ -76,8 +78,8 @@ export default function TabContent(props: {
     scrollable = new Scrollable(element);
     scrollable.setListeners();
     scrollable.container.addEventListener('scroll', () => {
-      setScrollAmount(scrollable.container.scrollTop);
       props.onScroll();
+      setScrollAmount(scrollable.container.scrollTop);
     });
   }
 
@@ -90,10 +92,13 @@ export default function TabContent(props: {
   });
 
   return (
-    <div ref={(el) => {
-      setContainer(el);
-      props.onContainer(el);
-    }} class="media-editor__tab-content">
+    <div
+      ref={(el) => {
+        setContainer(el);
+        props.onContainer(el);
+      }}
+      class="media-editor__tab-content"
+    >
       <div ref={prevElement}>
         <div class="media-editor__tab-content-scrollable-content">
           <TabContentContext.Provider value={{container, scrollAmount}}>{initialTab}</TabContentContext.Provider>

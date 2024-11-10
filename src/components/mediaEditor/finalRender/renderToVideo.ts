@@ -12,7 +12,6 @@ import {ScaledLayersAndLines} from './getScaledLayersAndLines';
 import drawTextLayer from './drawTextLayer';
 import drawStickerLayer from './drawStickerLayer';
 
-
 export type RenderToVideoArgs = {
   context: MediaEditorContextValue;
   scaledLayers: ScaledLayersAndLines['scaledLayers'];
@@ -22,41 +21,41 @@ export type RenderToVideoArgs = {
   imageCanvas: HTMLCanvasElement;
   brushCanvas: HTMLCanvasElement;
   resultCanvas: HTMLCanvasElement;
-}
+};
 
-export default async function renderToVideo(
-  {
-    context,
-    scaledWidth,
-    scaledHeight,
-    scaledLayers,
-    ctx,
-    imageCanvas,
-    brushCanvas,
-    resultCanvas
-  }: RenderToVideoArgs
-) {
+export default async function renderToVideo({
+  context,
+  scaledWidth,
+  scaledHeight,
+  scaledLayers,
+  ctx,
+  imageCanvas,
+  brushCanvas,
+  resultCanvas
+}: RenderToVideoArgs) {
   const [, setProgress] = context.gifCreationProgress;
 
   const renderers = new Map<number, StickerFrameByFrameRenderer>();
 
   let maxFrames = 0;
 
-  await Promise.all(scaledLayers.map(async(layer) => {
-    if(!layer.sticker) return;
+  await Promise.all(
+    scaledLayers.map(async(layer) => {
+      if(!layer.sticker) return;
 
-    const stickerType = layer.sticker?.sticker;
-    let renderer: StickerFrameByFrameRenderer
+      const stickerType = layer.sticker?.sticker;
+      let renderer: StickerFrameByFrameRenderer;
 
-    if(stickerType === 1) renderer = new ImageStickerFrameByFrameRenderer
-    if(stickerType === 2) renderer = new LottieStickerFrameByFrameRenderer
-    if(stickerType === 3) renderer = new VideoStickerFrameByFrameRenderer
-    if(!renderer) return;
+      if(stickerType === 1) renderer = new ImageStickerFrameByFrameRenderer();
+      if(stickerType === 2) renderer = new LottieStickerFrameByFrameRenderer();
+      if(stickerType === 3) renderer = new VideoStickerFrameByFrameRenderer();
+      if(!renderer) return;
 
-    renderers.set(layer.id, renderer)
-    await renderer.init(layer.sticker!, STICKER_SIZE * layer.scale * context.pixelRatio);
-    maxFrames = Math.max(maxFrames, renderer.getTotalFrames());
-  }));
+      renderers.set(layer.id, renderer);
+      await renderer.init(layer.sticker!, STICKER_SIZE * layer.scale * context.pixelRatio);
+      maxFrames = Math.max(maxFrames, renderer.getTotalFrames());
+    })
+  );
 
   const muxer = new Muxer({
     target: new ArrayBufferTarget(),
@@ -71,7 +70,7 @@ export default async function renderToVideo(
 
   const encoder = new VideoEncoder({
     output: (chunk, meta) => muxer.addVideoChunk(chunk, meta),
-    error: e => console.error(e)
+    error: (e) => console.error(e)
   });
 
   encoder.configure({
@@ -82,7 +81,9 @@ export default async function renderToVideo(
   });
 
   async function renderFrame(frameNo: number) {
-    const promises = Array.from(renderers.values()).map(renderer => renderer.renderFrame(frameNo % (renderer.getTotalFrames() + 1)));
+    const promises = Array.from(renderers.values()).map((renderer) =>
+      renderer.renderFrame(frameNo % (renderer.getTotalFrames() + 1))
+    );
     await Promise.all(promises);
 
     ctx.clearRect(0, 0, scaledWidth, scaledHeight);
@@ -98,7 +99,7 @@ export default async function renderToVideo(
     });
 
     const videoFrame = new VideoFrame(resultCanvas, {
-      timestamp: frameNo * 1e6 / FRAMES_PER_SECOND,
+      timestamp: (frameNo * 1e6) / FRAMES_PER_SECOND,
       duration: 1e6 / FRAMES_PER_SECOND
     });
     encoder.encode(videoFrame);
@@ -109,8 +110,7 @@ export default async function renderToVideo(
 
   await renderFrame(0);
 
-  const preview = await new Promise<Blob>(resolve =>
-    resultCanvas.toBlob(resolve));
+  const preview = await new Promise<Blob>((resolve) => resultCanvas.toBlob(resolve));
 
   const resultPromise = new Promise<Blob>(async(resolve) => {
     await delay(200);
@@ -123,15 +123,15 @@ export default async function renderToVideo(
     await encoder.flush();
     muxer.finalize();
 
-    Array.from(renderers.values()).forEach(renderer => renderer.destroy())
+    Array.from(renderers.values()).forEach((renderer) => renderer.destroy());
 
-    const {buffer} = muxer.target
+    const {buffer} = muxer.target;
     resolve(new Blob([buffer], {type: 'video/mp4'}));
   });
 
   let result: Blob;
 
-  resultPromise.then(blob => result = blob);
+  resultPromise.then((blob) => (result = blob));
 
   return {
     preview,
@@ -139,7 +139,7 @@ export default async function renderToVideo(
     getResult: () => {
       return result ?? resultPromise;
     }
-  }
+  };
 
   // const div = document.createElement('div')
   // div.style.position = 'fixed';

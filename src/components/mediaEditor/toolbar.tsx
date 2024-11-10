@@ -14,11 +14,7 @@ import MediaEditorContext from './context';
 import {animateValue, delay, lerp} from './utils';
 import useMediaQuery from './useMediaQuery';
 
-
-export default function Toolbar(props: {
-  onFinish: () => void;
-  onClose: () => void;
-}) {
+export default function Toolbar(props: {onFinish: () => void; onClose: () => void}) {
   let toolbar: HTMLDivElement;
 
   const context = useContext(MediaEditorContext);
@@ -26,7 +22,7 @@ export default function Toolbar(props: {
   const [currentTab] = context.currentTab;
   const [renderingPayload] = context.renderingPayload;
 
-  const [move, setMove] = createSignal(0)
+  const [move, setMove] = createSignal(0);
   const [isCollapsed, setIsCollapsed] = createSignal(false);
   const [container, setContainer] = createSignal<HTMLDivElement>();
   const [containerHeight, setContainerHeight] = createSignal(0);
@@ -50,7 +46,7 @@ export default function Toolbar(props: {
     animateValue(move(), 0, 200, setMove);
     setTimeout(() => {
       isResetting = false;
-    }, 200)
+    }, 200);
   }
   context.abortDrawerSlide = () => resetMove();
 
@@ -60,7 +56,9 @@ export default function Toolbar(props: {
       startY = y;
       isAborted = false;
       canMove = false;
-      setTimeout(() => {canMove = true}, 50); // wait for scroll to trigger first
+      setTimeout(() => {
+        canMove = true;
+      }, 50); // wait for scroll to trigger first
     }
     function dragMove(y: number) {
       if(!isMobile()) return;
@@ -68,14 +66,14 @@ export default function Toolbar(props: {
       if(!canMove) return;
       const diff = y - startY;
       if(isCollapsed()) setMove(Math.min(Math.max(-containerHeight(), diff), 0));
-      else setMove(Math.max(Math.min(containerHeight(), diff), 0))
+      else setMove(Math.max(Math.min(containerHeight(), diff), 0));
     }
     function dragEnd() {
       if(!isMobile()) return;
       if(isAborted) return;
       isAborted = true;
       if(Math.abs(move()) > 100) {
-        setIsCollapsed(prev => !prev);
+        setIsCollapsed((prev) => !prev);
       } else {
         resetMove();
       }
@@ -116,17 +114,19 @@ export default function Toolbar(props: {
     onCleanup(() => observer.disconnect());
   });
 
-  createEffect(on(isCollapsed, () => {
-    const initialMove = move();
-    const initialExtraMove = extraMove();
-    const targetExtraMove = isCollapsed() ? containerHeight() : 0;
-    animateValue(0, 1, 200, (progress) => {
-      batch(() => {
-        setMove(lerp(initialMove, 0, progress));
-        setExtraMove(lerp(initialExtraMove, targetExtraMove, progress));
-      })
+  createEffect(
+    on(isCollapsed, () => {
+      const initialMove = move();
+      const initialExtraMove = extraMove();
+      const targetExtraMove = isCollapsed() ? containerHeight() : 0;
+      animateValue(0, 1, 200, (progress) => {
+        batch(() => {
+          setMove(lerp(initialMove, 0, progress));
+          setExtraMove(lerp(initialExtraMove, targetExtraMove, progress));
+        });
+      });
     })
-  }));
+  );
 
   createEffect(() => {
     if(currentTab() !== 'crop') setIsCollapsed(false);
@@ -142,7 +142,7 @@ export default function Toolbar(props: {
         toolbar.style.removeProperty('transition');
       })();
     }
-  })
+  });
 
   const totalMove = () => extraMove() + move();
 
@@ -152,10 +152,12 @@ export default function Toolbar(props: {
       class="media-editor__toolbar"
       style={{
         'opacity': isMobile() && isAdjusting() ? 0 : 1,
-        'transform': shouldHide() && isMobile() ?
-          'translate(-50%, 100%)' :
-           isMobile() ?
-            `translate(-50%, ${totalMove()}px)` : undefined
+        'transform':
+          shouldHide() && isMobile() ?
+            'translate(-50%, 100%)' :
+            isMobile() ?
+              `translate(-50%, ${totalMove()}px)` :
+              undefined
       }}
     >
       <div class="media-editor__toolbar-draggable" />
@@ -175,5 +177,5 @@ export default function Toolbar(props: {
         }}
       />
     </div>
-  )
+  );
 }

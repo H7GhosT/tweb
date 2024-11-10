@@ -48,13 +48,19 @@ export function animateToNewRotationOrRatio(newRotation: number) {
   setCurrentImageRatio(ratio);
 
   setIsMoving(true);
-  animateValue(0, 1, 200, (progress) => {
-    batch(() => {
-      setScale(lerp(initialScale, targetScale, progress))
-      setTranslation(lerpArray(initialTranslation, targetTranslation, progress) as [number, number])
-      setRotation(lerp(initialRotation, targetRotation, progress))
-    })
-  }, {
-    onEnd: () => setIsMoving(false)
-  });
+  animateValue(
+    0,
+    1,
+    200,
+    (progress) => {
+      batch(() => {
+        setScale(lerp(initialScale, targetScale, progress));
+        setTranslation(lerpArray(initialTranslation, targetTranslation, progress) as [number, number]);
+        setRotation(lerp(initialRotation, targetRotation, progress));
+      });
+    },
+    {
+      onEnd: () => setIsMoving(false)
+    }
+  );
 }

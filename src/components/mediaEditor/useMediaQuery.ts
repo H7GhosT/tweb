@@ -15,5 +15,5 @@ export default function useMediaQuery(query: string) {
     mediaQueryList.removeEventListener('change', updateMatch);
   });
 
-  return isMatch
+  return isMatch;
 }

@@ -72,10 +72,14 @@ export default function BrushTab() {
   return (
     <>
       <div
-        style={!hasColor() ? {
-          'opacity': 0.25,
-          'pointer-events': 'none'
-        } : undefined}
+        style={
+          !hasColor() ?
+            {
+              'opacity': 0.25,
+              'pointer-events': 'none'
+            } :
+            undefined
+        }
       >
         <ColorPicker
           value={currentBrush().color}

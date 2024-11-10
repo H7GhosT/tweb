@@ -11,7 +11,7 @@ export type RenderToImageArgs = {
   imageCanvas: HTMLCanvasElement;
   brushCanvas: HTMLCanvasElement;
   resultCanvas: HTMLCanvasElement;
-}
+};
 
 export default async function renderToImage({
   context,
@@ -37,12 +37,11 @@ export default async function renderToImage({
     }
   });
 
-  const result = await new Promise<Blob>((resolve) =>
-    resultCanvas.toBlob(resolve));
+  const result = await new Promise<Blob>((resolve) => resultCanvas.toBlob(resolve));
 
   return {
     preview: result,
     isGif: false,
     getResult: () => result
-  }
+  };
 }

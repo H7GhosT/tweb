@@ -36,21 +36,23 @@ export default function CropHandles() {
     const [width, height] = snapToViewport(currentImageRatio(), cropOffset().width, cropOffset().height);
 
     return {
-      leftTop: [cropOffset().left + (cropOffset().width - width) / 2, cropOffset().top + (cropOffset().height - height) / 2],
+      leftTop: [
+        cropOffset().left + (cropOffset().width - width) / 2,
+        cropOffset().top + (cropOffset().height - height) / 2
+      ],
       size: [width, height]
-    }
-  }
+    };
+  };
 
-  createEffect(on(cropOffset, () => {
-    const {
-      leftTop,
-      size
-    } = getNewLeftTopAndSize();
-    setLeftTop(leftTop);
-    setSize(size);
-  }));
+  createEffect(
+    on(cropOffset, () => {
+      const {leftTop, size} = getNewLeftTopAndSize();
+      setLeftTop(leftTop);
+      setSize(size);
+    })
+  );
 
-  let cancelSizeAnimation: () => void
+  let cancelSizeAnimation: () => void;
 
   function resetSizeWithAnimation() {
     const initialDiff = diff();
@@ -60,10 +62,7 @@ export default function CropHandles() {
 
     const targetDiff = [0, 0];
     const targetLeftTopDiff = [0, 0];
-    const {
-      leftTop: targetLeftTop,
-      size: targetSize
-    } = getNewLeftTopAndSize();
+    const {leftTop: targetLeftTop, size: targetSize} = getNewLeftTopAndSize();
 
     cancelSizeAnimation?.();
 
@@ -77,9 +76,11 @@ export default function CropHandles() {
     });
   }
 
-  createEffect(on(currentImageRatio, () => {
-    resetSizeWithAnimation();
-  }))
+  createEffect(
+    on(currentImageRatio, () => {
+      resetSizeWithAnimation();
+    })
+  );
 
   onMount(() => {
     const multipliers = [
@@ -97,7 +98,7 @@ export default function CropHandles() {
     let boundDiff: [number, number];
     let initialScale: number;
     let initialTranslation: [number, number];
-    let firstTarget: EventTarget
+    let firstTarget: EventTarget;
 
     const resizeSwipeHandlers = multipliers.map(({el, left, top}) => {
       return new SwipeHandler({
@@ -122,11 +123,11 @@ export default function CropHandles() {
             ratio = -ratio;
           }
 
-          const [w, h] = size()
-          const minW = Math.min(w, cropOffset().width / MAX_SCALE * Math.min(MAX_SCALE, initialScale))
-          const minH = Math.min(h, cropOffset().height / MAX_SCALE * Math.min(MAX_SCALE, initialScale))
-          xDiff = Math.max(xDiff * left, minW - w) * left
-          yDiff = Math.max(yDiff * top, minH - h) * top
+          const [w, h] = size();
+          const minW = Math.min(w, (cropOffset().width / MAX_SCALE) * Math.min(MAX_SCALE, initialScale));
+          const minH = Math.min(h, (cropOffset().height / MAX_SCALE) * Math.min(MAX_SCALE, initialScale));
+          xDiff = Math.max(xDiff * left, minW - w) * left;
+          yDiff = Math.max(yDiff * top, minH - h) * top;
 
           if(fixed) {
             if(top === 0) {
@@ -158,8 +159,14 @@ export default function CropHandles() {
               rotation: rotation(),
               translation: initialTranslation,
               extendCrop: [
-                [fixed && left === 0 ? -xDiff / 2 : left === -1 ? xDiff : 0, fixed && top === 0 ? yDiff / 2 : top === 1 ? yDiff : 0],
-                [fixed && left === 0 ? xDiff / 2 : left === 1 ? xDiff : 0, fixed && top === 0 ? -yDiff / 2 : top === -1 ? yDiff : 0]
+                [
+                  fixed && left === 0 ? -xDiff / 2 : left === -1 ? xDiff : 0,
+                  fixed && top === 0 ? yDiff / 2 : top === 1 ? yDiff : 0
+                ],
+                [
+                  fixed && left === 0 ? xDiff / 2 : left === 1 ? xDiff : 0,
+                  fixed && top === 0 ? -yDiff / 2 : top === -1 ? yDiff : 0
+                ]
               ]
             });
           const halfImageWidth = (imageMaxX - imageMinX) / 2,
@@ -169,16 +176,12 @@ export default function CropHandles() {
           let additionalScaleX = 1;
           let additionalScaleY = 1;
 
-          if(imageMinX > cropMinX)
-            additionalScaleX *= 1 + (((imageCenter[0] - cropMinX) / halfImageWidth) - 1) / 2;
-          if(imageMaxX < cropMaxX)
-            additionalScaleX *= 1 + (((cropMaxX - imageCenter[0]) / halfImageWidth) - 1) / 2;
-          if(imageMinY > cropMinY)
-            additionalScaleY *= 1 + (((imageCenter[1] - cropMinY) / halfImageHeight) - 1) / 2;
-          if(imageMaxY < cropMaxY)
-            additionalScaleY *= 1 + (((cropMaxY - imageCenter[1]) / halfImageHeight) - 1) / 2;
+          if(imageMinX > cropMinX) additionalScaleX *= 1 + ((imageCenter[0] - cropMinX) / halfImageWidth - 1) / 2;
+          if(imageMaxX < cropMaxX) additionalScaleX *= 1 + ((cropMaxX - imageCenter[0]) / halfImageWidth - 1) / 2;
+          if(imageMinY > cropMinY) additionalScaleY *= 1 + ((imageCenter[1] - cropMinY) / halfImageHeight - 1) / 2;
+          if(imageMaxY < cropMaxY) additionalScaleY *= 1 + ((cropMaxY - imageCenter[1]) / halfImageHeight - 1) / 2;
 
-          const additionalScale = Math.max(additionalScaleX, additionalScaleY)
+          const additionalScale = Math.max(additionalScaleX, additionalScaleY);
           if(additionalScale > 1) {
             setScale(initialScale * additionalScale);
           }
@@ -197,7 +200,7 @@ export default function CropHandles() {
           setTranslation([initialTranslation[0] - boundDiff[0] / 2, initialTranslation[1] - boundDiff[1] / 2]);
         },
         onReset() {
-          if(firstTarget !== el) return firstTarget = undefined;
+          if(firstTarget !== el) return (firstTarget = undefined);
           firstTarget = undefined;
 
           const newWidth = size()[0] + diff()[0],
@@ -217,14 +220,20 @@ export default function CropHandles() {
             upScale * (translation()[1] + -diff()[1] * top * 0.5)
           ];
 
-          animateValue(0, 1, 200, (progress) => {
-            batch(() => {
-              setScale(lerp(initialScale, targetScale, progress));
-              setTranslation(lerpArray(initialTranslation, targetTranslation, progress) as [number, number]);
-            })
-          }, {
-            onEnd: () => setIsMoving(false)
-          });
+          animateValue(
+            0,
+            1,
+            200,
+            (progress) => {
+              batch(() => {
+                setScale(lerp(initialScale, targetScale, progress));
+                setTranslation(lerpArray(initialTranslation, targetTranslation, progress) as [number, number]);
+              });
+            },
+            {
+              onEnd: () => setIsMoving(false)
+            }
+          );
 
           el.classList.remove('media-editor__crop-handles-circle--anti-flicker');
         }
@@ -267,7 +276,7 @@ export default function CropHandles() {
         boundDiff = [boundDiff[0] / resistance, boundDiff[1] / resistance];
       },
       onReset() {
-        if(firstTarget !== cropArea) return firstTarget = undefined;
+        if(firstTarget !== cropArea) return (firstTarget = undefined);
         firstTarget = undefined;
 
         const prevTranslation = translation();
@@ -319,20 +328,22 @@ export default function CropHandles() {
   let rightHandle: HTMLDivElement;
   let bottomHandle: HTMLDivElement;
 
-  const coverAnimatedStyle = () => ({
-    'transition': 'opacity 0.2s',
-    'transition-timing-function': isCroping() ? 'ease-in' : 'ease-out',
-    'pointer-events': isCroping() ? 'none' : undefined,
-    'opacity': isCroping() ? 0 : 1
-  } as const);
+  const coverAnimatedStyle = () =>
+    ({
+      'transition': 'opacity 0.2s',
+      'transition-timing-function': isCroping() ? 'ease-in' : 'ease-out',
+      'pointer-events': isCroping() ? 'none' : undefined,
+      'opacity': isCroping() ? 0 : 1
+    }) as const;
 
-  const controlsAnimatedStyle = () => ({
-    'transition': 'transform 0.2s, opacity 0.2s',
-    'transition-timing-function': isCroping() ? 'ease-out' : 'ease-in',
-    'pointer-events': isCroping() ? undefined : 'none',
-    'opacity': isCroping() ? 1 : 0,
-    'transform': isCroping() ? undefined : 'scale(1.05)'
-  } as const);
+  const controlsAnimatedStyle = () =>
+    ({
+      'transition': 'transform 0.2s, opacity 0.2s',
+      'transition-timing-function': isCroping() ? 'ease-out' : 'ease-in',
+      'pointer-events': isCroping() ? undefined : 'none',
+      'opacity': isCroping() ? 1 : 0,
+      'transform': isCroping() ? undefined : 'scale(1.05)'
+    }) as const;
 
   return (
     <>
@@ -400,7 +411,6 @@ export default function CropHandles() {
               ${right()}px ${bottom()}px, ${left()}px ${bottom()}px, ${left()}px 100%,
               100% 100%, 100% 0%
             )`
-            // ...controlsAnimatedStyle()
           }}
         />
         <div
@@ -411,7 +421,6 @@ export default function CropHandles() {
             top: top() + 'px',
             width: width() + 'px',
             height: height() + 'px'
-            // ...controlsAnimatedStyle()
           }}
         >
           <div class="media-editor__crop-handles-line-h" style={{top: '33%'}} />
@@ -427,10 +436,12 @@ export default function CropHandles() {
           <div ref={leftTopHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--nw" />
           <div ref={rightTopHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--ne" />
           <div ref={leftBottomHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--sw" />
-          <div ref={rightBottomHandle} class="media-editor__crop-handles-circle media-editor__crop-handles-circle--se" />
+          <div
+            ref={rightBottomHandle}
+            class="media-editor__crop-handles-circle media-editor__crop-handles-circle--se"
+          />
         </div>
       </div>
-
     </>
   );
 }

@@ -17,5 +17,5 @@ export function useCropOffset() {
       width: w - 120,
       height: h - 180
     };
-  }
+  };
 }

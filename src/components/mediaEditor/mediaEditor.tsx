@@ -94,9 +94,11 @@ export function MediaEditor(props: MediaEditorProps) {
       button: {
         text: i18n('Discard')
       }
-    }).then(() => {
+    })
+    .then(() => {
       performClose(true);
-    }).catch(() => {});
+    })
+    .catch(() => {});
     return false;
   }
 
@@ -112,20 +114,19 @@ export function MediaEditor(props: MediaEditorProps) {
               if(isFinishing) return;
               isFinishing = true;
 
-              const result = await createFinalResult(standaloneContext)
-              .finally(() => isFinishing = false);
+              const result = await createFinalResult(standaloneContext).finally(() => (isFinishing = false));
 
               props.onEditFinish(result);
               handleClose(true, result.isGif);
             });
 
-            return <>
-              <MainCanvas />
-              <Toolbar onClose={handleClose} onFinish={handleFinish} />
-              <FinishButton
-                onClick={handleFinish}
-              />
-            </>
+            return (
+              <>
+                <MainCanvas />
+                <Toolbar onClose={handleClose} onFinish={handleFinish} />
+                <FinishButton onClick={handleFinish} />
+              </>
+            );
           })()}
         </div>
       </div>

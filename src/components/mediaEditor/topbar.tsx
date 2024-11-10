@@ -8,11 +8,8 @@ import MediaEditorContext from './context';
 import {useCanFinish} from './finishButton';
 import {addShortcutListener} from './shortcutListener';
 
-export default function Topbar(props: {
-  onClose: () => void;
-  onFinish: () => void;
-}) {
-  let doneButton: HTMLDivElement
+export default function Topbar(props: {onClose: () => void; onFinish: () => void}) {
+  let doneButton: HTMLDivElement;
 
   const context = useContext(MediaEditorContext);
   const [history, setHistory] = context.history;
@@ -54,7 +51,7 @@ export default function Topbar(props: {
     });
 
     onCleanup(() => removeListeners());
-  })
+  });
 
   return (
     <div class="media-editor__topbar">
@@ -71,9 +68,11 @@ export default function Topbar(props: {
           'media-editor__topbar-done--disabled': !canFinish()
         }}
         onClick={() => {
-          if(canFinish()) props.onFinish()
+          if(canFinish()) props.onFinish();
         }}
-      >{i18n('Done')}</div>
+      >
+        {i18n('Done')}
+      </div>
     </div>
   );
 }

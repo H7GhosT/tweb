@@ -6,31 +6,31 @@ import {StickerFrameByFrameRenderer} from './types';
 import {FRAMES_PER_SECOND} from './constants';
 
 export default class VideoStickerFrameByFrameRenderer implements StickerFrameByFrameRenderer {
-  private duration: number = 0
-  private currentDeferredFrame: CancellablePromise<void>
-  private video: HTMLVideoElement
+  private duration: number = 0;
+  private currentDeferredFrame: CancellablePromise<void>;
+  private video: HTMLVideoElement;
 
   async init(doc: Document.document) {
     const blob = await appDownloadManager.downloadMedia({
       media: doc
-    })
+    });
 
-    const video = this.video = document.createElement('video')
-    video.src = URL.createObjectURL(blob)
-    video.preload = 'auto'
+    const video = (this.video = document.createElement('video'));
+    video.src = URL.createObjectURL(blob);
+    video.preload = 'auto';
 
-    const deferred = deferredPromise<void>()
+    const deferred = deferredPromise<void>();
 
     video.addEventListener('canplaythrough', () => {
-      this.duration = video.duration
-      deferred.resolve()
-    })
+      this.duration = video.duration;
+      deferred.resolve();
+    });
 
     video.addEventListener('seeked', () => {
-      this.currentDeferredFrame?.resolve()
-    })
+      this.currentDeferredFrame?.resolve();
+    });
 
-    await deferred
+    await deferred;
   }
 
   getTotalFrames() {
@@ -39,7 +39,7 @@ export default class VideoStickerFrameByFrameRenderer implements StickerFrameByF
 
   async renderFrame(frame: number) {
     this.currentDeferredFrame = deferredPromise<void>();
-    this.video.currentTime = 1 / FRAMES_PER_SECOND * frame;
+    this.video.currentTime = (1 / FRAMES_PER_SECOND) * frame;
     await this.currentDeferredFrame;
   }
 
@@ -48,7 +48,7 @@ export default class VideoStickerFrameByFrameRenderer implements StickerFrameByF
   }
 
   getRenderedFrame() {
-    return this.video
+    return this.video;
   }
 
   destroy() {

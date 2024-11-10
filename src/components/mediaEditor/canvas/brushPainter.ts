@@ -159,88 +159,90 @@ export default class BrushPainter {
       ctx.stroke();
     }
 
-
     const duration = 200;
     animateValue(0.1, finalArrowLength, duration, drawArrowHead);
     await delay(duration);
   }
 
-  private brushes: Record<string, (line: BrushDrawnLine, ctx: CanvasRenderingContext2D, shouldFinish: boolean) => void> = {
-    pen: (line, ctx) => {
-      ctx.strokeStyle = line.color;
-      this.drawLinePath(line, ctx);
-    },
-    arrow: (line, ctx, shouldFinish) => {
-      const {points} = line;
+  private brushes: Record<
+    string,
+    (line: BrushDrawnLine, ctx: CanvasRenderingContext2D, shouldFinish: boolean) => void
+  > = {
+      pen: (line, ctx) => {
+        ctx.strokeStyle = line.color;
+        this.drawLinePath(line, ctx);
+      },
+      arrow: (line, ctx, shouldFinish) => {
+        const {points} = line;
 
-      ctx.strokeStyle = line.color;
-      this.drawLinePath(line, ctx);
+        ctx.strokeStyle = line.color;
+        this.drawLinePath(line, ctx);
 
-      if(!shouldFinish) return;
-      if(points.length < 2) return;
+        if(!shouldFinish) return;
+        if(points.length < 2) return;
 
-      const i = points.length - 1;
+        const i = points.length - 1;
 
-      let i2 = i;
-      for(; i2 > 0; i2--) {
-        if(distance(points[i], points[i2]) > line.size * 1.5) break;
+        let i2 = i;
+        for(; i2 > 0; i2--) {
+          if(distance(points[i], points[i2]) > line.size * 1.5) break;
+        }
+
+        const angle = Math.atan2(points[i][0] - points[i2][0], points[i][1] - points[i2][1]) + Math.PI;
+
+        const arrowLen = line.size * 5;
+        const angle1 = angle + Math.PI / 4;
+        const angle2 = angle - Math.PI / 4;
+
+        const vec1 = [arrowLen * Math.sin(angle1), arrowLen * Math.cos(angle1)];
+        const vec2 = [arrowLen * Math.sin(angle2), arrowLen * Math.cos(angle2)];
+
+        ctx.beginPath();
+        ctx.moveTo(points[i][0], points[i][1]);
+        ctx.lineTo(points[i][0] + vec1[0], points[i][1] + vec1[1]);
+        ctx.moveTo(points[i][0], points[i][1]);
+        ctx.lineTo(points[i][0] + vec2[0], points[i][1] + vec2[1]);
+        ctx.stroke();
+      },
+      brush: (line, ctx) => {
+        ctx.strokeStyle = `rgba(${hexaToRgba(line.color).join(',')},0.4)`;
+        this.drawLinePath(line, ctx);
+      },
+      neon: (line, ctx) => {
+        ctx.strokeStyle = '#ffffff';
+        ctx.shadowBlur = line.size;
+        ctx.shadowColor = line.color;
+        this.drawLinePath(line, ctx);
+      },
+      blur: (line, ctx) => {
+        const w = ctx.canvas.width,
+          h = ctx.canvas.height;
+
+        this.blurredLineCtx.clearRect(0, 0, w, h);
+
+        const {points} = line;
+        const pointsX = points.map((p) => p[0]);
+        const pointsY = points.map((p) => p[1]);
+        const minX = Math.max(Math.min(...pointsX) - line.size, 0),
+          maxX = Math.max(...pointsX) + line.size,
+          minY = Math.max(Math.min(...pointsY) - line.size, 0),
+          maxY = Math.max(...pointsY) + line.size;
+
+        this.blurredLineCtx.strokeStyle = 'white';
+        this.drawLinePath(line, this.blurredLineCtx);
+
+        this.blurredLineCtx.globalCompositeOperation = 'source-in';
+        this.blurredLineCtx.drawImage(this.blurredImageCanvas, 0, 0);
+
+        ctx.drawImage(this.blurredLineCanvas, minX, minY, maxX, maxY, minX, minY, maxX, maxY);
+        this.blurredLineCtx.globalCompositeOperation = 'source-over';
+      },
+      eraser: (line, ctx) => {
+        ctx.strokeStyle = 'white';
+        ctx.globalCompositeOperation = 'destination-out';
+        this.drawLinePath(line, ctx);
+        ctx.stroke();
+        ctx.globalCompositeOperation = 'source-over';
       }
-
-      const angle = Math.atan2(points[i][0] - points[i2][0], points[i][1] - points[i2][1]) + Math.PI;
-
-      const arrowLen = line.size * 5;
-      const angle1 = angle + Math.PI / 4;
-      const angle2 = angle - Math.PI / 4;
-
-      const vec1 = [arrowLen * Math.sin(angle1), arrowLen * Math.cos(angle1)];
-      const vec2 = [arrowLen * Math.sin(angle2), arrowLen * Math.cos(angle2)];
-
-      ctx.beginPath();
-      ctx.moveTo(points[i][0], points[i][1]);
-      ctx.lineTo(points[i][0] + vec1[0], points[i][1] + vec1[1]);
-      ctx.moveTo(points[i][0], points[i][1]);
-      ctx.lineTo(points[i][0] + vec2[0], points[i][1] + vec2[1]);
-      ctx.stroke();
-    },
-    brush: (line, ctx) => {
-      ctx.strokeStyle = `rgba(${hexaToRgba(line.color).join(',')},0.4)`;
-      this.drawLinePath(line, ctx);
-    },
-    neon: (line, ctx) => {
-      ctx.strokeStyle = '#ffffff';
-      ctx.shadowBlur = line.size;
-      ctx.shadowColor = line.color;
-      this.drawLinePath(line, ctx);
-    },
-    blur: (line, ctx) => {
-      const w = ctx.canvas.width,
-        h = ctx.canvas.height;
-
-      this.blurredLineCtx.clearRect(0, 0, w, h);
-
-      const {points} = line;
-      const pointsX = points.map((p) => p[0]);
-      const pointsY = points.map((p) => p[1]);
-      const minX = Math.max(Math.min(...pointsX) - line.size, 0),
-        maxX = Math.max(...pointsX) + line.size,
-        minY = Math.max(Math.min(...pointsY) - line.size, 0),
-        maxY = Math.max(...pointsY) + line.size;
-
-      this.blurredLineCtx.strokeStyle = 'white';
-      this.drawLinePath(line, this.blurredLineCtx);
-
-      this.blurredLineCtx.globalCompositeOperation = 'source-in';
-      this.blurredLineCtx.drawImage(this.blurredImageCanvas, 0, 0);
-
-      ctx.drawImage(this.blurredLineCanvas, minX, minY, maxX, maxY, minX, minY, maxX, maxY);
-      this.blurredLineCtx.globalCompositeOperation = 'source-over';
-    },
-    eraser: (line, ctx) => {
-      ctx.strokeStyle = 'white';
-      ctx.globalCompositeOperation = 'destination-out';
-      this.drawLinePath(line, ctx);
-      ctx.stroke();
-      ctx.globalCompositeOperation = 'source-over';
-    }
-  };
+    };
 }

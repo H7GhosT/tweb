@@ -28,9 +28,9 @@ export default function StickersTab() {
   const [, setLayers] = context.resizableLayers;
   const [canvasSize] = context.canvasSize;
   const [, setSelectedResizableLayer] = context.selectedResizableLayer;
-  const [finalTransform] = context.finalTransform
+  const [finalTransform] = context.finalTransform;
 
-  const normalizePoint = useNormalizePoint()
+  const normalizePoint = useNormalizePoint();
 
   const [recentStickers] = createResource(() => managers.appStickersManager.getRecentStickersStickers());
   const [stickerSets] = createResource(() => managers.appStickersManager.getAllStickers());
@@ -111,7 +111,7 @@ export default function StickersTab() {
 
     function onClick() {
       const id = context.resizableLayersSeed++;
-      const transform = finalTransform()
+      const transform = finalTransform();
       const newLayer = {
         id,
         position: normalizePoint([canvasSize()[0] / 2, canvasSize()[1] / 2]),
@@ -218,7 +218,6 @@ export default function StickersTab() {
     </div>;
     return <></>;
   }
-
 
   createEffect(() => {
     setIntersectionObserver(

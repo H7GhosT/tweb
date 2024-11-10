@@ -112,8 +112,8 @@ export default function RotationWheel() {
       batch(() => {
         setMoved(values[0]);
         setMovedDiff(values[1]);
-      })
-    })
+      });
+    });
   }
 
   let isFirstEffect = true;

@@ -43,24 +43,24 @@ export default function BrushCanvas() {
   const [, setSelectedTextLayer] = context.selectedResizableLayer;
   const [lines, setLines] = context.brushDrawnLines;
   const [isAdjusting] = context.isAdjusting;
-  const [finalTransform] = context.finalTransform
+  const [finalTransform] = context.finalTransform;
   const [isMoving] = context.isMoving;
 
-  const [fullImageGLPayload, setFullImageGLPayload] = createSignal<RenderingPayload>()
+  const [fullImageGLPayload, setFullImageGLPayload] = createSignal<RenderingPayload>();
 
   const normalizePoint = useNormalizePoint();
-  const processPoint = useProcessPoint()
+  const processPoint = useProcessPoint();
 
   function processLine(line: BrushDrawnLine): BrushDrawnLine {
-    const transform = finalTransform()
+    const transform = finalTransform();
     return {
       ...line,
       size: line.size * transform.scale,
       points: line.points.map(processPoint)
-    }
+    };
   }
 
-  const processedLines = createMemo(() => lines().map(processLine))
+  const processedLines = createMemo(() => lines().map(processLine));
 
   const [lastLine, setLastLine] = createSignal<BrushDrawnLine>();
 
@@ -79,24 +79,17 @@ export default function BrushCanvas() {
   ) as HTMLCanvasElement;
   const ctx = canvas.getContext('2d');
 
-  const fullImageMultiplier = () => Math.min(
-    canvasSize()[0] / imageSize()[0],
-    canvasSize()[1] / imageSize()[1]
-  ) * 2 * context.pixelRatio;
+  const fullImageMultiplier = () =>
+    Math.min(canvasSize()[0] / imageSize()[0], canvasSize()[1] / imageSize()[1]) * 2 * context.pixelRatio;
 
-  const fullImageCanvas = <canvas
-    width={imageSize()[0]}
-    height={imageSize()[1]}
-  /> as HTMLCanvasElement;
+  const fullImageCanvas = (<canvas width={imageSize()[0]} height={imageSize()[1]} />) as HTMLCanvasElement;
   const gl = fullImageCanvas.getContext('webgl', {
     preserveDrawingBuffer: true
   });
 
-  const fullBrushesCanvas = <canvas
-    width={imageSize()[0] * fullImageMultiplier()}
-    height={imageSize()[1] * fullImageMultiplier()}
-  /> as HTMLCanvasElement;
-
+  const fullBrushesCanvas = (
+    <canvas width={imageSize()[0] * fullImageMultiplier()} height={imageSize()[1] * fullImageMultiplier()} />
+  ) as HTMLCanvasElement;
 
   let brushPainter = new BrushPainter({
     imageCanvas: imageCanvas(),
@@ -111,22 +104,24 @@ export default function BrushCanvas() {
 
   createEffect(() => {
     const payload = fullImageGLPayload();
-    drawAdjustedImage(gl, payload)
+    drawAdjustedImage(gl, payload);
   });
 
-  createEffect(on(canvasSize, () => {
-    brushPainter = new BrushPainter({
-      imageCanvas: imageCanvas(),
-      targetCanvas: canvas
-    });
-    redraw();
-  }));
+  createEffect(
+    on(canvasSize, () => {
+      brushPainter = new BrushPainter({
+        imageCanvas: imageCanvas(),
+        targetCanvas: canvas
+      });
+      redraw();
+    })
+  );
 
   function resetLastLine() {
     setLastLine({
       color: currentBrush().color,
       brush: currentBrush().brush,
-      size: currentBrush().size * context.pixelRatio / finalTransform().scale,
+      size: (currentBrush().size * context.pixelRatio) / finalTransform().scale,
       points: []
     });
   }
@@ -165,11 +160,14 @@ export default function BrushCanvas() {
     return {
       ...line,
       size: line.size * fullImageMultiplier(),
-      points: line.points.map(point => [
-        (point[0] + imageSize()[0] / 2) * fullImageMultiplier(),
-        (point[1] + imageSize()[1] / 2) * fullImageMultiplier()
-      ] as [number, number])
-    }
+      points: line.points.map(
+        (point) =>
+          [
+            (point[0] + imageSize()[0] / 2) * fullImageMultiplier(),
+            (point[1] + imageSize()[1] / 2) * fullImageMultiplier()
+          ] as [number, number]
+      )
+    };
   }
 
   function redrawFull() {
@@ -178,40 +176,39 @@ export default function BrushCanvas() {
     fullBrushPainter.clear();
     fullBrushPainter.saveLastLine();
 
-    lines().forEach((line) => fullBrushPainter.drawLine(
-      processLineForFullImage(line))
-    );
+    lines().forEach((line) => fullBrushPainter.drawLine(processLineForFullImage(line)));
   }
 
-  createEffect(on(imageSize, () => {
-    if(!imageSize()?.[0]) return;
-    fullBrushPainter = new BrushPainter({
-      imageCanvas: fullImageCanvas,
-      targetCanvas: fullBrushesCanvas,
-      blurAmount: BrushPainter.defaultBlurAmount * fullImageMultiplier()
-    });
+  createEffect(
+    on(imageSize, () => {
+      if(!imageSize()?.[0]) return;
+      fullBrushPainter = new BrushPainter({
+        imageCanvas: fullImageCanvas,
+        targetCanvas: fullBrushesCanvas,
+        blurAmount: BrushPainter.defaultBlurAmount * fullImageMultiplier()
+      });
 
-    redraw();
-    redrawFull();
-  }));
+      redraw();
+      redrawFull();
+    })
+  );
 
   createEffect(() => {
     if(isAdjusting() || currentTab() === 'crop') {
       onCleanup(() => {
         redraw();
         redrawFull();
-      })
+      });
     }
-  })
+  });
 
   context.redrawBrushes = () => {
     redraw();
     redrawFull();
   };
   onCleanup(() => {
-    context.redrawBrushes = () => {}
+    context.redrawBrushes = () => {};
   });
-
 
   onMount(() => {
     let initialPosition: [number, number];
@@ -223,7 +220,7 @@ export default function BrushCanvas() {
       const prevLines = [...lines()];
       const newLines = [...lines(), lastLine()];
       setLines(newLines);
-      fullBrushPainter.updateBlurredImage()
+      fullBrushPainter.updateBlurredImage();
       fullBrushPainter.drawLine(processLineForFullImage(lastLine()));
       resetLastLine();
       brushPainter.saveLastLine();
@@ -277,15 +274,11 @@ export default function BrushCanvas() {
       endSwipe();
     });
 
-
     new SwipeHandler({
       element: canvas,
       cursor: '',
       onSwipe: (xDiff, yDiff, _e) => {
-        const point = normalizePoint([
-          (initialPosition[0] + xDiff),
-          (initialPosition[1] + yDiff)
-        ]);
+        const point = normalizePoint([initialPosition[0] + xDiff, initialPosition[1] + yDiff]);
 
         if(points.length > 0) {
           const lastPoint = points[points.length - 1];
@@ -313,7 +306,5 @@ export default function BrushCanvas() {
     });
   });
 
-  return <>
-    {canvas}
-  </>;
+  return <>{canvas}</>;
 }

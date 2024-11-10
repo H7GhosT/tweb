@@ -26,7 +26,7 @@ export interface MediaEditorContextValue {
   rotation: Signal<number>;
   translation: Signal<[number, number]>;
   flip: Signal<[number, number]>;
-  finalTransform: Signal<FinalTransform>
+  finalTransform: Signal<FinalTransform>;
 
   resizableLayersSeed: number;
   currentTextLayerInfo: Signal<TextLayerInfo>;

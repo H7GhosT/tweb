@@ -66,55 +66,57 @@ export default function ColorPicker(props: {
 
   // let colorPicker: _ColorPicker;
 
-  const colorPicker = createMemo(on(containerSize, () => {
-    const colorPicker = new _ColorPicker({
-      buildLayout: (parts) => {
-        return (
-          <div
-            class="media-editor__color-picker"
-            classList={{'media-editor__color-picker--collapsed': collapsed()}}
-            style={{'--picker-height': PICKER_HEIGHT_PX + 'px'}}
-          >
-            <div class="media-editor__color-picker-swatches">
-              {colorPickerSwatches.map(swatch)}
-              <div
-                class="media-editor__color-picker-swatch media-editor__color-picker-swatch--gradient"
-                classList={{'media-editor__color-picker-swatch--active': !collapsed()}}
-                onClick={onCollapseToggle}
-              >
-                <div class="media-editor__color-picker-swatch-color" />
+  const colorPicker = createMemo(
+    on(containerSize, () => {
+      const colorPicker = new _ColorPicker({
+        buildLayout: (parts) => {
+          return (
+            <div
+              class="media-editor__color-picker"
+              classList={{'media-editor__color-picker--collapsed': collapsed()}}
+              style={{'--picker-height': PICKER_HEIGHT_PX + 'px'}}
+            >
+              <div class="media-editor__color-picker-swatches">
+                {colorPickerSwatches.map(swatch)}
+                <div
+                  class="media-editor__color-picker-swatch media-editor__color-picker-swatch--gradient"
+                  classList={{'media-editor__color-picker-swatch--active': !collapsed()}}
+                  onClick={onCollapseToggle}
+                >
+                  <div class="media-editor__color-picker-swatch-color" />
+                </div>
+
+                <div class="media-editor__color-picker-slider">{parts.slider}</div>
               </div>
 
-              <div class="media-editor__color-picker-slider">{parts.slider}</div>
-            </div>
-
-            <div class="media-editor__color-picker-layout-wrapper">
-              <div class="media-editor__color-picker-layout">
-                <div class="media-editor__color-picker-box">{parts.pickerBox}</div>
-                <div class="media-editor__color-picker-inputs">
-                  {parts.hexInput}
-                  {parts.rgbInput}
+              <div class="media-editor__color-picker-layout-wrapper">
+                <div class="media-editor__color-picker-layout">
+                  <div class="media-editor__color-picker-box">{parts.pickerBox}</div>
+                  <div class="media-editor__color-picker-inputs">
+                    {parts.hexInput}
+                    {parts.rgbInput}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ) as HTMLDivElement;
-      },
-      pickerBoxWidth: PICKER_WIDTH_PX + containerSize() - DEFAULT_SIZE,
-      pickerBoxHeight: PICKER_HEIGHT_PX,
-      sliderWidth: SLIDER_WIDTH_PX + containerSize() - DEFAULT_SIZE,
-      thickSlider: true
-    });
-    colorPicker.onChange = (color) => {
-      if(color.hex !== props.value) props.onChange(color.hex);
-      context.abortDrawerSlide();
-    };
-    colorPicker.container.querySelectorAll('.media-editor__color-picker-swatch').forEach((element) => {
-      ripple(element as HTMLElement);
-    });
+          ) as HTMLDivElement;
+        },
+        pickerBoxWidth: PICKER_WIDTH_PX + containerSize() - DEFAULT_SIZE,
+        pickerBoxHeight: PICKER_HEIGHT_PX,
+        sliderWidth: SLIDER_WIDTH_PX + containerSize() - DEFAULT_SIZE,
+        thickSlider: true
+      });
+      colorPicker.onChange = (color) => {
+        if(color.hex !== props.value) props.onChange(color.hex);
+        context.abortDrawerSlide();
+      };
+      colorPicker.container.querySelectorAll('.media-editor__color-picker-swatch').forEach((element) => {
+        ripple(element as HTMLElement);
+      });
 
-    return colorPicker;
-  }));
+      return colorPicker;
+    })
+  );
 
   onMount(() => {
     setContainerSize(sizeContainer.clientWidth);
@@ -140,7 +142,7 @@ export default function ColorPicker(props: {
           if(newCollapsed) {
             setCollapsing(true);
             await delay(200);
-            setCollapsing(false)
+            setCollapsing(false);
           }
         }
       }
@@ -152,7 +154,7 @@ export default function ColorPicker(props: {
       colorPicker().setColor(props.value);
       doubleRaf().then(() => {
         colorPicker().setColor(props.value);
-      })
+      });
     }
   });
 

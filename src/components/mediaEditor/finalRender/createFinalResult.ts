@@ -14,7 +14,6 @@ import getScaledLayersAndLines from './getScaledLayersAndLines';
 import renderToVideo from './renderToVideo';
 import renderToImage from './renderToImage';
 
-
 export type MediaEditorFinalResult = {
   preview: Blob;
   getResult: () => Blob | Promise<Blob>;
@@ -33,8 +32,9 @@ export async function createFinalResult(standaloneContext: StandaloneContext): P
 
   const cropOffset = useCropOffset();
 
-  const hasAnimatedStickers = !!resizableLayers().find(layerSignal =>
-    [2, 3].includes(layerSignal[0]().sticker?.sticker));
+  const hasAnimatedStickers = !!resizableLayers().find((layerSignal) =>
+    [2, 3].includes(layerSignal[0]().sticker?.sticker)
+  );
 
   const [scaledWidth, scaledHeight] = getResultSize(hasAnimatedStickers);
 
@@ -57,7 +57,6 @@ export async function createFinalResult(standaloneContext: StandaloneContext): P
     cropOffset
   });
 
-
   draw(gl, payload, {
     ...finalTransform,
     imageSize: [payload.image.width, payload.image.height],
@@ -69,10 +68,7 @@ export async function createFinalResult(standaloneContext: StandaloneContext): P
     ) as Record<AdjustmentsConfig[number]['key'], number>)
   });
 
-  const {
-    scaledLayers,
-    scaledLines
-  } = getScaledLayersAndLines(context, finalTransform, scaledWidth, scaledHeight);
+  const {scaledLayers, scaledLines} = getScaledLayersAndLines(context, finalTransform, scaledWidth, scaledHeight);
 
   const brushCanvas = document.createElement('canvas');
   brushCanvas.width = scaledWidth;
@@ -87,23 +83,25 @@ export async function createFinalResult(standaloneContext: StandaloneContext): P
   resultCanvas.height = scaledHeight;
   const ctx = resultCanvas.getContext('2d', {willReadFrequently: true});
 
-  const renderPromise = hasAnimatedStickers ? renderToVideo({
-    context,
-    scaledWidth,
-    scaledHeight,
-    scaledLayers,
-    imageCanvas,
-    resultCanvas,
-    brushCanvas,
-    ctx
-  }) : renderToImage({
-    context,
-    scaledLayers,
-    imageCanvas,
-    resultCanvas,
-    brushCanvas,
-    ctx
-  })
+  const renderPromise = hasAnimatedStickers ?
+    renderToVideo({
+      context,
+      scaledWidth,
+      scaledHeight,
+      scaledLayers,
+      imageCanvas,
+      resultCanvas,
+      brushCanvas,
+      ctx
+    }) :
+    renderToImage({
+      context,
+      scaledLayers,
+      imageCanvas,
+      resultCanvas,
+      brushCanvas,
+      ctx
+    });
 
   const renderResult = await renderPromise;
 
@@ -133,11 +131,11 @@ export async function createFinalResult(standaloneContext: StandaloneContext): P
   document.body.append(animatedImg);
 
   return {
-    ...(renderResult),
+    ...renderResult,
     animatedPreview: animatedImg,
     width: scaledWidth,
     height: scaledHeight,
     originalSrc: context.imageSrc,
     standaloneContext
-  }
+  };
 }

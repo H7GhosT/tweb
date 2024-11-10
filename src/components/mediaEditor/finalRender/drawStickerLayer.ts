@@ -1,11 +1,16 @@
-
 import {MediaEditorContextValue} from '../context';
 import {snapToViewport} from '../utils';
 import {ResizableLayer} from '../types';
 
 import {STICKER_SIZE} from './constants';
 
-export default function drawStickerLayer(context: MediaEditorContextValue, ctx: CanvasRenderingContext2D, layer: ResizableLayer, source: CanvasImageSource, ratio: number) {
+export default function drawStickerLayer(
+  context: MediaEditorContextValue,
+  ctx: CanvasRenderingContext2D,
+  layer: ResizableLayer,
+  source: CanvasImageSource,
+  ratio: number
+) {
   const [stickersLayersInfo] = context.stickersLayersInfo;
 
   const {container} = stickersLayersInfo()[layer.id];

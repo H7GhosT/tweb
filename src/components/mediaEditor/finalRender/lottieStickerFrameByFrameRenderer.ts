@@ -7,44 +7,44 @@ import {Document} from '../../../layer';
 import {StickerFrameByFrameRenderer} from './types';
 
 export default class LottieStickerFrameByFrameRenderer implements StickerFrameByFrameRenderer {
-  private frameCount: number = 0
-  private currentDeferredFrame: CancellablePromise<void>
-  private container: HTMLDivElement
-  private animation: RLottiePlayer
+  private frameCount: number = 0;
+  private currentDeferredFrame: CancellablePromise<void>;
+  private container: HTMLDivElement;
+  private animation: RLottiePlayer;
 
   async init(doc: Document.document, size: number) {
     const blob = await appDownloadManager.downloadMedia({
       media: doc
-    })
-    const container = this.container = document.createElement('div')
-    container.style.width = size + 'px'
-    container.style.height = size + 'px'
-    container.style.position = 'absolute'
-    container.style.opacity = '0'
-    container.style.pointerEvents = 'none'
+    });
+    const container = (this.container = document.createElement('div'));
+    container.style.width = size + 'px';
+    container.style.height = size + 'px';
+    container.style.position = 'absolute';
+    container.style.opacity = '0';
+    container.style.pointerEvents = 'none';
 
-    document.body.append(container)
-    const animation = this.animation = await lottieLoader.loadAnimationWorker({
+    document.body.append(container);
+    const animation = (this.animation = await lottieLoader.loadAnimationWorker({
       container: container,
       autoplay: false,
       animationData: blob,
       width: size,
       height: size,
       name: 'doc' + doc.id
-    });
+    }));
 
-    const deferred = deferredPromise<void>()
+    const deferred = deferredPromise<void>();
 
     animation.addEventListener('ready', () => {
-      this.frameCount = animation.maxFrame
-      deferred.resolve()
-    })
+      this.frameCount = animation.maxFrame;
+      deferred.resolve();
+    });
 
     animation.addEventListener('enterFrame', () => {
-      this.currentDeferredFrame?.resolve()
-    })
+      this.currentDeferredFrame?.resolve();
+    });
 
-    await deferred
+    await deferred;
   }
 
   getTotalFrames() {
@@ -62,7 +62,7 @@ export default class LottieStickerFrameByFrameRenderer implements StickerFrameBy
   }
 
   getRenderedFrame() {
-    return this.animation.canvas[0]
+    return this.animation.canvas[0];
   }
 
   destroy() {

@@ -29,7 +29,7 @@ export default function TextLayerContent(props: ResizableLayerProps) {
         size: layer().textInfo.size,
         font: layer().textInfo.font
       });
-    })
+    });
   };
 
   const fontInfo = () => fontInfoMap[layer().textInfo.font];
@@ -51,23 +51,23 @@ export default function TextLayerContent(props: ResizableLayerProps) {
       contentEditable.innerHTML = '<div></div>';
 
       // Firefox cursor reset
-      const child = contentEditable.children[0]
-      const range = document.createRange()
-      const sel = window.getSelection()
+      const child = contentEditable.children[0];
+      const range = document.createRange();
+      const sel = window.getSelection();
 
-      range.setStart(child, 0)
-      range.collapse(true)
+      range.setStart(child, 0);
+      range.collapse(true);
 
-      sel.removeAllRanges()
-      sel.addRange(range)
+      sel.removeAllRanges();
+      sel.addRange(range);
     }
 
     // Firefox puts the cursor outside the inner divs and messes up everything
-    const selection = window.getSelection()
+    const selection = window.getSelection();
     if(selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0)
+      const range = selection.getRangeAt(0);
       if(range.startContainer === contentEditable && range.startOffset === 0) {
-        const innerDiv = contentEditable.children[0]
+        const innerDiv = contentEditable.children[0];
         const innerDivRange = document.createRange();
         innerDivRange.selectNodeContents(innerDiv);
         innerDivRange.collapse(false); // Collapse to the end of the inner div
@@ -103,14 +103,12 @@ export default function TextLayerContent(props: ResizableLayerProps) {
     selection.addRange(range);
   }
 
-
   createEffect(() => {
     updateBackground();
   });
 
   onMount(() => {
-    if(layer().id === selectedResizableLayer())
-      selectAll();
+    if(layer().id === selectedResizableLayer()) selectAll();
   });
 
   createEffect(

@@ -12,7 +12,7 @@ export default function AdjustmentsTab() {
   const {adjustments} = context;
   const [, setIsAdjusting] = context.isAdjusting;
 
-  const isMobile = useMediaQuery('(max-width: 800px)')
+  const isMobile = useMediaQuery('(max-width: 800px)');
 
   let timeoutId = 0;
   function removeIsAdjusting() {
@@ -31,36 +31,40 @@ export default function AdjustmentsTab() {
 
         const [showGhost, setShowGhost] = createSignal(false);
 
-        createEffect(on(showGhost, () => {
-          if(!container() || !isMobile() || !showGhost()) return;
-          const bcr = container().getBoundingClientRect();
-          const div = <div
-            class='night media-editor__inherit-color'
-            style={{
-              'position': 'fixed',
-              'left': bcr.left + 'px',
-              'top': bcr.top + 'px',
-              'width': bcr.width + 'px',
-              'height': bcr.height + 'px',
-              'z-index': 100
-            }}
-          >
-            <RangeInput
-              value={value()}
-              onChange={() => {}}
-              label={item.label()}
-              min={item.to100 ? 0 : -50}
-              max={item.to100 ? 100 : 50}
-            />
-          </div> as HTMLDivElement
-          document.body.append(div);
+        createEffect(
+          on(showGhost, () => {
+            if(!container() || !isMobile() || !showGhost()) return;
+            const bcr = container().getBoundingClientRect();
+            const div = (
+              <div
+                class="night media-editor__inherit-color"
+                style={{
+                  'position': 'fixed',
+                  'left': bcr.left + 'px',
+                  'top': bcr.top + 'px',
+                  'width': bcr.width + 'px',
+                  'height': bcr.height + 'px',
+                  'z-index': 100
+                }}
+              >
+                <RangeInput
+                  value={value()}
+                  onChange={() => {}}
+                  label={item.label()}
+                  min={item.to100 ? 0 : -50}
+                  max={item.to100 ? 100 : 50}
+                />
+              </div>
+            ) as HTMLDivElement;
+            document.body.append(div);
 
-          onCleanup(() => {
-            setTimeout(() => {
-              div.remove();
-            }, 200)
-          });
-        }));
+            onCleanup(() => {
+              setTimeout(() => {
+                div.remove();
+              }, 200);
+            });
+          })
+        );
 
         let timeoutId = 0;
         const removeGhost = () => {
@@ -68,7 +72,7 @@ export default function AdjustmentsTab() {
           timeoutId = window.setTimeout(() => {
             setShowGhost(false);
           }, ADJUST_TIMEOUT);
-        }
+        };
 
         return (
           <>

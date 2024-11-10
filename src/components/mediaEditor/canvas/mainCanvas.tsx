@@ -24,12 +24,12 @@ export default function MainCanvas() {
     const listener = () => {
       const bcr = container.getBoundingClientRect();
       setCanvasSize([bcr.width, bcr.height]);
-    }
-    listener()
-    window.addEventListener('resize', listener)
+    };
+    listener();
+    window.addEventListener('resize', listener);
     onCleanup(() => {
-      window.removeEventListener('resize', listener)
-    })
+      window.removeEventListener('resize', listener);
+    });
   });
 
   return (
@@ -38,16 +38,18 @@ export default function MainCanvas() {
         <ImageCanvas />
         <BrushCanvas />
         <ResizableLayers />
-        {previewBrushSize() && <div
-          class="media-editor__preview-brush-size"
-          style={{
-            '--color': !['blur', 'eraser'].includes(currentBrush().brush) ?
-              hexToRgb(currentBrush().color).join(',') :
-              undefined,
-            'width': previewBrushSize() + 'px',
-            'height': previewBrushSize() + 'px'
-          }}
-        />}
+        {previewBrushSize() && (
+          <div
+            class="media-editor__preview-brush-size"
+            style={{
+              '--color': !['blur', 'eraser'].includes(currentBrush().brush) ?
+                hexToRgb(currentBrush().color).join(',') :
+                undefined,
+              'width': previewBrushSize() + 'px',
+              'height': previewBrushSize() + 'px'
+            }}
+          />
+        )}
         <CropHandles />
         <RotationWheel />
       </Show>

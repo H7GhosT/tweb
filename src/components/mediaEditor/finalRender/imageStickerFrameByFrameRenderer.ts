@@ -5,23 +5,23 @@ import {Document} from '../../../layer';
 import {StickerFrameByFrameRenderer} from './types';
 
 export default class ImageStickerFrameByFrameRenderer implements StickerFrameByFrameRenderer {
-  private image: HTMLImageElement
+  private image: HTMLImageElement;
 
   async init(doc: Document.document) {
     const blob = await appDownloadManager.downloadMedia({
       media: doc
-    })
+    });
 
-    const image = this.image = new Image()
-    image.src = URL.createObjectURL(blob)
+    const image = (this.image = new Image());
+    image.src = URL.createObjectURL(blob);
 
-    const deferred = deferredPromise<void>()
+    const deferred = deferredPromise<void>();
 
     image.addEventListener('load', () => {
-      deferred.resolve()
-    })
+      deferred.resolve();
+    });
 
-    await deferred
+    await deferred;
   }
 
   getTotalFrames() {
@@ -32,10 +32,10 @@ export default class ImageStickerFrameByFrameRenderer implements StickerFrameByF
     return this.image.naturalWidth / this.image.naturalHeight;
   }
 
-  async renderFrame(frame: number) {}
+  async renderFrame() {}
 
   getRenderedFrame() {
-    return this.image
+    return this.image;
   }
 
   destroy() {

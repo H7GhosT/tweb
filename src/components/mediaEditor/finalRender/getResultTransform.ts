@@ -10,7 +10,7 @@ export type GetResultTransformArgs = {
   imageWidth: number;
   imageHeight: number;
   cropOffset: ReturnType<typeof useCropOffset>;
-}
+};
 
 export default function getResultTransform({
   context,
@@ -57,10 +57,7 @@ export default function getResultTransform({
 
   toCropScale *= fromCroppedScale;
 
-  const snappedImageScale = Math.min(
-    snappedCanvasWidth / imageWidth,
-    snappedCanvasHeight / imageHeight
-  );
+  const snappedImageScale = Math.min(snappedCanvasWidth / imageWidth, snappedCanvasHeight / imageHeight);
 
   const cropTranslation = translation().map((x) => x * fromCroppedScale - x);
 
