@@ -14,6 +14,7 @@ import useFinalTransform from './useFinalTransform';
 export default function MainCanvas() {
   let container: HTMLDivElement;
   const context = useContext(MediaEditorContext);
+  const [isReady] = context.isReady;
   const [canvasSize, setCanvasSize] = context.canvasSize;
   const [previewBrushSize] = context.previewBrushSize;
   const [currentBrush] = context.currentBrush;
@@ -36,22 +37,24 @@ export default function MainCanvas() {
     <div ref={container} class="media-editor__main-canvas">
       <Show when={canvasSize()}>
         <ImageCanvas />
-        <BrushCanvas />
-        <ResizableLayers />
-        {previewBrushSize() && (
-          <div
-            class="media-editor__preview-brush-size"
-            style={{
-              '--color': !['blur', 'eraser'].includes(currentBrush().brush) ?
-                hexToRgb(currentBrush().color).join(',') :
-                undefined,
-              'width': previewBrushSize() + 'px',
-              'height': previewBrushSize() + 'px'
-            }}
-          />
-        )}
-        <CropHandles />
-        <RotationWheel />
+        <Show when={isReady()}>
+          <BrushCanvas />
+          <ResizableLayers />
+          {previewBrushSize() && (
+            <div
+              class="media-editor__preview-brush-size"
+              style={{
+                '--color': !['blur', 'eraser'].includes(currentBrush().brush) ?
+                  hexToRgb(currentBrush().color).join(',') :
+                  undefined,
+                'width': previewBrushSize() + 'px',
+                'height': previewBrushSize() + 'px'
+              }}
+            />
+          )}
+          <CropHandles />
+          <RotationWheel />
+        </Show>
       </Show>
     </div>
   );

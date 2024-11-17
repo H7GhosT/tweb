@@ -1,4 +1,4 @@
-import {createEffect, onMount, useContext} from 'solid-js';
+import {createEffect, createReaction, onMount, useContext} from 'solid-js';
 
 import MediaEditorContext from '../context';
 import {AdjustmentsConfig} from '../adjustments';
@@ -27,6 +27,7 @@ function drawAdjustedImage(gl: WebGLRenderingContext) {
 
 export default function ImageCanvas() {
   const context = useContext(MediaEditorContext);
+  const [isReady] = context.isReady;
   const [canvasSize] = context.canvasSize;
   const [currentImageRatio, setCurrentImageRatio] = context.currentImageRatio;
   const [, setImageSize] = context.imageSize;
@@ -43,12 +44,12 @@ export default function ImageCanvas() {
   setImageCanvas(canvas);
 
   onMount(async() => {
-    setTimeout(async() => {
+    createReaction(async() => {
       const payload = await initWebGL(gl, context);
       setRenderingPayload(payload);
       setImageSize([payload.image.width, payload.image.height]);
       if(!currentImageRatio()) setCurrentImageRatio(payload.image.width / payload.image.height);
-    }, 200);
+    })(isReady);
   });
 
   createEffect(() => {

@@ -21,7 +21,7 @@ export type MediaEditorProps = {
   onClose: (hasGif: boolean) => void;
   managers: AppManagers;
   onEditFinish: (result: MediaEditorFinalResult) => void;
-  onCanvasReady: (canvas: HTMLCanvasElement) => void;
+  onCanvasReady: (canvas: HTMLCanvasElement) => Promise<void>;
   onImageRendered: () => void;
   imageURL: string;
   standaloneContext?: StandaloneContext;
@@ -30,9 +30,11 @@ export type MediaEditorProps = {
 export function MediaEditor(props: MediaEditorProps) {
   const standaloneContext = props.standaloneContext || createStandaloneContextValue(props);
 
+  const [, setIsReady] = standaloneContext.value.isReady;
   const [, setRenderingPayload] = standaloneContext.value.renderingPayload;
   const [, setCanvasSize] = standaloneContext.value.canvasSize;
   const [, setCurretTab] = standaloneContext.value.currentTab;
+  setIsReady(false);
   setRenderingPayload();
   setCanvasSize();
   setCurretTab('adjustments');
@@ -64,7 +66,7 @@ export function MediaEditor(props: MediaEditorProps) {
 
   createEffect(() => {
     if(!imageCanvas()) return;
-    props.onCanvasReady(imageCanvas());
+    props.onCanvasReady(imageCanvas()).then(() => setIsReady(true));
   });
 
   createEffect(() => {

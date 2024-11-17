@@ -1,5 +1,6 @@
 import {getOwner, runWithOwner} from 'solid-js';
 
+import BezierEasing from '../../vendor/bezierEasing';
 import {logger} from '../../lib/logger';
 import {hexaToHsla} from '../../helpers/color';
 
@@ -46,9 +47,6 @@ export function lerpArray(min: number[], max: number[], progress: number) {
   return min.map((start, index) => start + (max[index] - start) * progress);
 }
 
-export function easeInOutQuad(t: number) {
-  return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-}
 
 type AnimateValueOptions = {
   easing?: (progress: number) => number;
@@ -60,7 +58,7 @@ export function animateValue<T extends number | number[]>(
   end: T,
   duration: number,
   callback: (value: T) => void,
-  {easing = easeInOutQuad, onEnd = () => {}}: AnimateValueOptions = {}
+  {easing = BezierEasing(0.42, 0.0, 0.58, 1.0), onEnd = () => {}}: AnimateValueOptions = {}
 ) {
   let startTime: number;
   let canceled = false;

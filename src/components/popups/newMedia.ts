@@ -60,6 +60,7 @@ import {MediaEditorFinalResult} from '../mediaEditor/finalRender/createFinalResu
 import RenderProgressCircle from '../mediaEditor/renderProgressCircle';
 import {animateValue, delay, lerp, snapToViewport} from '../mediaEditor/utils';
 import {IS_MOBILE} from '../../environment/userAgent';
+import deferredPromise from '../../helpers/cancellablePromise';
 
 type SendFileParams = SendFileDetails & {
   file?: File,
@@ -963,6 +964,9 @@ export default class PopupNewMedia extends PopupElement {
                 const leftDiff = (canvasBcr.left + canvasBcr.width / 2) - left;
                 const topDiff = (canvasBcr.top + canvasBcr.height / 2) - top;
                 const [scaledWidth, scaledHeight] = snapToViewport(img.naturalWidth / img.naturalHeight, canvasBcr.width, canvasBcr.height);
+
+                const deferred = deferredPromise<void>();
+
                 animateValue(
                   0, 1, 200,
                   (progress) => {
@@ -973,8 +977,12 @@ export default class PopupNewMedia extends PopupElement {
                     }px - 50%))`;
                     animatedImg.style.width = lerp(width, scaledWidth, progress) + 'px';
                     animatedImg.style.height = lerp(height, scaledHeight, progress) + 'px';
+                  },
+                  {
+                    onEnd: () => deferred.resolve()
                   }
-                )
+                );
+                return deferred;
               },
               onImageRendered: async() => {
                 animatedImg.style.opacity = '1';

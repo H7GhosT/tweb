@@ -107,6 +107,11 @@ export default function BrushCanvas() {
     drawAdjustedImage(gl, payload);
   });
 
+  createEffect(() => {
+    const payload = fullImageGLPayload();
+    if(payload) redrawFull();
+  });
+
   createEffect(
     on(canvasSize, () => {
       brushPainter = new BrushPainter({
@@ -194,7 +199,7 @@ export default function BrushCanvas() {
   );
 
   createEffect(() => {
-    if(isAdjusting() || currentTab() === 'crop') {
+    if(isAdjusting()) {
       onCleanup(() => {
         redraw();
         redrawFull();

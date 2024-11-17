@@ -15,6 +15,7 @@ export interface MediaEditorContextValue {
   imageSrc: string;
   adjustments: AdjustmentsConfig;
   renderingPayload: Signal<RenderingPayload>;
+  isReady: Signal<boolean>;
 
   currentTab: Signal<string>;
 
@@ -80,6 +81,7 @@ function createContextValue(props: MediaEditorProps): MediaEditorContextValue {
     imageSrc: props.imageURL,
     pixelRatio: Math.min(2, window.devicePixelRatio),
     renderingPayload: createSignal(),
+    isReady: createSignal(false),
 
     adjustments: createAdjustmentsConfig(),
     currentTab: createSignal('adjustments'),
