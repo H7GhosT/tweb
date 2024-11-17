@@ -5,6 +5,7 @@ import {
   createSignal,
   For,
   on,
+  onCleanup,
   onMount,
   ParentProps,
   Show,
@@ -35,6 +36,7 @@ export default function ResizableLayers() {
   const [layers, setLayers] = context.resizableLayers;
   const [currentTab] = context.currentTab;
   const isTextTab = () => currentTab() === 'text';
+  const canClick = () => ['stickers', 'text', 'adjustments'].includes(currentTab());
   const [currentTextLayerInfo] = context.currentTextLayerInfo;
   const [selectedResizableLayer, setSelectedResizableLayer] = context.selectedResizableLayer;
   const [isAdjusting] = context.isAdjusting;
@@ -57,7 +59,10 @@ export default function ResizableLayers() {
   );
 
   createEffect(() => {
-    if(!isTextTab()) setSelectedResizableLayer();
+    currentTab();
+    onCleanup(() => {
+      setSelectedResizableLayer();
+    });
   });
 
   let container: HTMLDivElement;
@@ -66,6 +71,11 @@ export default function ResizableLayers() {
 
   function addLayer(e: MouseEvent) {
     if(e.target !== container) return;
+    if(selectedResizableLayer()) {
+      setSelectedResizableLayer();
+      return;
+    }
+
     if(!isTextTab()) return;
 
     const bcr = container.getBoundingClientRect();
@@ -110,7 +120,10 @@ export default function ResizableLayers() {
     <div
       class="media-editor__resizable-layers"
       classList={{
-        'media-editor__resizable-layers--active': isTextTab()
+        'media-editor__resizable-layers--active': canClick()
+      }}
+      style={{
+        cursor: !selectedResizableLayer() && isTextTab() ? 'text' : undefined
       }}
     >
       <div
@@ -290,6 +303,9 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
         'top': processedLayer().position[1] + diff()[1] + 'px',
         '--rotation': (processedLayer().rotation / Math.PI) * 180 + 'deg',
         '--scale': processedLayer().scale
+      }}
+      onClick={() => {
+        setSelectedResizableLayer(layer().id);
       }}
       ref={container}
     >
