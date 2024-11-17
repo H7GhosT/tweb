@@ -1,10 +1,10 @@
-import {batch, createEffect, on, onMount, useContext} from 'solid-js';
+import {batch, createEffect, createMemo, createSignal, on, onCleanup, onMount, useContext} from 'solid-js';
 
 import createElementFromMarkup from '../../../helpers/createElementFromMarkup';
 import {i18n} from '../../../lib/langPack';
 
 import MediaEditorContext from '../context';
-import {ResizableLayerProps, TextLayerInfo, TextRenderingInfoLine} from '../types';
+import {ResizableLayer, ResizableLayerProps, TextLayerInfo, TextRenderingInfoLine} from '../types';
 import {fontInfoMap, getContrastColor} from '../utils';
 
 import {ResizableContainer} from './resizableLayers';
@@ -14,6 +14,7 @@ export default function TextLayerContent(props: ResizableLayerProps) {
   const [selectedResizableLayer, setSelectedResizableLayer] = context.selectedResizableLayer;
   const [currentTextLayerInfo, setCurrentTextLayerInfo] = context.currentTextLayerInfo;
   const [textLayersInfo, setTextLayersInfo] = context.textLayersInfo;
+  const [, setLayers] = context.resizableLayers;
 
   const [layer, setLayer] = props.layerSignal;
 
@@ -33,6 +34,44 @@ export default function TextLayerContent(props: ResizableLayerProps) {
   };
 
   const fontInfo = () => fontInfoMap[layer().textInfo.font];
+
+  function deleteThisLayer() {
+    let position = -1;
+    let deletedLayer: ResizableLayer;
+
+    setTextLayersInfo((prev) => ({
+      ...prev,
+      [layer().id]: undefined
+    }));
+
+    setLayers((prev) => {
+      prev = [...prev];
+      position = prev.findIndex((other) => other[0]().id === layer().id);
+      if(position > -1) deletedLayer = prev.splice(position, 1)?.[0][0]?.();
+      return prev;
+    });
+
+    context.pushToHistory({
+      undo() {
+        batch(() => {
+          setLayers((prev) => {
+            prev = [...prev];
+            if(position > -1) prev.splice(position, 0, createSignal({...deletedLayer}));
+            return prev;
+          });
+          setSelectedResizableLayer(deletedLayer.id);
+        });
+      },
+      redo() {
+        setLayers((prev) => {
+          prev = [...prev];
+          position = prev.findIndex((layer) => layer[0]().id === deletedLayer.id);
+          if(position > -1) deletedLayer = prev.splice(position, 1)[0]?.[0]();
+          return prev;
+        });
+      }
+    });
+  }
 
   function updateBackground() {
     contentEditable.childNodes.forEach((childNode) => {
@@ -107,8 +146,21 @@ export default function TextLayerContent(props: ResizableLayerProps) {
     updateBackground();
   });
 
+  const isThisLayerSelected = createMemo(() => layer().id === selectedResizableLayer());
+
   onMount(() => {
-    if(layer().id === selectedResizableLayer()) selectAll();
+    if(isThisLayerSelected()) selectAll();
+  });
+
+
+  createEffect(() => {
+    if(isThisLayerSelected()) {
+      onCleanup(() => {
+        if(!contentEditable.innerText.trim()) {
+          deleteThisLayer();
+        }
+      })
+    }
   });
 
   createEffect(
