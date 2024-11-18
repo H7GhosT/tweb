@@ -107,10 +107,10 @@ export default function BrushCanvas() {
     drawAdjustedImage(gl, payload);
   });
 
-  createEffect(() => {
+  createEffect(on(fullImageGLPayload, () => {
     const payload = fullImageGLPayload();
-    if(payload) redrawFull();
-  });
+    if(payload) setTimeout(() => redrawFull(), 100);
+  }));
 
   createEffect(
     on(canvasSize, () => {

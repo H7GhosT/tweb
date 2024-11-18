@@ -1,3 +1,4 @@
+import deferredPromise from '../../../helpers/cancellablePromise';
 import {hexaToRgba} from '../../../helpers/color';
 
 import {animateValue, delay, distance} from '../utils';
@@ -123,45 +124,55 @@ export default class BrushPainter {
     ctx.stroke();
   }
 
+  private getArrowHeadLength(line: BrushDrawnLine) {
+    return Math.sqrt(line.size) + line.size * 2.5;
+  }
+
+  private drawArrowHead(ctx: CanvasRenderingContext2D, line: BrushDrawnLine, arrowLength: number) {
+    const {points} = line;
+    if(points.length < 2) return;
+
+    const i = points.length - 1;
+
+    let i2 = i;
+    for(; i2 > 0; i2--) {
+      if(distance(points[i], points[i2]) > line.size * 0.5) break;
+    }
+
+    const angle = Math.atan2(points[i][0] - points[i2][0], points[i][1] - points[i2][1]) + Math.PI;
+
+    const angle1 = angle + Math.PI / 4;
+    const angle2 = angle - Math.PI / 4;
+
+    const vec1 = [arrowLength * Math.sin(angle1), arrowLength * Math.cos(angle1)];
+    const vec2 = [arrowLength * Math.sin(angle2), arrowLength * Math.cos(angle2)];
+
+    ctx.strokeStyle = line.color;
+    ctx.lineWidth = line.size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(points[i][0], points[i][1]);
+    ctx.lineTo(points[i][0] + vec1[0], points[i][1] + vec1[1]);
+    ctx.moveTo(points[i][0], points[i][1]);
+    ctx.lineTo(points[i][0] + vec2[0], points[i][1] + vec2[1]);
+    ctx.stroke();
+  }
+
   async animateArrowBrush(line: BrushDrawnLine) {
     const {points} = line;
     if(points.length < 2) return;
 
     const ctx = this.targetCtx;
 
-    const i = points.length - 1;
+    const arrowLength = this.getArrowHeadLength(line);
 
-    let i2 = i;
-    for(; i2 > 0; i2--) {
-      if(distance(points[i], points[i2]) > line.size * 1.5) break;
-    }
-    const finalArrowLength = line.size * 5;
-
-    function drawArrowHead(arrowLen: number) {
-      const angle = Math.atan2(points[i][0] - points[i2][0], points[i][1] - points[i2][1]) + Math.PI;
-
-      const angle1 = angle + Math.PI / 4;
-      const angle2 = angle - Math.PI / 4;
-
-      const vec1 = [arrowLen * Math.sin(angle1), arrowLen * Math.cos(angle1)];
-      const vec2 = [arrowLen * Math.sin(angle2), arrowLen * Math.cos(angle2)];
-
-      ctx.strokeStyle = line.color;
-      ctx.lineWidth = line.size;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      ctx.beginPath();
-      ctx.moveTo(points[i][0], points[i][1]);
-      ctx.lineTo(points[i][0] + vec1[0], points[i][1] + vec1[1]);
-      ctx.moveTo(points[i][0], points[i][1]);
-      ctx.lineTo(points[i][0] + vec2[0], points[i][1] + vec2[1]);
-      ctx.stroke();
-    }
-
-    const duration = 200;
-    animateValue(0.1, finalArrowLength, duration, drawArrowHead);
-    await delay(duration);
+    const deferred = deferredPromise<void>();
+    animateValue(0.1, arrowLength, 120, (length) => this.drawArrowHead(ctx, line, length), {
+      onEnd: () => deferred.resolve()
+    });
+    await deferred;
   }
 
   private brushes: Record<
@@ -181,28 +192,7 @@ export default class BrushPainter {
         if(!shouldFinish) return;
         if(points.length < 2) return;
 
-        const i = points.length - 1;
-
-        let i2 = i;
-        for(; i2 > 0; i2--) {
-          if(distance(points[i], points[i2]) > line.size * 1.5) break;
-        }
-
-        const angle = Math.atan2(points[i][0] - points[i2][0], points[i][1] - points[i2][1]) + Math.PI;
-
-        const arrowLen = line.size * 5;
-        const angle1 = angle + Math.PI / 4;
-        const angle2 = angle - Math.PI / 4;
-
-        const vec1 = [arrowLen * Math.sin(angle1), arrowLen * Math.cos(angle1)];
-        const vec2 = [arrowLen * Math.sin(angle2), arrowLen * Math.cos(angle2)];
-
-        ctx.beginPath();
-        ctx.moveTo(points[i][0], points[i][1]);
-        ctx.lineTo(points[i][0] + vec1[0], points[i][1] + vec1[1]);
-        ctx.moveTo(points[i][0], points[i][1]);
-        ctx.lineTo(points[i][0] + vec2[0], points[i][1] + vec2[1]);
-        ctx.stroke();
+        this.drawArrowHead(ctx, line, this.getArrowHeadLength(line));
       },
       brush: (line, ctx) => {
         ctx.strokeStyle = `rgba(${hexaToRgba(line.color).join(',')},0.4)`;
