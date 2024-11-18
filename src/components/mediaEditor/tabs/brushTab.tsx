@@ -72,13 +72,16 @@ export default function BrushTab() {
   return (
     <>
       <div
-        style={
-          !hasColor() ?
+        style={{
+          transition: 'opacity .2s',
+          ...(!hasColor() ?
             {
               'opacity': 0.25,
               'pointer-events': 'none'
             } :
             undefined
+          )
+        }
         }
       >
         <ColorPicker

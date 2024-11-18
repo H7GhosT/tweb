@@ -112,8 +112,8 @@ export async function createFinalResult(standaloneContext: StandaloneContext): P
   const animatedImg = new Image();
   animatedImg.src = URL.createObjectURL(renderResult.preview);
   animatedImg.style.position = 'fixed';
-  const left = bcr.left + (isCroping ? cropOffset().left + cropOffset().width / 2 : bcr.left + bcr.width / 2),
-    top = bcr.top + (isCroping ? cropOffset().top + cropOffset().height / 2 : bcr.top + bcr.height / 2);
+  const left = bcr.left + (isCroping ? cropOffset().left + cropOffset().width / 2 : bcr.width / 2),
+    top = bcr.top + (isCroping ? cropOffset().top + cropOffset().height / 2 : bcr.height / 2);
 
   const [width, height] = snapToViewport(
     scaledWidth / scaledHeight,
