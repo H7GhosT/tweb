@@ -54,6 +54,7 @@ export interface MediaEditorContextValue {
 
   redrawBrushes: () => void;
   abortDrawerSlide: () => void;
+  resetRotationWheel: () => void;
 
   gifCreationProgress: Signal<number>;
 }
@@ -132,6 +133,7 @@ function createContextValue(props: MediaEditorProps): MediaEditorContextValue {
 
     redrawBrushes: () => {},
     abortDrawerSlide: () => {},
+    resetRotationWheel: () => {},
 
     gifCreationProgress: createSignal(0)
   };

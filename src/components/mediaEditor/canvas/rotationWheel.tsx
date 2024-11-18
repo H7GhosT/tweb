@@ -1,4 +1,4 @@
-import {batch, createEffect, createSignal, on, onMount, useContext} from 'solid-js';
+import {batch, createEffect, createSignal, on, onCleanup, onMount, useContext} from 'solid-js';
 
 import clamp from '../../../helpers/number/clamp';
 
@@ -6,7 +6,7 @@ import {ButtonIconTsx} from '../../buttonIconTsx';
 import SwipeHandler from '../../swipeHandler';
 
 import MediaEditorContext from '../context';
-import {animateValue, withCurrentOwner} from '../utils';
+import {animateValue, lerp, withCurrentOwner} from '../utils';
 
 import {animateToNewRotationOrRatio} from './animateToNewRotationOrRatio';
 import getConvenientPositioning from './getConvenientPositioning';
@@ -15,6 +15,7 @@ const DEGREE_DIST_PX = 42;
 const DEGREE_STEP = 15;
 const TOTAL_DEGREES_SIDE = 90;
 const MAX_DEGREES_DIST_PX = (TOTAL_DEGREES_SIDE / DEGREE_STEP) * DEGREE_DIST_PX;
+const SNAP_DIST_PX = 32;
 
 function rotationFromMove(amount: number) {
   return ((amount / DEGREE_DIST_PX) * DEGREE_STEP * Math.PI) / 180;
@@ -40,25 +41,83 @@ export default function RotationWheel() {
     setMoved((((snappedRotation - rotation()) * 180) / Math.PI / DEGREE_STEP) * DEGREE_DIST_PX);
     prevRotation = rotationFromMove(moved());
 
+    let currentDiff: number;
+    let targetDiff: number;
+    let prevShouldSnap = getShouldSnap();
+    let isAnimating = false;
+    let isSnapped = false;
+    let cancelAnimation: () => void;
+    let timeoutId: number;
+
+    function getShouldSnap() {
+      return Math.abs(moved() + currentDiff || 0) < SNAP_DIST_PX
+    }
+
+    function handleDiffChange(diff: number) {
+      setMovedDiff(diff);
+      onSwipe();
+    }
+
     new SwipeHandler({
       element: swiperEl,
       onStart() {
         initialScale = scale();
+        currentDiff = movedDiff();
+        targetDiff = currentDiff;
+        isAnimating = false;
+        isSnapped = false;
+        prevShouldSnap = getShouldSnap();
         setIsMoving(true);
       },
       onSwipe(xDiff) {
-        setMovedDiff(clamp(moved() + xDiff, -MAX_DEGREES_DIST_PX, MAX_DEGREES_DIST_PX) - moved());
-        onSwipe();
+        targetDiff = currentDiff = clamp(moved() + xDiff, -MAX_DEGREES_DIST_PX, MAX_DEGREES_DIST_PX) - moved();
+        const shouldSnap = getShouldSnap();
+        if(shouldSnap) targetDiff = -moved();
+
+        if(prevShouldSnap !== shouldSnap && !isAnimating) {
+          window.clearTimeout(timeoutId);
+          timeoutId = window.setTimeout(() => {
+            const shouldSnapAfterTimeout = getShouldSnap();
+            if(shouldSnapAfterTimeout !== shouldSnap) return;
+            isAnimating = true;
+            const initialDiff = movedDiff();
+            cancelAnimation?.();
+            cancelAnimation = animateValue(0, 1, 200, (progress) => {
+              handleDiffChange(lerp(initialDiff, targetDiff, progress));
+            }, {
+              onEnd: () => {
+                isAnimating = false;
+                isSnapped = getShouldSnap();
+
+                if(!isSnapped) return;
+                timeoutId = window.setTimeout(() => {
+                  isSnapped = false;
+                }, 1200);
+              }
+            });
+          }, 120);
+        }
+
+        prevShouldSnap = shouldSnap;
+
+        if(isAnimating || isSnapped) return;
+        handleDiffChange(currentDiff);
       },
       onReset() {
         let newMoved = moved() + movedDiff();
         if(Math.abs(newMoved) === MAX_DEGREES_DIST_PX) {
           newMoved = 0;
           prevRotation = 0;
+          prevShouldSnap = false;
+          isAnimating = false;
         }
-        setMoved(newMoved);
-        setMovedDiff(0);
-        setIsMoving(false);
+        cancelAnimation?.();
+        window.clearTimeout(timeoutId);
+        batch(() => {
+          setMoved(newMoved);
+          setMovedDiff(0);
+          setIsMoving(false);
+        });
       }
     });
   });
@@ -116,6 +175,11 @@ export default function RotationWheel() {
     });
   }
 
+  context.resetRotationWheel = () => resetWheelWithAnimation();
+  onCleanup(() => {
+    context.resetRotationWheel = () => {}
+  });
+
   let isFirstEffect = true;
   createEffect(
     on(fixedImageRatioKey, () => {
@@ -144,7 +208,11 @@ export default function RotationWheel() {
     });
   }
 
-  const value = () => ((-(moved() + movedDiff()) / DEGREE_DIST_PX) * DEGREE_STEP).toFixed(1).replace(/\.0$/, '');
+  const value = () =>
+    ((-(moved() + movedDiff()) / DEGREE_DIST_PX) * DEGREE_STEP)
+    .toFixed(1)
+    .replace(/\.0$/, '')
+    .replace(/^-0$/, '0');
 
   return (
     <div class="media-editor__rotation-wheel" style={{display: isCroping() ? undefined : 'none'}}>
@@ -195,3 +263,39 @@ function ArrowUp() {
     </svg>
   );
 }
+
+/*
+if(shouldSnap) newDiff = -moved();
+if(isAnimating) return;
+
+if(!shouldSnap && isSnapped) {
+  isSnapped = false;
+  cancelAnimation?.();
+  const initialDiff = movedDiff();
+  isAnimating = true;
+  cancelAnimation = animateValue(0, 1, 120, (progress) => {
+    setMovedDiff(lerp(initialDiff, newDiff, progress));
+    onSwipe();
+  }, {
+    onEnd: () => isAnimating = false
+  });
+  return;
+}
+if(!shouldSnap) {
+  setMovedDiff(newDiff);
+  onSwipe();
+  return;
+}
+
+if(isSnapped) return;
+isSnapped = true;
+cancelAnimation?.();
+const initialDiff = movedDiff();
+isAnimating = true;
+cancelAnimation = animateValue(0, 1, 200, (progress) => {
+  setMovedDiff(lerp(initialDiff, newDiff, progress));
+  onSwipe();
+}, {
+  onEnd: () => isAnimating = false
+});
+*/

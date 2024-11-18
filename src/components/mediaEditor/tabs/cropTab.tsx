@@ -56,6 +56,7 @@ export default function CropTab() {
   const onRatioClick = withCurrentOwner((ratio?: string) => {
     setFixedImageRatioKey(ratio);
     animateToNewRotationOrRatio(rotation());
+    context.resetRotationWheel();
   });
 
   return (
