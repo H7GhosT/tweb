@@ -58,6 +58,23 @@ export default function RotationWheel() {
       onSwipe();
     }
 
+    function removeSnapAfterTimeout() {
+      timeoutId = window.setTimeout(() => {
+        isSnapped = false;
+        isAnimating = true;
+
+        const initialDiff = movedDiff();
+        cancelAnimation?.();
+        cancelAnimation = animateValue(0, 1, 200, (progress) => {
+          handleDiffChange(lerp(initialDiff, currentDiff, progress));
+        }, {
+          onEnd: () => {
+            isAnimating = false
+          }
+        });
+      }, 750);
+    }
+
     new SwipeHandler({
       element: swiperEl,
       onStart() {
@@ -90,9 +107,7 @@ export default function RotationWheel() {
                 isSnapped = getShouldSnap();
 
                 if(!isSnapped) return;
-                timeoutId = window.setTimeout(() => {
-                  isSnapped = false;
-                }, 1200);
+                removeSnapAfterTimeout();
               }
             });
           }, 120);
