@@ -278,7 +278,10 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
           }
         }
       ],
-      listenTo: container
+      listenTo: container,
+      onElementReady: (element) => {
+        element.classList.add('night');
+      }
     });
   });
 
