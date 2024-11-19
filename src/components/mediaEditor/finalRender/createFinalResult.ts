@@ -6,13 +6,13 @@ import {draw} from '../webgl/draw';
 import {initWebGL} from '../webgl/initWebGL';
 import BrushPainter from '../canvas/brushPainter';
 import {useCropOffset} from '../canvas/useCropOffset';
-import {snapToViewport} from '../utils';
 
 import getResultSize from './getResultSize';
 import getResultTransform from './getResultTransform';
 import getScaledLayersAndLines from './getScaledLayersAndLines';
 import renderToVideo from './renderToVideo';
 import renderToImage from './renderToImage';
+import spawnAnimatedPreview from './spawnAnimatedPreview';
 
 export type MediaEditorFinalResult = {
   preview: Blob;
@@ -28,7 +28,6 @@ export type MediaEditorFinalResult = {
 export async function createFinalResult(standaloneContext: StandaloneContext): Promise<MediaEditorFinalResult> {
   const context = useContext(MediaEditorContext);
   const [resizableLayers] = context.resizableLayers;
-  const [currentTab] = context.currentTab;
 
   const cropOffset = useCropOffset();
 
@@ -105,34 +104,17 @@ export async function createFinalResult(standaloneContext: StandaloneContext): P
 
   const renderResult = await renderPromise;
 
-  const isCroping = currentTab() === 'crop';
-
-  const [positionCanvas] = context.imageCanvas;
-  const bcr = positionCanvas().getBoundingClientRect();
-  const animatedImg = new Image();
-  animatedImg.src = URL.createObjectURL(renderResult.preview);
-  animatedImg.style.position = 'fixed';
-  const left = bcr.left + (isCroping ? cropOffset().left + cropOffset().width / 2 : bcr.width / 2),
-    top = bcr.top + (isCroping ? cropOffset().top + cropOffset().height / 2 : bcr.height / 2);
-
-  const [width, height] = snapToViewport(
-    scaledWidth / scaledHeight,
-    isCroping ? cropOffset().width : bcr.width,
-    isCroping ? cropOffset().height : bcr.height
-  );
-  animatedImg.style.left = left + 'px';
-  animatedImg.style.top = top + 'px';
-  animatedImg.style.width = width + 'px';
-  animatedImg.style.height = height + 'px';
-  animatedImg.style.transform = 'translate(-50%, -50%)';
-  animatedImg.style.objectFit = 'cover';
-  animatedImg.style.zIndex = '1000';
-
-  document.body.append(animatedImg);
+  const animatedPreview = await spawnAnimatedPreview({
+    context,
+    cropOffset,
+    scaledWidth,
+    scaledHeight,
+    previewBlob: renderResult.preview
+  })
 
   return {
     ...renderResult,
-    animatedPreview: animatedImg,
+    animatedPreview,
     width: scaledWidth,
     height: scaledHeight,
     originalSrc: context.imageSrc,
