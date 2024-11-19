@@ -15,7 +15,7 @@ const DEGREE_DIST_PX = 42;
 const DEGREE_STEP = 15;
 const TOTAL_DEGREES_SIDE = 90;
 const MAX_DEGREES_DIST_PX = (TOTAL_DEGREES_SIDE / DEGREE_STEP) * DEGREE_DIST_PX;
-const SNAP_DIST_PX = 32;
+const SNAP_DIST_PX = 40;
 
 function rotationFromMove(amount: number) {
   return ((amount / DEGREE_DIST_PX) * DEGREE_STEP * Math.PI) / 180;
@@ -110,7 +110,7 @@ export default function RotationWheel() {
                 removeSnapAfterTimeout();
               }
             });
-          }, 120);
+          }, 200);
         }
 
         prevShouldSnap = shouldSnap;

@@ -257,6 +257,7 @@ export function ResizableContainer(props: ParentProps<ResizableContainerProps>) 
               if(position > -1) deletedLayer = prev.splice(position, 1)?.[0][0]?.();
               return prev;
             });
+            setSelectedResizableLayer();
 
             context.pushToHistory({
               undo() {
