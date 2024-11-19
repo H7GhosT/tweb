@@ -91,7 +91,7 @@ export default function RotationWheel() {
         const shouldSnap = getShouldSnap();
         if(shouldSnap) targetDiff = -moved();
 
-        if(prevShouldSnap !== shouldSnap && !isAnimating) {
+        if(prevShouldSnap !== shouldSnap) {
           window.clearTimeout(timeoutId);
           timeoutId = window.setTimeout(() => {
             const shouldSnapAfterTimeout = getShouldSnap();
