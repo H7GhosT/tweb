@@ -35,7 +35,7 @@ import toggleStorages from '../../helpers/toggleStorages';
 import tsNow from '../../helpers/tsNow';
 import transportController from './transports/controller';
 import MTTransport from './transports/transport';
-import {getCurrentAccount} from '../appManagers/utils/currentAccount';
+import { getCurrentAccount } from '../appManagers/utils/currentAccount';
 
 /* class RotatableArray<T> {
   public array: Array<T> = [];
@@ -51,14 +51,27 @@ const PREMIUM_FILE_NETWORKERS_COUNT = 6;
 const REGULAR_FILE_NETWORKERS_COUNT = 3;
 const DESTROY_NETWORKERS = true;
 
-export class ApiManager extends ApiManagerMethods {
-  private cachedNetworkers: {
-    [transportType in TransportType]: {
+type IterateNetworkersCallback = (o: {
+  networker: MTPNetworker,
+  dcId: DcId,
+  connectionType: ConnectionType,
+  transportType: TransportType,
+  index: number,
+  array: MTPNetworker[]
+}) => void;
+
+type CachedNetworkersMap = {
+  [num in ActiveAccountNumber]?: {
+    [transportType in TransportType]?: {
       [connectionType in ConnectionType]: {
         [dcId: DcId]: MTPNetworker[]
       }
     }
-  };
+  }
+};
+
+export class ApiManager extends ApiManagerMethods {
+  private cachedNetworkers: CachedNetworkersMap;
 
   private cachedExportPromise: {[x: number]: Promise<unknown>};
   private gettingNetworkers: {[dcIdAndType: string]: Promise<MTPNetworker>};
@@ -86,6 +99,7 @@ export class ApiManager extends ApiManagerMethods {
     this.log = logger('API');
 
     this.cachedNetworkers = {} as any;
+    console.log('this.cachedNetworkers', this.cachedNetworkers);
     this.cachedExportPromise = {};
     this.gettingNetworkers = {};
     this.baseDcId = 0;
@@ -124,6 +138,7 @@ export class ApiManager extends ApiManagerMethods {
     });
 
     this.rootScope.addEventListener('premium_toggle', (isPremium) => {
+      const currentAccount = getCurrentAccount();
       this.iterateNetworkers(({networker, connectionType, dcId, transportType}) => {
         if(connectionType === 'client' || transportType !== 'websocket') {
           return;
@@ -139,7 +154,7 @@ export class ApiManager extends ApiManagerMethods {
           const url = constructTelegramWebSocketUrl(dcId, connectionType, isPremium);
           (transport as TcpObfuscated).changeUrl(url);
         }
-      });
+      }, currentAccount);
     });
 
     return result;
@@ -176,23 +191,35 @@ export class ApiManager extends ApiManagerMethods {
     return transportType;
   }
 
-  private iterateNetworkers(callback: (o: {networker: MTPNetworker, dcId: DcId, connectionType: ConnectionType, transportType: TransportType, index: number, array: MTPNetworker[]}) => void) {
-    for(const transportType in this.cachedNetworkers) {
-      const connections = this.cachedNetworkers[transportType as TransportType];
-      for(const connectionType in connections) {
-        const dcs = connections[connectionType as ConnectionType];
-        for(const dcId in dcs) {
-          const networkers = dcs[dcId as any as DcId];
-          networkers.forEach((networker, idx, arr) => {
-            callback({
-              networker,
-              dcId: +dcId as DcId,
-              connectionType: connectionType as ConnectionType,
-              transportType: transportType as TransportType,
-              index: idx,
-              array: arr
+  private iterateNetworkers(
+    callback: IterateNetworkersCallback,
+    fromAccount?: ActiveAccountNumber
+  ) {
+    let byAccounts: Partial<CachedNetworkersMap> = this.cachedNetworkers;
+
+    const accountCachedNetworkers = this.cachedNetworkers[fromAccount];
+    if(fromAccount && !accountCachedNetworkers) return;
+    if(accountCachedNetworkers) byAccounts = {[fromAccount]: accountCachedNetworkers}
+
+    for(const accountNumber in byAccounts) {
+      const byTransports = byAccounts[accountNumber as any as ActiveAccountNumber];
+      for(const transportType in byTransports) {
+        const byConnections = byTransports[transportType as TransportType];
+        for(const connectionType in byConnections) {
+          const byDcs = byConnections[connectionType as ConnectionType];
+          for(const dcId in byDcs) {
+            const networkers = byDcs[dcId as any as DcId];
+            networkers.forEach((networker, idx, arr) => {
+              callback({
+                networker,
+                dcId: +dcId as DcId,
+                connectionType: connectionType as ConnectionType,
+                transportType: transportType as TransportType,
+                index: idx,
+                array: arr
+              });
             });
-          });
+          }
         }
       }
     }
@@ -210,10 +237,13 @@ export class ApiManager extends ApiManagerMethods {
 
     this.log('changing transport from', oldTransportType, 'to', transportType);
 
-    const oldObject = this.cachedNetworkers[oldTransportType];
-    const newObject = this.cachedNetworkers[transportType];
-    this.cachedNetworkers[transportType] = oldObject;
-    this.cachedNetworkers[oldTransportType] = newObject;
+    for(const accountNumber in this.cachedNetworkers) {
+      const accountCachedNetworkers = this.cachedNetworkers[accountNumber as any as ActiveAccountNumber];
+      const oldObject = accountCachedNetworkers[oldTransportType];
+      const newObject = accountCachedNetworkers[transportType];
+      accountCachedNetworkers[transportType] = oldObject;
+      accountCachedNetworkers[oldTransportType] = newObject;
+    }
 
     this.transportType = transportType;
 
@@ -263,13 +293,12 @@ export class ApiManager extends ApiManagerMethods {
       userAuth.dcID = baseDcId;
     }
 
+    // TODO: Check here
     sessionStorage.get(`account${getCurrentAccount()}`).then(accountData => {
       sessionStorage.set({
         [`account${getCurrentAccount()}`]: {
           ...accountData,
-          date:  (userAuth as UserAuth).date,
-          userId: (userAuth as UserAuth).id,
-          dcId: (userAuth as UserAuth).dcID
+          userId: (userAuth as UserAuth).id
         }
       });
     })
@@ -334,29 +363,37 @@ export class ApiManager extends ApiManagerMethods {
     }) */;
   }
 
-  private generateNetworkerGetKey(dcId: DcId, transportType: TransportType, connectionType: ConnectionType) {
-    return [dcId, transportType, connectionType].join('-');
+  private generateNetworkerGetKey(accountNumber: ActiveAccountNumber, dcId: DcId, transportType: TransportType, connectionType: ConnectionType) {
+    return [accountNumber, dcId, transportType, connectionType].join('-');
   }
 
-  public getNetworker(dcId: DcId, options: InvokeApiOptions = {}): Promise<MTPNetworker> {
+  public async getNetworker(dcId: DcId, options: InvokeApiOptions = {}): Promise<MTPNetworker> {
     const connectionType: ConnectionType = options.fileDownload ? 'download' : (options.fileUpload ? 'upload' : 'client');
     // const connectionType: ConnectionType = 'client';
 
+    const accountNumber = options.accountNumber || getCurrentAccount();
+
     const transportType = this.getTransportType(connectionType);
-    if(!this.cachedNetworkers[transportType]) {
-      this.cachedNetworkers[transportType] = {
+
+    console.log('this.cachedNetworkers', this.cachedNetworkers)
+
+    if(!this.cachedNetworkers[accountNumber]) this.cachedNetworkers[accountNumber] = {};
+    if(!this.cachedNetworkers[accountNumber][transportType]) {
+      this.cachedNetworkers[accountNumber][transportType] = {
         client: {},
         download: {},
         upload: {}
       };
     }
 
-    const cache = this.cachedNetworkers[transportType][connectionType];
+    const cache = this.cachedNetworkers[accountNumber][transportType][connectionType];
     if(!(dcId in cache)) {
       cache[dcId] = [];
     }
 
     const networkers = cache[dcId];
+    console.log('[...networkers]', [...networkers])
+    console.log('{...this.gettingNetworkers}', {...this.gettingNetworkers})
     // @ts-ignore
     const maxNetworkers = connectionType === 'client' || transportType === 'https' ? 1 : (this.rootScope.premium ? PREMIUM_FILE_NETWORKERS_COUNT : REGULAR_FILE_NETWORKERS_COUNT);
     if(networkers.length >= maxNetworkers) {
@@ -384,20 +421,26 @@ export class ApiManager extends ApiManagerMethods {
         }
       }
 
-      return Promise.resolve(networker);
+      return networker;
     }
 
-    let getKey = this.generateNetworkerGetKey(dcId, transportType, connectionType);
+    // HERE change to include account
+    let getKey = this.generateNetworkerGetKey(accountNumber, dcId, transportType, connectionType);
     if(this.gettingNetworkers[getKey]) {
       return this.gettingNetworkers[getKey];
     }
 
+    const accountKey = `account${accountNumber}` as const;
+    const accountData = await sessionStorage.get(accountKey);
     const ak: DcAuthKey = `dc${dcId}_auth_key` as any;
     const ss: DcServerSalt = `dc${dcId}_server_salt` as any;
 
     let transport = this.chooseServer(dcId, connectionType, transportType);
-    return this.gettingNetworkers[getKey] = sessionStorage.get(`account${getCurrentAccount()}`).then(accountData => [accountData?.[ak], accountData?.[ss]] as const)
-    .then(async([authKeyHex, serverSaltHex]) => {
+
+
+    return this.gettingNetworkers[getKey] = new Promise(async(resolve, reject) => {
+      let [authKeyHex, serverSaltHex] = [accountData?.[ak], accountData?.[ss]];
+
       let networker: MTPNetworker, error: any;
       if(authKeyHex?.length === 512) {
         if(serverSaltHex?.length !== 16) {
@@ -417,24 +460,18 @@ export class ApiManager extends ApiManagerMethods {
           serverSaltHex = bytesToHex(auth.serverSalt);
 
           if(dcId === App.baseDcId) {
-            sessionStorage.get(`account${getCurrentAccount()}`).then(accountData => {
-              sessionStorage.set({
-                [`account${getCurrentAccount()}`]: {
-                  ...accountData,
-                  auth_key_fingerprint: authKeyHex.slice(0, 8)
-                }
-              });
+            sessionStorage.set({
+              // TODO: See here
+              auth_key_fingerprint: authKeyHex.slice(0, 8)
             });
           }
 
-          sessionStorage.get(`account${getCurrentAccount()}`).then(accountData => {
-            sessionStorage.set({
-              [`account${getCurrentAccount()}`]: {
-                ...accountData,
-                [ak]: authKeyHex,
-                [ss]: serverSaltHex
-              }
-            });
+          sessionStorage.set({
+            [accountKey]: {
+              ...accountData,
+              [ak]: authKeyHex,
+              [ss]: serverSaltHex
+            }
           });
 
           networker = this.networkerFactory.getNetworker(dcId, auth.authKey, auth.authKeyId, auth.serverSalt, options);
@@ -446,7 +483,7 @@ export class ApiManager extends ApiManagerMethods {
       // ! cannot get it before this promise because simultaneous changeTransport will change nothing
       const newTransportType = this.getTransportType(connectionType);
       if(newTransportType !== transportType) {
-        getKey = this.generateNetworkerGetKey(dcId, newTransportType, connectionType);
+        getKey = this.generateNetworkerGetKey(accountNumber, dcId, newTransportType, connectionType);
         transport.destroy();
         DcConfigurator.removeTransport(this.dcConfigurator.chosenServers, transport);
 
@@ -465,13 +502,14 @@ export class ApiManager extends ApiManagerMethods {
 
       if(error) {
         this.log('get networker error', error, (error as Error).stack);
-        throw error;
+        reject(error);
       }
 
       this.changeNetworkerTransport(networker, transport);
       networkers.unshift(networker);
       this.setOnDrainIfNeeded(networker);
-      return networker;
+
+      resolve(networker);
     });
   }
 
@@ -622,8 +660,6 @@ export class ApiManager extends ApiManagerMethods {
         if(error.code === 401 && this.baseDcId === dcId) {
           if(error.type !== 'SESSION_PASSWORD_NEEDED') {
             sessionStorage.delete('dc')
-
-            // TODO Check here
             sessionStorage.delete('user_auth'); // ! возможно тут вообще не нужно это делать, но нужно проверить случай с USER_DEACTIVATED (https://core.telegram.org/api/errors)
             // this.telegramMeNotify(false);
           }

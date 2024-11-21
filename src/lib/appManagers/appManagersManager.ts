@@ -11,17 +11,23 @@ import callbackify from '../../helpers/callbackify';
 import deferredPromise, {CancellablePromise} from '../../helpers/cancellablePromise';
 import cryptoMessagePort from '../crypto/cryptoMessagePort';
 import MTProtoMessagePort from '../mtproto/mtprotoMessagePort';
-import appStateManager from './appStateManager';
 import {AppStoragesManager} from './appStoragesManager';
 import createManagers from './createManagers';
+import {ActiveAccountNumber} from './utils/currentAccountTypes';
+import {getCurrentAccount} from './utils/currentAccount';
+import AppStateManager from './appStateManager';
 
 type Managers = Awaited<ReturnType<typeof createManagers>>;
 
 // for testing cases without video streaming
 const CAN_USE_SERVICE_WORKER = true;
 
+type ManagersByAccount = Record<ActiveAccountNumber, Managers>;
+type StateManagersByAccount = Record<ActiveAccountNumber, AppStateManager>;
+
 export class AppManagersManager {
-  private managers: Managers | Promise<Managers>;
+  private managersByAccount: Promise<ManagersByAccount> | ManagersByAccount;
+  public readonly stateManagersByAccount: StateManagersByAccount;
   private cryptoWorkersURLs: string[];
   private cryptoPortsAttached: number;
   private cryptoPortPromise: CancellablePromise<void>;
@@ -40,15 +46,23 @@ export class AppManagersManager {
     this.cryptoPortPromise.then(() => {
       this.cryptoPortPromise = undefined;
     });
+
+    this.stateManagersByAccount = {
+      1: new AppStateManager(1),
+      2: new AppStateManager(2)
+      // 3: new AppStateManager(3),
+      // 4: new AppStateManager(4)
+    } as StateManagersByAccount;
   }
 
   public start() {
     const port = MTProtoMessagePort.getInstance<false>();
 
-    port.addEventListener('manager', ({name, method, args}) => {
-      return callbackify(this.getManagers(), (managers) => {
+    port.addEventListener('manager', ({name, method, args, accountNumber}) => {
+      return callbackify(this.getManagersByAccount(), (managersByAccount) => {
+        const managers = managersByAccount[accountNumber];
+        const manager = managers[name as keyof Managers];
         // @ts-ignore
-        const manager = managers[name];
         return manager[method](...args);
       });
     });
@@ -84,20 +98,31 @@ export class AppManagersManager {
   }
 
   private async createManagers() {
-    const appStoragesManager = new AppStoragesManager();
+    const promises = ([1, 2/* , 3, 4 */] as ActiveAccountNumber[]).map(async accountNumber => {
+      const stateManager = this.stateManagersByAccount[accountNumber]
+      const appStoragesManager = new AppStoragesManager(accountNumber, stateManager.resetStoragesPromise);
 
-    await Promise.all([
-      // new Promise(() => {}),
-      appStoragesManager.loadStorages(),
-      this.cryptoPortPromise
-    ]);
+      await Promise.all([
+        // new Promise(() => {}),
+        appStoragesManager.loadStorages(),
+        this.cryptoPortPromise
+      ]);
 
-    const managers = await createManagers(appStoragesManager, appStateManager.userId);
-    return this.managers = managers; // have to overwrite cached promise
+      const managers = await createManagers(appStoragesManager, stateManager, accountNumber, stateManager.userId);
+
+      return [
+        accountNumber,
+        managers
+      ] as const;
+    });
+
+    const accountNumberToManagersPairs = await Promise.all(promises);
+    this.managersByAccount = Object.fromEntries(accountNumberToManagersPairs) as ManagersByAccount;
+    return this.managersByAccount;
   }
 
-  public getManagers() {
-    return this.managers ??= this.createManagers();
+  public getManagersByAccount() {
+    return this.managersByAccount ??= this.createManagers();
   }
 
   public get isServiceWorkerOnline() {
@@ -120,25 +145,27 @@ export class AppManagersManager {
       this.serviceMessagePort = new ServiceMessagePort();
       this.serviceMessagePort.addMultipleEventsListeners({
         requestFilePart: (payload) => {
-          return callbackify(appManagersManager.getManagers(), (managers) => {
-            const {docId, dcId, offset, limit} = payload;
-            return managers.appDocsManager.requestDocPart(docId, dcId, offset, limit);
+          // TODO: choose right managers here
+          return callbackify(appManagersManager.getManagersByAccount(), (managersByAccount) => {
+            const {docId, dcId, offset, limit, accountNumber} = payload;
+            console.log('accountNumber from worker', accountNumber)
+            return managersByAccount[accountNumber].appDocsManager.requestDocPart(docId, dcId, offset, limit);
           });
         },
-        cancelFilePartRequests: (docId) => {
-          return callbackify(appManagersManager.getManagers(), (managers) => {
-            return managers.appDocsManager.cancelDocPartsRequests(docId);
+        cancelFilePartRequests: ({docId, accountNumber}) => {
+          return callbackify(appManagersManager.getManagersByAccount(), (managersByAccount) => {
+            return managersByAccount[accountNumber].appDocsManager.cancelDocPartsRequests(docId);
           });
         },
-        requestRtmpState(call) {
-          return callbackify(appManagersManager.getManagers(), (managers) => {
-            return managers.appGroupCallsManager.fetchRtmpState(call);
+        requestRtmpState({call, accountNumber}) {
+          return callbackify(appManagersManager.getManagersByAccount(), (managersByAccount) => {
+            return managersByAccount[accountNumber].appGroupCallsManager.fetchRtmpState(call);
           });
         },
         requestRtmpPart(payload) {
-          return callbackify(appManagersManager.getManagers(), (managers) => {
-            const {request, dcId} = payload;
-            return managers.appGroupCallsManager.fetchRtmpPart(request, dcId);
+          return callbackify(appManagersManager.getManagersByAccount(), (managersByAccount) => {
+            const {request, dcId, accountNumber} = payload;
+            return managersByAccount[accountNumber].appGroupCallsManager.fetchRtmpPart(request, dcId);
           });
         }
       });

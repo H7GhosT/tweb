@@ -7,12 +7,12 @@
 import type {ChatSavedPosition} from './appManagers/appImManager';
 import type {AppDraftsManager} from './appManagers/appDraftsManager';
 import type {State} from '../config/state';
-import {MOUNT_CLASS_TO} from '../config/debug';
 import {LangPackDifference} from '../layer';
 import AppStorage from './storage';
-import DATABASE_STATE from '../config/databases/state';
+import DATABASE_STATE, {getDatabaseState} from '../config/databases/state';
+import {ActiveAccountNumber} from './appManagers/utils/currentAccountTypes';
 
-class StateStorage extends AppStorage<{
+export default class StateStorage extends AppStorage<{
   chatPositions: {
     [peerId_threadId: string]: ChatSavedPosition
   },
@@ -20,11 +20,7 @@ class StateStorage extends AppStorage<{
   drafts: AppDraftsManager['drafts'],
   user_auth: any, // support old webk format
 } & State, typeof DATABASE_STATE> {
-  constructor() {
-    super(DATABASE_STATE, 'session');
+  constructor(accountNumber: ActiveAccountNumber) {
+    super(getDatabaseState(accountNumber), 'session');
   }
 }
-
-const stateStorage = new StateStorage();
-MOUNT_CLASS_TO.stateStorage = stateStorage;
-export default stateStorage;

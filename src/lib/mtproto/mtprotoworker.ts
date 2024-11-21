@@ -6,7 +6,7 @@
 
 import type {Awaited} from '../../types';
 import type {CacheStorageDbName} from '../files/cacheStorage';
-import type {State} from '../../config/state';
+import {STATE_INIT, type State} from '../../config/state';
 import type {Chat, ChatPhoto, Message, MessagePeerReaction, PeerNotifySettings, User, UserProfilePhoto} from '../../layer';
 import type {CryptoMethods} from '../crypto/crypto_methods';
 import type {ThumbStorageMedia} from '../storages/thumbs';
@@ -46,6 +46,7 @@ import {MTAppConfig} from './appConfig';
 import {setAppStateSilent} from '../../stores/appState';
 import getObjectKeysAndSort from '../../helpers/object/getObjectKeysAndSort';
 import {reconcilePeer, reconcilePeers} from '../../stores/peers';
+import {getCurrentAccount} from '../appManagers/utils/currentAccount';
 
 const TEST_NO_STREAMING = false;
 
@@ -595,7 +596,10 @@ class ApiManagerProxy extends MTProtoMessagePort {
   public sendState() {
     return this.loadState().then((result) => {
       const [stateResult] = result;
-      this.invoke('state', {...stateResult, userId: rootScope.myId.toUserId()});
+      this.invoke('state', {...stateResult, userId: rootScope.myId.toUserId(), accountNumber: 1});
+      this.invoke('state', {...stateResult, state: {...STATE_INIT}, userId: (0).toUserId(), accountNumber: 2});
+      // this.invoke('state', {...stateResult, state: {...STATE_INIT}, userId: (0).toUserId(), accountNumber: 3});
+      // this.invoke('state', {...stateResult, state: {...STATE_INIT}, userId: (0).toUserId(), accountNumber: 4});
       return result;
     });
   }

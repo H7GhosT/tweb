@@ -5,27 +5,32 @@
  */
 
 import {logger} from '../logger';
+import {ResetStoragesPromise} from './appStateManager';
 import {AppManager} from './manager';
+import {ActiveAccountNumber} from './utils/currentAccountTypes';
 import createStorages from './utils/storages/createStorages';
 import loadStorages from './utils/storages/loadStorages';
 
 export class AppStoragesManager extends AppManager {
   private storages: ReturnType<typeof createStorages>;
+  private resetStoragesPromise: ResetStoragesPromise;
+  private loadStoragesPromise: ReturnType<typeof loadStorages>;
 
   // private loadPromise: CancellablePromise<StoragesResults>;
 
   private log: ReturnType<typeof logger>;
 
-  constructor() {
+  constructor(accountNumber: ActiveAccountNumber, resetStoragesPromise: ResetStoragesPromise) {
     super();
 
+    this.resetStoragesPromise = resetStoragesPromise;
     this.log = logger('STORAGES');
-    this.storages = createStorages();
+    this.storages = createStorages(accountNumber);
     // this.loadPromise = deferredPromise();
   }
 
   public loadStorages() {
-    return loadStorages(this.storages);
+    return this.loadStoragesPromise ??= loadStorages(this.storages, this.resetStoragesPromise);
     // loadStorages(this.storages).then((storagesResults) => {
     // this.loadPromise.resolve(storagesResults);
     // });

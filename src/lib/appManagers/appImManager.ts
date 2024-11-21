@@ -21,7 +21,6 @@ import SetTransition from '../../components/singleTransition';
 import ChatDragAndDrop from '../../components/chat/dragAndDrop';
 import {doubleRaf} from '../../helpers/schedulers';
 import useHeavyAnimationCheck, {dispatchHeavyAnimationEvent} from '../../hooks/useHeavyAnimationCheck';
-import stateStorage from '../stateStorage';
 import {MOUNT_CLASS_TO} from '../../config/debug';
 import appNavigationController from '../../components/appNavigationController';
 import AppPrivateSearchTab from '../../components/sidebarRight/tabs/search';
@@ -131,6 +130,7 @@ import getSelectedNodes from '../../helpers/dom/getSelectedNodes';
 import {setQuizHint} from '../../components/poll';
 import anchorCallback from '../../helpers/dom/anchorCallback';
 import PopupPremium from '../../components/popups/premium';
+import stateStorage from '../stateStorageInstance';
 
 export type ChatSavedPosition = {
   mids: number[],

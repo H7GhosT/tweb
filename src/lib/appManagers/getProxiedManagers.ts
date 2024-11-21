@@ -12,6 +12,7 @@ import DEBUG from '../../config/debug';
 import dT from '../../helpers/dT';
 import noop from '../../helpers/noop';
 import copy from '../../helpers/object/copy';
+import {getCurrentAccount} from './utils/currentAccount';
 
 // let stats: {
 //   [manager: string]: {
@@ -92,7 +93,8 @@ function createProxy(/* source: T,  */name: string, ack?: boolean) {
         const promise = apiManagerProxy.invoke('manager', {
           name,
           method: p as string,
-          args
+          args,
+          accountNumber: getCurrentAccount()
         }, ack as any);
 
         if(DEBUG) {

@@ -20,14 +20,15 @@ import {attachClickEvent} from '../helpers/dom/clickEvent';
 import replaceContent from '../helpers/dom/replaceContent';
 import toggleDisability from '../helpers/dom/toggleDisability';
 import sessionStorage from '../lib/sessionStorage';
-import {DcAuthKey} from '../types';
+import {DcAuthKey, DcId, TrueDcId} from '../types';
 import placeCaretAtEnd from '../helpers/dom/placeCaretAtEnd';
 import {HelpCountry, HelpCountryCode} from '../layer';
-import stateStorage from '../lib/stateStorage';
+import stateStorage from '../lib/stateStorageInstance';
 import rootScope from '../lib/rootScope';
 import TelInputField from '../components/telInputField';
 import apiManagerProxy from '../lib/mtproto/mtprotoworker';
 import CountryInputField from '../components/countryInputField';
+import {getCurrentAccount} from '../lib/appManagers/utils/currentAccount';
 
 // import _countries from '../countries_pretty.json';
 let btnNext: HTMLButtonElement = null, btnQr: HTMLButtonElement;
@@ -262,8 +263,10 @@ const onFirstMount = () => {
           const dcId = _dcs.shift();
           if(!dcId) return;
 
-          const dbKey: DcAuthKey = `dc${dcId}_auth_key` as any;
-          const key = await sessionStorage.get(dbKey);
+          const currentAccount = getCurrentAccount();
+          const accountData = await sessionStorage.get(`account${currentAccount}`);
+          const key = accountData?.[`dc${dcId as TrueDcId}_auth_key`];
+
           if(key) {
             return g();
           }

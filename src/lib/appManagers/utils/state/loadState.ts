@@ -12,13 +12,15 @@ import copy from '../../../../helpers/object/copy';
 import validateInitObject from '../../../../helpers/object/validateInitObject';
 import {UserAuth} from '../../../mtproto/mtproto_config';
 import rootScope from '../../../rootScope';
-import stateStorage from '../../../stateStorage';
+import stateStorage from '../../../stateStorageInstance';
 import sessionStorage from '../../../sessionStorage';
 import {recordPromiseBound} from '../../../../helpers/recordPromise';
 // import RESET_STORAGES_PROMISE from "../storages/resetStoragesPromise";
 import {StoragesResults} from '../storages/loadStorages';
 import {LogTypes, logger} from '../../../logger';
 import {WallPaper} from '../../../../layer';
+import tsNow from '../../../../helpers/tsNow';
+import {getCurrentAccount} from '../currentAccount';
 
 const REFRESH_EVERY = 24 * 60 * 60 * 1000; // 1 day
 // const REFRESH_EVERY = 1e3;
@@ -37,6 +39,7 @@ const REFRESH_KEYS: Array<keyof State> = [
 ];
 
 // const REFRESH_KEYS_WEEK = ['dialogs', 'allDialogsLoaded', 'updates', 'pinnedOrders'] as any as Array<keyof State>;
+
 
 async function loadStateInner() {
   const log = logger('STATE-LOADER', LogTypes.Error);
@@ -126,31 +129,32 @@ async function loadStateInner() {
   arr.splice(0, ALL_KEYS.length);
 
   // * Read auth
-  let auth = arr.shift() as UserAuth | number;
+  // let auth = arr.shift() as UserAuth | number;
   const stateId = arr.shift() as number;
   const sessionBuild = arr.shift() as number;
-  const authKeyFingerprint = arr.shift() as string;
-  const baseDcAuthKey = arr.shift() as string;
+  arr.shift(); arr.shift();
+  // const authKeyFingerprint = arr.shift() as string;
+  // const baseDcAuthKey = arr.shift() as string;
   const shiftedWebKAuth = arr.shift() as UserAuth | number;
-  if(!auth && shiftedWebKAuth) { // support old webk auth
-    auth = shiftedWebKAuth;
-    const keys: string[] = ['dc', 'server_time_offset', 'xt_instance'];
-    for(let i = 1; i <= 5; ++i) {
-      keys.push(`dc${i}_server_salt`);
-      keys.push(`dc${i}_auth_key`);
-    }
+  // if(!auth && shiftedWebKAuth) { // support old webk auth
+  //   auth = shiftedWebKAuth;
+  //   const keys: string[] = ['dc', 'server_time_offset', 'xt_instance'];
+  //   for(let i = 1; i <= 5; ++i) {
+  //     keys.push(`dc${i}_server_salt`);
+  //     keys.push(`dc${i}_auth_key`);
+  //   }
 
-    const values = await Promise.all(keys.map((key) => stateStorage.get(key as any)));
-    keys.push('user_auth');
-    values.push(typeof(auth) === 'number' || typeof(auth) === 'string' ? {dcID: values[0] || App.baseDcId, date: Date.now() / 1000 | 0, id: auth.toPeerId(false)} as UserAuth : auth);
+  //   const values = await Promise.all(keys.map((key) => stateStorage.get(key as any)));
+  //   keys.push('user_auth');
+  //   values.push(typeof(auth) === 'number' || typeof(auth) === 'string' ? {dcID: values[0] || App.baseDcId, date: Date.now() / 1000 | 0, id: auth.toPeerId(false)} as UserAuth : auth);
 
-    const obj: any = {};
-    keys.forEach((key, idx) => {
-      obj[key] = values[idx];
-    });
+  //   const obj: any = {};
+  //   keys.forEach((key, idx) => {
+  //     obj[key] = values[idx];
+  //   });
 
-    await sessionStorage.set(obj);
-  }
+  //   await sessionStorage.set(obj);
+  // }
 
   /* if(!auth) { // try to read Webogram's session from localStorage
     try {
@@ -176,13 +180,41 @@ async function loadStateInner() {
     }
   } */
 
-  if(auth) {
+
+  // const currentAccount = getCurrentAccount();
+
+  // const accountKey = `account${currentAccount}` as const;
+  // const accountData = await sessionStorage.get(accountKey);
+
+  // if(accountData?.userId) {
+  //   const dcId = await sessionStorage.get('dc');
+  //   state.authState = {_: 'authStateSignedIn'};
+  //   rootScope.dispatchEvent('user_auth', {
+  //     dcID: dcId || 0,
+  //     date: tsNow(true),
+  //     id: accountData.userId.toPeerId(false)
+  //   });
+  // } else
+
+  const accountData = await sessionStorage.get(`account${getCurrentAccount()}`);
+  const authKeyFingerprint = accountData?.auth_key_fingerprint;
+  const baseDcAuthKey = accountData?.[`dc${App.baseDcId}_auth_key`];
+  if(accountData?.userId) {
     // ! Warning ! DON'T delete this
     state.authState = {_: 'authStateSignedIn'};
-    rootScope.dispatchEvent('user_auth', typeof(auth) === 'number' || typeof(auth) === 'string' ?
-      {dcID: 0, date: Date.now() / 1000 | 0, id: auth.toPeerId(false)} :
-      auth); // * support old version
+    rootScope.dispatchEvent('user_auth',
+      {dcID: accountData.dcId || 0, date: accountData.date || (Date.now() / 1000 | 0), id: accountData.userId.toPeerId(false)}
+    );
+    // rootScope.dispatchEvent('user_auth', typeof(auth) === 'number' || typeof(auth) === 'string' ?
+    //   {dcID: 0, date: Date.now() / 1000 | 0, id: auth.toPeerId(false)} :
+    //   auth); // * support old version
+  } else {
+    state.authState = {_: 'authStateSignQr'}; // TODO: depends on device
   }
+
+  // if(!accountData?.userId && state.authState._ === 'authStateSignedIn') {
+  //   state.authState = {_: 'authStateSignQr'}; // TODO: depends on device
+  // }
 
   const resetStorages: Set<keyof StoragesResults> = new Set();
   const resetState = (preserveKeys: (keyof State)[]) => {
@@ -217,6 +249,7 @@ async function loadStateInner() {
     });
   }
 
+  // TODO: Check here
   if(baseDcAuthKey) {
     const _authKeyFingerprint = baseDcAuthKey.slice(0, 8);
     if(!authKeyFingerprint) { // * migration, preserve settings
@@ -227,7 +260,10 @@ async function loadStateInner() {
 
     if(authKeyFingerprint !== _authKeyFingerprint) {
       await sessionStorage.set({
-        auth_key_fingerprint: _authKeyFingerprint
+        [`account${getCurrentAccount()}`]: {
+          ...accountData,
+          auth_key_fingerprint: _authKeyFingerprint
+        }
       });
     }
   }
@@ -449,6 +485,8 @@ async function loadStateInner() {
   log.warn('total', performance.now() - totalPerf);
 
   // RESET_STORAGES_PROMISE.resolve(appStateManager.resetStorages);
+
+  // console.log('state', {...state});
 
   return {state, resetStorages, newVersion, oldVersion, pushedKeys};
 }

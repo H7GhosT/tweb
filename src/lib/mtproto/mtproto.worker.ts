@@ -10,7 +10,6 @@ import '../../helpers/peerIdPolyfill';
 
 import cryptoWorker from '../crypto/cryptoMessagePort';
 import {setEnvironment} from '../../environment/utils';
-import appStateManager from '../appManagers/appStateManager';
 import transportController from './transports/controller';
 import MTProtoMessagePort from './mtprotoMessagePort';
 import RESET_STORAGES_PROMISE from '../appManagers/utils/storages/resetStoragesPromise';
@@ -22,6 +21,7 @@ import toggleStorages from '../../helpers/toggleStorages';
 import appTabsManager from '../appManagers/appTabsManager';
 import callbackify from '../../helpers/callbackify';
 import Modes from '../../config/modes';
+import {getCurrentAccount} from '../appManagers/utils/currentAccount';
 
 const log = logger('MTPROTO');
 // let haveState = false;
@@ -40,20 +40,27 @@ port.addMultipleEventsListeners({
     return cryptoWorker.invokeCrypto(method as any, ...args as any);
   },
 
-  state: ({state, resetStorages, pushedKeys, newVersion, oldVersion, userId}) => {
+  state: ({state, resetStorages, pushedKeys, newVersion, oldVersion, userId, accountNumber}) => {
     // if(haveState) {
     //   return;
     // }
 
-    log('got state', state, pushedKeys);
+    log('got state', accountNumber, state, pushedKeys);
 
+    // console.log('accountNumber', accountNumber);
+
+    const appStateManager = appManagersManager.stateManagersByAccount[accountNumber];
     appStateManager.userId = userId;
     appStateManager.newVersion = newVersion;
     appStateManager.oldVersion = oldVersion;
+    // callbackify(appManagersManager.getManagersByAccount(), (managersByAccount) => {
+    // });
 
-    RESET_STORAGES_PROMISE.resolve({
+    // TODO: Understand why is this needed
+    appStateManager.resetStoragesPromise.resolve({
       storages: resetStorages,
       callback: () => {
+        console.log('calling callback for account', accountNumber);
         (Object.keys(state) as any as (keyof State)[]).forEach((key) => {
           appStateManager.pushToState(key, state[key], true, !pushedKeys.includes(key));
         });
@@ -103,20 +110,21 @@ port.addMultipleEventsListeners({
 log('MTProto start');
 
 appManagersManager.start();
-appManagersManager.getManagers();
+appManagersManager.getManagersByAccount();
 appTabsManager.start();
 
 let isFirst = true;
 // let sentHello = false;
 listenMessagePort(port, (source) => {
   appTabsManager.addTab(source);
+  console.log('source', source)
   if(isFirst) {
     isFirst = false;
   } else {
-    callbackify(appManagersManager.getManagers(), (managers) => {
-      managers.thumbsStorage.mirrorAll(source);
-      managers.appPeersManager.mirrorAllPeers(source);
-      managers.appMessagesManager.mirrorAllMessages(source);
+    callbackify(appManagersManager.getManagersByAccount(), (managers) => {
+      managers[getCurrentAccount()].thumbsStorage.mirrorAll(source);
+      managers[getCurrentAccount()].appPeersManager.mirrorAllPeers(source);
+      managers[getCurrentAccount()].appMessagesManager.mirrorAllMessages(source);
     });
   }
 

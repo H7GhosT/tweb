@@ -9,7 +9,7 @@ import type langSign from '../langSign';
 import type {State} from '../config/state';
 import DEBUG, {MOUNT_CLASS_TO} from '../config/debug';
 import {HelpCountriesList, HelpCountry, LangPackDifference, LangPackString} from '../layer';
-import stateStorage from './stateStorage';
+import stateStorage from './stateStorageInstance';
 import App from '../config/app';
 import rootScope from './rootScope';
 import {IS_MOBILE} from '../environment/userAgent';

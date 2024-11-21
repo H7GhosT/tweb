@@ -6,18 +6,33 @@
 
 import type {State} from '../../config/state';
 import rootScope from '../rootScope';
-import stateStorage from '../stateStorage';
+import StateStorage from '../stateStorage';
 import setDeepProperty, {splitDeepPath} from '../../helpers/object/setDeepProperty';
 import MTProtoMessagePort from '../mtproto/mtprotoMessagePort';
+import {ActiveAccountNumber} from './utils/currentAccountTypes';
+import deferredPromise, {CancellablePromise} from '../../helpers/cancellablePromise';
+import {StoragesResults} from './utils/storages/loadStorages';
 
-export class AppStateManager {
+export type ResetStoragesPromise = CancellablePromise<{
+  storages: Set<keyof StoragesResults>,
+  callback: () => void
+}>;
+
+export default class AppStateManager {
   private state: State = {} as any;
-  private storage = stateStorage;
+  public readonly storage: StateStorage;
 
   // ! for mtproto worker use only
   public newVersion: string;
   public oldVersion: string;
   public userId: UserId;
+
+  public readonly resetStoragesPromise: ResetStoragesPromise;
+
+  constructor(accountNumber: ActiveAccountNumber) {
+    this.storage = new StateStorage(accountNumber);
+    this.resetStoragesPromise = deferredPromise();
+  }
 
   public getState() {
     return Promise.resolve(this.state);
@@ -60,6 +75,3 @@ export class AppStateManager {
     });
   } */
 }
-
-const appStateManager = new AppStateManager();
-export default appStateManager;
