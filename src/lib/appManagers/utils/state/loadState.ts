@@ -21,6 +21,8 @@ import {LogTypes, logger} from '../../../logger';
 import {WallPaper} from '../../../../layer';
 import tsNow from '../../../../helpers/tsNow';
 import {getCurrentAccount} from '../currentAccount';
+import {ActiveAccountNumber} from '../currentAccountTypes';
+import StateStorage from '../../../stateStorage';
 
 const REFRESH_EVERY = 24 * 60 * 60 * 1000; // 1 day
 // const REFRESH_EVERY = 1e3;
@@ -40,6 +42,53 @@ const REFRESH_KEYS: Array<keyof State> = [
 
 // const REFRESH_KEYS_WEEK = ['dialogs', 'allDialogsLoaded', 'updates', 'pinnedOrders'] as any as Array<keyof State>;
 
+export async function loadStateForAccount(accountNumber: ActiveAccountNumber) {
+  const log = logger(`STATE-LOADER-ACCOUNT-${accountNumber}`, LogTypes.Error);
+
+  const stateStorage = new StateStorage(accountNumber);
+
+  const promises = ALL_KEYS.map((key) => stateStorage.get(key));
+
+  const arr = await Promise.all(promises);
+
+  const pushedKeys: (keyof State)[] = [];
+  const pushToState = <T extends keyof State>(key: T, value: State[T]) => {
+    state[key] = value;
+    pushedKeys.push(key);
+  };
+
+  const state: State = {} as any;
+
+  for(let i = 0, length = ALL_KEYS.length; i < length; ++i) {
+    const key = ALL_KEYS[i];
+    const value = arr[i];
+    if(value !== undefined) {
+      // @ts-ignore
+      state[key] = value;
+    } else {
+      pushToState(key, copy(STATE_INIT[key]));
+    }
+  }
+
+  arr.splice(0, ALL_KEYS.length);
+
+  const time = Date.now();
+  if((state.stateCreatedTime + REFRESH_EVERY) < time) {
+    if(DEBUG) {
+      log('will refresh state', state.stateCreatedTime, time);
+    }
+
+    const r = (keys: typeof REFRESH_KEYS) => {
+      keys.forEach((key) => {
+        pushToState(key, copy(STATE_INIT[key]));
+      });
+    };
+
+    r(REFRESH_KEYS);
+  }
+
+  return {state, pushedKeys};
+}
 
 async function loadStateInner() {
   const log = logger('STATE-LOADER', LogTypes.Error);
@@ -209,7 +258,7 @@ async function loadStateInner() {
     //   {dcID: 0, date: Date.now() / 1000 | 0, id: auth.toPeerId(false)} :
     //   auth); // * support old version
   } else {
-    state.authState = {_: 'authStateSignQr'}; // TODO: depends on device
+    state.authState = {_: 'authStateSignQr'}; // TODO: depends on device and try to keep on refresh if changed
   }
 
   // if(!accountData?.userId && state.authState._ === 'authStateSignedIn') {

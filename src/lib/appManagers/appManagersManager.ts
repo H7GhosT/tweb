@@ -14,7 +14,6 @@ import MTProtoMessagePort from '../mtproto/mtprotoMessagePort';
 import {AppStoragesManager} from './appStoragesManager';
 import createManagers from './createManagers';
 import {ActiveAccountNumber} from './utils/currentAccountTypes';
-import {getCurrentAccount} from './utils/currentAccount';
 import AppStateManager from './appStateManager';
 
 type Managers = Awaited<ReturnType<typeof createManagers>>;

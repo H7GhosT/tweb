@@ -35,7 +35,6 @@ import toggleStorages from '../../helpers/toggleStorages';
 import tsNow from '../../helpers/tsNow';
 import transportController from './transports/controller';
 import MTTransport from './transports/transport';
-import {getCurrentAccount} from '../appManagers/utils/currentAccount';
 
 /* class RotatableArray<T> {
   public array: Array<T> = [];
@@ -256,6 +255,7 @@ export class ApiManager extends ApiManagerMethods {
       userAuth = {dcID: 0, date: tsNow(true), id: userAuth.toPeerId(false)};
     }
 
+    console.log('dispatching userAuth', userAuth)
     this.rootScope.dispatchEvent('user_auth', userAuth);
 
     if(!userAuth.dcID) {
@@ -263,9 +263,9 @@ export class ApiManager extends ApiManagerMethods {
       userAuth.dcID = baseDcId;
     }
 
-    sessionStorage.get(`account${getCurrentAccount()}`).then(accountData => {
+    sessionStorage.get(`account${this.getAccountNumber()}`).then(accountData => {
       sessionStorage.set({
-        [`account${getCurrentAccount()}`]: {
+        [`account${this.getAccountNumber()}`]: {
           ...accountData,
           date:  (userAuth as UserAuth).date,
           userId: (userAuth as UserAuth).id,
@@ -395,8 +395,10 @@ export class ApiManager extends ApiManagerMethods {
     const ak: DcAuthKey = `dc${dcId}_auth_key` as any;
     const ss: DcServerSalt = `dc${dcId}_server_salt` as any;
 
+    console.log('this.getAccountNumber()', this.getAccountNumber())
+
     let transport = this.chooseServer(dcId, connectionType, transportType);
-    return this.gettingNetworkers[getKey] = sessionStorage.get(`account${getCurrentAccount()}`).then(accountData => [accountData?.[ak], accountData?.[ss]] as const)
+    return this.gettingNetworkers[getKey] = sessionStorage.get(`account${this.getAccountNumber()}`).then(accountData => [accountData?.[ak], accountData?.[ss]] as const)
     .then(async([authKeyHex, serverSaltHex]) => {
       let networker: MTPNetworker, error: any;
       if(authKeyHex?.length === 512) {
@@ -417,9 +419,9 @@ export class ApiManager extends ApiManagerMethods {
           serverSaltHex = bytesToHex(auth.serverSalt);
 
           if(dcId === App.baseDcId) {
-            sessionStorage.get(`account${getCurrentAccount()}`).then(accountData => {
+            sessionStorage.get(`account${this.getAccountNumber()}`).then(accountData => {
               sessionStorage.set({
-                [`account${getCurrentAccount()}`]: {
+                [`account${this.getAccountNumber()}`]: {
                   ...accountData,
                   auth_key_fingerprint: authKeyHex.slice(0, 8)
                 }
@@ -427,9 +429,9 @@ export class ApiManager extends ApiManagerMethods {
             });
           }
 
-          sessionStorage.get(`account${getCurrentAccount()}`).then(accountData => {
+          sessionStorage.get(`account${this.getAccountNumber()}`).then(accountData => {
             sessionStorage.set({
-              [`account${getCurrentAccount()}`]: {
+              [`account${this.getAccountNumber()}`]: {
                 ...accountData,
                 [ak]: authKeyHex,
                 [ss]: serverSaltHex

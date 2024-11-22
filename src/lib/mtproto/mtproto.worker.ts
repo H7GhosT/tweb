@@ -21,7 +21,6 @@ import toggleStorages from '../../helpers/toggleStorages';
 import appTabsManager from '../appManagers/appTabsManager';
 import callbackify from '../../helpers/callbackify';
 import Modes from '../../config/modes';
-import {getCurrentAccount} from '../appManagers/utils/currentAccount';
 
 const log = logger('MTPROTO');
 // let haveState = false;
@@ -122,9 +121,10 @@ listenMessagePort(port, (source) => {
     isFirst = false;
   } else {
     callbackify(appManagersManager.getManagersByAccount(), (managers) => {
-      managers[getCurrentAccount()].thumbsStorage.mirrorAll(source);
-      managers[getCurrentAccount()].appPeersManager.mirrorAllPeers(source);
-      managers[getCurrentAccount()].appMessagesManager.mirrorAllMessages(source);
+      // TODO Need somehow to take the account number here, event.origin?
+      // managers[getCurrentAccount()].thumbsStorage.mirrorAll(source);
+      // managers[getCurrentAccount()].appPeersManager.mirrorAllPeers(source);
+      // managers[getCurrentAccount()].appMessagesManager.mirrorAllMessages(source);
     });
   }
 

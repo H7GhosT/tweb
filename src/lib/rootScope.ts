@@ -234,7 +234,13 @@ export class RootScope extends EventListenerBase<BroadcastEventsListeners> {
 
     this.dispatchEvent = (e, ...args) => {
       super.dispatchEvent(e, ...args);
-      MTProtoMessagePort.getInstance().invokeVoid('event', {name: e as string, args});
+      (async() => {
+        MTProtoMessagePort.getInstance().invokeVoid('event', {
+          name: e as string,
+          args,
+          accountNumber: await this.managers.apiManager.getAccountNumber()
+        });
+      })();
     };
 
     if(!IS_WORKER) {

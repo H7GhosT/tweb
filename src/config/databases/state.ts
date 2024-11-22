@@ -5,8 +5,7 @@
  */
 
 import type {Database} from '.';
-import {getCurrentAccount} from '../../lib/appManagers/utils/currentAccount';
-import type {IDBIndex} from '../../lib/files/idb';
+import {ActiveAccountNumber} from '../../lib/appManagers/utils/currentAccountTypes';
 
 // TODO: migrate old database
 const DATABASE_STATE: Database<'session' | 'stickerSets' | 'users' | 'chats' | 'messages' | 'dialogs'> = {
@@ -39,7 +38,7 @@ const DATABASE_STATE: Database<'session' | 'stickerSets' | 'users' | 'chats' | '
   }]
 };
 
-export const getDatabaseState = (accountNumber = getCurrentAccount()): Database<'session' | 'stickerSets' | 'users' | 'chats' | 'messages' | 'dialogs'> => ({
+export const getDatabaseState = (accountNumber: ActiveAccountNumber): Database<'session' | 'stickerSets' | 'users' | 'chats' | 'messages' | 'dialogs'> => ({
   name: `tweb-account-${accountNumber}`,
   version: 7,
   stores: [{

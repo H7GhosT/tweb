@@ -32,7 +32,7 @@ const CHECK_INSTANCE_INTERVAL = 5000;
 const DEACTIVATE_TIMEOUT = 30000;
 const MULTIPLE_TABS_THRESHOLD = 20000;
 const IS_MULTIPLE_TABS_SUPPORTED = IS_SHARED_WORKER_SUPPORTED;
-
+// Check RootScope
 export class SingleInstance extends EventListenerBase<{
   activated: () =>  void,
   deactivated: (reason: InstanceDeactivateReason) => void

@@ -17,7 +17,7 @@ export type ResetStoragesPromise = CancellablePromise<{
   storages: Set<keyof StoragesResults>,
   callback: () => void
 }>;
-
+// Check RootScope
 export default class AppStateManager {
   private state: State = {} as any;
   public readonly storage: StateStorage;
@@ -58,6 +58,7 @@ export default class AppStateManager {
   }
 
   public setKeyValueToStorage<T extends keyof State>(key: T, value: State[T] = this.state[key], onlyLocal?: boolean) {
+    // TODO: Check all mirrors and add accountNumber
     MTProtoMessagePort.getInstance<false>().invokeVoid('mirror', {name: 'state', key, value});
 
     return this.storage.set({

@@ -18,7 +18,7 @@ import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
 export type MTProtoManagerTaskPayload = {name: string, method: string, args: any[], accountNumber: ActiveAccountNumber};
 
 type MTProtoBroadcastEvent = {
-  event: (payload: {name: string, args: any[]}, source: MessageEventSource) => void
+  event: (payload: {name: string, args: any[], accountNumber: ActiveAccountNumber}, source: MessageEventSource) => void
 };
 
 export default class MTProtoMessagePort<Master extends boolean = true> extends SuperMessagePort<{

@@ -79,7 +79,7 @@ export class AppStickersManager extends AppManager {
   }>;
 
   protected after() {
-    this.storage = new AppStorage<Record<Long, MyMessagesStickerSet>, typeof DATABASE_STATE>(getDatabaseState(), 'stickerSets');
+    this.storage = new AppStorage(getDatabaseState(this.getAccountNumber()), 'stickerSets');
     this.clear(true);
 
     this.rootScope.addEventListener('user_auth', () => {

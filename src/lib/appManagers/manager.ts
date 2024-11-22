@@ -59,7 +59,7 @@ import AppGifsManager from './appGifsManager';
 import {ActiveAccountNumber} from './utils/currentAccountTypes';
 
 export class AppManager {
-  readonly accountNumber: ActiveAccountNumber;
+  private accountNumber: ActiveAccountNumber;
 
   protected appPeersManager: AppPeersManager;
   protected appChatsManager: AppChatsManager;
@@ -115,6 +115,10 @@ export class AppManager {
   protected appGifsManager: AppGifsManager;
 
   public clear: (init?: boolean) => void;
+
+  public getAccountNumber() {
+    return this.accountNumber;
+  }
 
   public setManagersAndAccountNumber(managers: AppManagers, accountNumber: ActiveAccountNumber) {
     Object.assign(this, {...managers, accountNumber});

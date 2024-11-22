@@ -35,7 +35,7 @@ import ctx from '../../environment/ctx';
 import PeersStorage from '../storages/peers';
 import ThumbsStorage from '../storages/thumbs';
 import {NetworkerFactory} from '../mtproto/networkerFactory';
-import {RootScope} from '../rootScope';
+import rootScope, {RootScope} from '../rootScope';
 import {Authorizer} from '../mtproto/authorizer';
 import {DcConfigurator} from '../mtproto/dcConfigurator';
 import {TimeManager} from '../mtproto/timeManager';
@@ -136,6 +136,8 @@ export default function createManagers(
     // @ts-ignore
     ctx[name] = manager;
   }
+
+  Object.assign(managers.rootScope, {managers});
 
   const promises: Array<Promise<(() => void) | void> | void>[] = [];
   let names = Object.keys(managers) as (keyof T)[];

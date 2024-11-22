@@ -23,7 +23,7 @@ import appRuntimeManager from '../appManagers/appRuntimeManager';
 import telegramMeWebManager from './telegramMeWebManager';
 import pause from '../../helpers/schedulers/pause';
 import ENVIRONMENT from '../../environment';
-import loadState from '../appManagers/utils/state/loadState';
+import loadState, {loadStateForAccount} from '../appManagers/utils/state/loadState';
 import opusDecodeController from '../opusDecodeController';
 import MTProtoMessagePort from './mtprotoMessagePort';
 import cryptoMessagePort from '../crypto/cryptoMessagePort';
@@ -47,6 +47,7 @@ import {setAppStateSilent} from '../../stores/appState';
 import getObjectKeysAndSort from '../../helpers/object/getObjectKeysAndSort';
 import {reconcilePeer, reconcilePeers} from '../../stores/peers';
 import {getCurrentAccount} from '../appManagers/utils/currentAccount';
+import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
 
 const TEST_NO_STREAMING = false;
 
@@ -204,7 +205,8 @@ class ApiManagerProxy extends MTProtoMessagePort {
         return opusDecodeController.pushDecodeTask(bytes, false).then((result) => result.bytes);
       },
 
-      event: ({name, args}) => {
+      event: ({name, args, accountNumber}) => {
+        if(accountNumber !== getCurrentAccount()) return;
         // @ts-ignore
         rootScope.dispatchEventSingle(name, ...args);
       },
@@ -593,15 +595,29 @@ class ApiManagerProxy extends MTProtoMessagePort {
     ]);
   }
 
-  public sendState() {
-    return this.loadState().then((result) => {
-      const [stateResult] = result;
-      this.invoke('state', {...stateResult, userId: rootScope.myId.toUserId(), accountNumber: 1});
-      this.invoke('state', {...stateResult, state: {...STATE_INIT}, userId: (0).toUserId(), accountNumber: 2});
-      // this.invoke('state', {...stateResult, state: {...STATE_INIT}, userId: (0).toUserId(), accountNumber: 3});
-      // this.invoke('state', {...stateResult, state: {...STATE_INIT}, userId: (0).toUserId(), accountNumber: 4});
-      return result;
-    });
+  public async sendState() {
+    const result = await this.loadState();
+
+    const [stateResult] = result;
+    this.invoke('state', {...stateResult, userId: rootScope.myId.toUserId(), accountNumber: getCurrentAccount()});
+
+    for(let i = 1; i <= 2; i++) {
+      if(i !== getCurrentAccount()) {
+        const otherAccountState = await loadStateForAccount(i as ActiveAccountNumber);
+        const userId = (await sessionStorage.get(`account${i as ActiveAccountNumber}`))?.userId;
+        this.invoke('state', {
+          ...otherAccountState,
+          resetStorages: new Set(),
+          newVersion: stateResult.newVersion,
+          oldVersion: stateResult.oldVersion,
+          userId,
+          accountNumber: i as ActiveAccountNumber
+        });
+      }
+    }
+    // this.invoke('state', {...stateResult, state: {...STATE_INIT}, userId: (0).toUserId(), accountNumber: 3});
+    // this.invoke('state', {...stateResult, state: {...STATE_INIT}, userId: (0).toUserId(), accountNumber: 4});
+    return result;
   }
 
   public invokeCrypto<Method extends keyof CryptoMethods>(method: Method, ...args: Parameters<CryptoMethods[typeof method]>): Promise<Awaited<ReturnType<CryptoMethods[typeof method]>>> {
@@ -780,6 +796,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
     this.updateTabState('idleStartTime', idle ? Date.now() : 0);
   }
 
+  // TODO: Mirror by account
   private onMirrorTask = (payload: MirrorTaskPayload) => {
     const {name, key, value} = payload;
     this.processMirrorTaskMap[name]?.(payload);

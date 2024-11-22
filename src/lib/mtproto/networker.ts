@@ -41,7 +41,7 @@ import pause from '../../helpers/schedulers/pause';
 import {getEnvironment} from '../../environment/utils';
 import {TimeManager} from './timeManager';
 import indexOfAndSplice from '../../helpers/array/indexOfAndSplice';
-import {getCurrentAccount} from '../appManagers/utils/currentAccount';
+import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
 
 // console.error('networker included!', new Error().stack);
 
@@ -210,6 +210,7 @@ export default class MTPNetworker {
     private authKey: Uint8Array,
     private authKeyId: Uint8Array,
     serverSalt: Uint8Array,
+    private accountNumber: ActiveAccountNumber,
     options: InvokeApiOptions = {}
   ) {
     this.authKeyUint8 = convertToUint8Array(this.authKey);
@@ -1524,9 +1525,9 @@ export default class MTPNetworker {
   private applyServerSalt(newServerSalt: string) {
     const serverSalt = longToBytes(newServerSalt);
 
-    sessionStorage.get(`account${getCurrentAccount()}`).then(accountData => {
+    sessionStorage.get(`account${this.accountNumber}`).then(accountData => {
       sessionStorage.set({
-        [`account${getCurrentAccount()}`]: {
+        [`account${this.accountNumber}`]: {
           ...accountData,
           ['dc' + this.dcId + '_server_salt']: bytesToHex(serverSalt)
         }

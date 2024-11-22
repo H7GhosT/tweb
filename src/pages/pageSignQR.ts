@@ -61,7 +61,8 @@ const onFirstMount = async() => {
   const QRCodeStyling = results[0].default;
 
   let stop = false;
-  rootScope.addEventListener('user_auth', () => {
+  rootScope.addEventListener('user_auth', (auth) => {
+    console.log('auth', auth)
     stop = true;
     cachedPromise = null;
   }, {once: true});
@@ -70,12 +71,14 @@ const onFirstMount = async() => {
   let prevToken: Uint8Array | number[];
 
   const iterate = async(isLoop: boolean) => {
+    console.log('iterating');
     try {
       let loginToken = await rootScope.managers.apiManager.invokeApi('auth.exportLoginToken', {
         api_id: App.id,
         api_hash: App.hash,
-        except_ids: []
+        except_ids: [] // TODO: Except other logged accounts??
       }, {ignoreErrors: true});
+      console.log('loginToken1', loginToken)
 
       if(loginToken._ === 'auth.loginTokenMigrateTo') {
         if(!options.dcId) {
@@ -89,8 +92,10 @@ const onFirstMount = async() => {
         }, options) as AuthLoginToken.authLoginToken;
       }
 
+      console.log('loginToken2', loginToken)
       if(loginToken._ === 'auth.loginTokenSuccess') {
         const authorization = loginToken.authorization as any as AuthAuthorization.authAuthorization;
+        console.log('Set user to api manager');
         await rootScope.managers.apiManager.setUser(authorization.user);
         import('./pageIm').then((m) => m.default.mount());
         return true;
@@ -215,11 +220,13 @@ const onFirstMount = async() => {
     stop = false;
 
     do {
+      console.log('stop', stop)
       if(stop) {
         break;
       }
 
       const needBreak = await iterate(true);
+      console.log('needBreak', needBreak)
       if(needBreak) {
         break;
       }
