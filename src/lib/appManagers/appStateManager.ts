@@ -29,7 +29,7 @@ export default class AppStateManager {
 
   public readonly resetStoragesPromise: ResetStoragesPromise;
 
-  constructor(accountNumber: ActiveAccountNumber) {
+  constructor(private accountNumber: ActiveAccountNumber) {
     this.storage = new StateStorage(accountNumber);
     this.resetStoragesPromise = deferredPromise();
   }
@@ -58,8 +58,12 @@ export default class AppStateManager {
   }
 
   public setKeyValueToStorage<T extends keyof State>(key: T, value: State[T] = this.state[key], onlyLocal?: boolean) {
-    // TODO: Check all mirrors and add accountNumber
-    MTProtoMessagePort.getInstance<false>().invokeVoid('mirror', {name: 'state', key, value});
+    MTProtoMessagePort.getInstance<false>().invokeVoid('mirror', {
+      name: 'state',
+      key,
+      value,
+      accountNumber: this.accountNumber
+    });
 
     return this.storage.set({
       [key]: value

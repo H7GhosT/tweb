@@ -164,7 +164,8 @@ export class AppReactionsManager extends AppManager {
 
         MTProtoMessagePort.getInstance<false>().invokeVoid('mirror', {
           name: 'availableReactions',
-          value: availableReactions
+          value: availableReactions,
+          accountNumber: this.getAccountNumber()
         });
 
         return availableReactions;

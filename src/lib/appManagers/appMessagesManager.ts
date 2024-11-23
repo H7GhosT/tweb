@@ -3017,7 +3017,8 @@ export class AppMessagesManager extends AppManager {
 
     MTProtoMessagePort.getInstance<false>().invokeVoid('mirror', {
       name: 'messages',
-      value: mirror
+      value: mirror,
+      accountNumber: this.getAccountNumber()
     }, port);
   }
 
@@ -3057,7 +3058,8 @@ export class AppMessagesManager extends AppManager {
       MTProtoMessagePort.getInstance<false>().invokeVoid('mirror', {
         name: 'messages',
         key: joinDeepPath(storage.key, mid),
-        value: message
+        value: message,
+        accountNumber: this.getAccountNumber()
       });
     }
 
@@ -3077,7 +3079,8 @@ export class AppMessagesManager extends AppManager {
     if(storage.type !== 'grouped') {
       MTProtoMessagePort.getInstance<false>().invokeVoid('mirror', {
         name: 'messages',
-        key: joinDeepPath(storage.key, mid)
+        key: joinDeepPath(storage.key, mid),
+        accountNumber: this.getAccountNumber()
       });
     }
 

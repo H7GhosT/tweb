@@ -12,7 +12,6 @@ import cryptoWorker from '../crypto/cryptoMessagePort';
 import {setEnvironment} from '../../environment/utils';
 import transportController from './transports/controller';
 import MTProtoMessagePort from './mtprotoMessagePort';
-import RESET_STORAGES_PROMISE from '../appManagers/utils/storages/resetStoragesPromise';
 import appManagersManager from '../appManagers/appManagersManager';
 import listenMessagePort from '../../helpers/listenMessagePort';
 import {logger} from '../logger';
@@ -21,6 +20,7 @@ import toggleStorages from '../../helpers/toggleStorages';
 import appTabsManager from '../appManagers/appTabsManager';
 import callbackify from '../../helpers/callbackify';
 import Modes from '../../config/modes';
+import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
 
 const log = logger('MTPROTO');
 // let haveState = false;
@@ -113,18 +113,20 @@ appManagersManager.getManagersByAccount();
 appTabsManager.start();
 
 let isFirst = true;
+
 // let sentHello = false;
 listenMessagePort(port, (source) => {
   appTabsManager.addTab(source);
-  console.log('source', source)
   if(isFirst) {
     isFirst = false;
   } else {
     callbackify(appManagersManager.getManagersByAccount(), (managers) => {
-      // TODO Need somehow to take the account number here, event.origin?
-      // managers[getCurrentAccount()].thumbsStorage.mirrorAll(source);
-      // managers[getCurrentAccount()].appPeersManager.mirrorAllPeers(source);
-      // managers[getCurrentAccount()].appMessagesManager.mirrorAllMessages(source);
+      for(const key in managers) {
+        const accountNumber = key as any as ActiveAccountNumber
+        managers[accountNumber].thumbsStorage.mirrorAll(source);
+        managers[accountNumber].appPeersManager.mirrorAllPeers(source);
+        managers[accountNumber].appMessagesManager.mirrorAllMessages(source);
+      }
     });
   }
 

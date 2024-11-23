@@ -78,7 +78,8 @@ export type MirrorTaskPayload<
   name: T,
   // key?: K,
   key?: string,
-  value?: any
+  value?: any,
+  accountNumber: ActiveAccountNumber
 };
 
 export type NotificationBuildTaskPayload = {
@@ -798,7 +799,9 @@ class ApiManagerProxy extends MTProtoMessagePort {
 
   // TODO: Mirror by account
   private onMirrorTask = (payload: MirrorTaskPayload) => {
-    const {name, key, value} = payload;
+    const {name, key, value, accountNumber} = payload;
+    if(accountNumber !== getCurrentAccount()) return;
+
     this.processMirrorTaskMap[name]?.(payload);
     if(!payload.hasOwnProperty('key')) {
       this.mirrors[name] = value;
