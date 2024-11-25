@@ -2880,7 +2880,10 @@ const lang = {
   'MediaEditor.Adjustments.Grain': 'Grain',
   'MediaEditor.Adjustments.Sharpen': 'Sharpen',
   'MediaEditor.DiscardChanges': 'Discard Changes',
-  'MediaEditor.DiscardWarning': 'Are you sure you want to discard your changes?'
+  'MediaEditor.DiscardWarning': 'Are you sure you want to discard your changes?',
+  'MultiAccount.AddAccount': 'Add Account',
+  'MultiAccount.More': 'More',
+  'Enable': 'Enable'
 };
 
 export default lang;

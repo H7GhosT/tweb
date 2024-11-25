@@ -6,24 +6,22 @@
 
 import type {AppInstance} from './mtproto/singleInstance';
 import type {UserAuth} from './mtproto/mtproto_config';
-import type {DcAuthKey, DcId, DcServerSalt, TrueDcId} from '../types';
+import type {DcId} from '../types';
 import {MOUNT_CLASS_TO} from '../config/debug';
 import LocalStorageController from './localStorage';
 import {AccountSessionData, ActiveAccountNumber} from './appManagers/utils/currentAccountTypes';
-
 
 const sessionStorage = new LocalStorageController<{
   dc: DcId,
   user_auth: UserAuth,
   state_id: number,
 
-  currentAccount: ActiveAccountNumber,
   account1: AccountSessionData,
   account2: AccountSessionData,
   account3: AccountSessionData,
   account4: AccountSessionData,
 
-  // <-- DEPRECATED
+  // <-- DEPRECATED, use only for going to and from 'A' (a.k.a. 'Z') version
   dc1_auth_key: string,
   dc2_auth_key: string,
   dc3_auth_key: string,

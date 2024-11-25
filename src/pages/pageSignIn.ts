@@ -29,6 +29,7 @@ import TelInputField from '../components/telInputField';
 import apiManagerProxy from '../lib/mtproto/mtprotoworker';
 import CountryInputField from '../components/countryInputField';
 import {getCurrentAccount} from '../lib/appManagers/utils/currentAccount';
+import AccountController from '../lib/accountController';
 
 // import _countries from '../countries_pretty.json';
 let btnNext: HTMLButtonElement = null, btnQr: HTMLButtonElement;
@@ -263,8 +264,7 @@ const onFirstMount = () => {
           const dcId = _dcs.shift();
           if(!dcId) return;
 
-          const currentAccount = getCurrentAccount();
-          const accountData = await sessionStorage.get(`account${currentAccount}`);
+          const accountData = await AccountController.get(getCurrentAccount());
           const key = accountData?.[`dc${dcId as TrueDcId}_auth_key`];
 
           if(key) {

@@ -22,7 +22,7 @@ import AppArchivedTab from './tabs/archivedTab';
 import AppAddMembersTab from './tabs/addMembers';
 import I18n, {i18n} from '../../lib/langPack';
 import AppPeopleNearbyTab from './tabs/peopleNearby';
-import {ButtonMenuItemOptions} from '../buttonMenu';
+import ButtonMenu, {ButtonMenuItemOptions, ButtonMenuItemOptionsVerifiable} from '../buttonMenu';
 import CheckboxField from '../checkboxField';
 import {IS_MOBILE_SAFARI} from '../../environment/userAgent';
 import appNavigationController, {NavigationItem} from '../appNavigationController';
@@ -66,13 +66,22 @@ import flatten from '../../helpers/array/flatten';
 import EmojiTab from '../emoticonsDropdown/tabs/emoji';
 import {EmoticonsDropdown} from '../emoticonsDropdown';
 import cloneDOMRect from '../../helpers/dom/cloneDOMRect';
-import {AccountEmojiStatuses, Document, EmojiStatus} from '../../layer';
+import {AccountEmojiStatuses, Document, EmojiStatus, User, UserProfilePhoto} from '../../layer';
 import filterUnique from '../../helpers/array/filterUnique';
 import {Middleware, MiddlewareHelper} from '../../helpers/middleware';
 import wrapEmojiStatus from '../wrappers/emojiStatus';
 import {makeMediaSize} from '../../helpers/mediaSize';
 import ReactionElement from '../chat/reaction';
 import setBlankToAnchor from '../../lib/richTextProcessor/setBlankToAnchor';
+import AccountController from '../../lib/accountController';
+import {ActiveAccountNumber, CURRENT_ACCOUNT_QUERY_PARAM} from '../../lib/appManagers/utils/currentAccountTypes';
+import {getCurrentAccount} from '../../lib/appManagers/utils/currentAccount';
+import {createProxiedManagersForAccount} from '../../lib/appManagers/getProxiedManagers';
+import limitSymbols from '../../helpers/string/limitSymbols';
+import {injectMediaEditorLangPack} from '../mediaEditor/langPack';
+import attachFloatingButtonMenu from '../floatingButtonMenu';
+import filterAsync from '../../helpers/array/filterAsync';
+import pause from '../../helpers/schedulers/pause';
 
 export const LEFT_COLUMN_ACTIVE_CLASSNAME = 'is-left-column-shown';
 
@@ -156,7 +165,21 @@ export class AppSidebarLeft extends SidebarSlider {
       themeCheckboxField.setValueSilently(themeController.getTheme().name === 'night');
     });
 
+    const more = document.createElement('span');
+    // more.setAttribute('style', 'display: inline-flex; justify-content: space-between; align-items: center');
+    more.classList.add('more-label');
+    more.append(i18n('MultiAccount.More'), Icon('arrowhead'));
+
+    let removeSubmenuListener: () => void;
     const menuButtons: (ButtonMenuItemOptions & {verify?: () => boolean | Promise<boolean>})[] = [{
+      icon: 'plus',
+      text: 'MultiAccount.AddAccount',
+      onClick: () => {},
+      verify: async() => {
+        const totalAccounts = await AccountController.getTotalAccounts();
+        return totalAccounts < 4;
+      }
+    }, {
       icon: 'savedmessages',
       text: 'SavedMessages',
       onClick: () => {
@@ -165,7 +188,8 @@ export class AppSidebarLeft extends SidebarSlider {
             peerId: appImManager.myId
           });
         }, 0);
-      }
+      },
+      separator: true
     }, btnArchive, {
       icon: 'stories',
       text: 'MyStories.Title',
@@ -177,95 +201,16 @@ export class AppSidebarLeft extends SidebarSlider {
       icon: 'user',
       text: 'Contacts',
       onClick: onContactsClick
-    }, IS_GEOLOCATION_SUPPORTED ? {
-      icon: 'group',
-      text: 'PeopleNearby',
-      onClick: () => {
-        this.createTab(AppPeopleNearbyTab).open();
-      }
-    } : undefined, {
+    }, {
       icon: 'settings',
       text: 'Settings',
       onClick: () => {
         this.createTab(AppSettingsTab).open();
       }
     }, {
-      icon: 'darkmode',
-      text: 'DarkMode',
-      onClick: () => {
-
-      },
-      checkboxField: themeCheckboxField
-    }, {
-      icon: 'animations',
-      text: 'Animations',
-      onClick: () => {
-
-      },
-      checkboxField: new CheckboxField({
-        toggle: true,
-        checked: liteMode.isAvailable('animations'),
-        stateKey: joinDeepPath('settings', 'liteMode', 'animations'),
-        stateValueReverse: true
-      }),
-      verify: () => !liteMode.isEnabled()
-    }, {
-      icon: 'animations',
-      text: 'LiteMode.Title',
-      onClick: () => {
-        this.createTab(AppPowerSavingTab).open();
-      },
-      verify: () => liteMode.isEnabled()
-    }, {
-      icon: 'help',
-      text: 'TelegramFeatures',
-      onClick: () => {
-        const url = I18n.format('TelegramFeaturesUrl', true);
-        appImManager.openUrl(url);
-      }
-    }, {
-      icon: 'bug',
-      text: 'ReportBug',
-      onClick: () => {
-        const a = document.createElement('a');
-        setBlankToAnchor(a);
-        a.href = 'https://bugs.telegram.org/?tag_ids=40&sort=time';
-        document.body.append(a);
-        a.click();
-        setTimeout(() => {
-          a.remove();
-        }, 0);
-      }
-    }, {
-      icon: 'char' as Icon,
-      className: 'a',
-      text: 'ChatList.Menu.SwitchTo.A',
-      onClick: () => {
-        Promise.all([
-          sessionStorage.set({kz_version: 'Z'}),
-          sessionStorage.delete('tgme_sync')
-        ]).then(() => {
-          location.href = 'https://web.telegram.org/a/';
-        });
-      },
-      verify: () => App.isMainDomain
-    }, /* {
-      icon: 'char w',
-      text: 'ChatList.Menu.SwitchTo.Webogram',
-      onClick: () => {
-        sessionStorage.delete('tgme_sync').then(() => {
-          location.href = 'https://web.telegram.org/?legacy=1';
-        });
-      },
-      verify: () => App.isMainDomain
-    }, */ {
-      icon: 'plusround',
-      text: 'PWA.Install',
-      onClick: () => {
-        const installPrompt = getInstallPrompt();
-        installPrompt?.();
-      },
-      verify: () => !!getInstallPrompt()
+      icon: 'more',
+      regularText: more,
+      onClick: () => {}
     }];
 
     const filteredButtons = menuButtons.filter(Boolean);
@@ -279,6 +224,7 @@ export class AppSidebarLeft extends SidebarSlider {
         const attachMenuBotsButtons = attachMenuBots.filter((attachMenuBot) => {
           return attachMenuBot.pFlags.show_in_side_menu;
         }).map((attachMenuBot) => {
+          injectMediaEditorLangPack();
           const icon = getAttachMenuBotIcon(attachMenuBot);
           const button: typeof buttons[0] = {
             regularText: wrapEmojiText(attachMenuBot.short_name),
@@ -297,29 +243,193 @@ export class AppSidebarLeft extends SidebarSlider {
           return button;
         });
 
-        buttons.splice(3, 0, ...attachMenuBotsButtons);
+        function wrapUserName(user: User.user) {
+          let name = user.first_name;
+          if(user.last_name) name += ' ' + user.last_name;
+
+          name = limitSymbols(name, 15, 18);
+          return wrapEmojiText(name);
+        }
+
+
+        function changeAccount(accountNumber: ActiveAccountNumber) {
+          const url = new URL(location.href);
+
+          if(accountNumber === 1) url.searchParams.delete(CURRENT_ACCOUNT_QUERY_PARAM);
+          else url.searchParams.set(CURRENT_ACCOUNT_QUERY_PARAM, accountNumber + '');
+
+          appNavigationController.overrideHash();
+
+          const newUrl = url.search ? url.pathname + url.search : url.pathname;
+          history.replaceState(null, '', newUrl)
+
+          location.reload();
+        }
+
+        const targetIdx = 5;
+        buttons[targetIdx].separator = !!attachMenuBotsButtons.length;
+        buttons.splice(targetIdx, 0, ...attachMenuBotsButtons);
+        buttons[targetIdx].separator = true;
+
+        const totalAccounts = await AccountController.getTotalAccounts();
+        const accountsButtons: typeof buttons = [];
+        for(let i = 1; i <= totalAccounts; i++) {
+          const accountNumber = i as ActiveAccountNumber;
+          if(accountNumber === getCurrentAccount()) {
+            const user = await this.managers.appUsersManager.getSelf();
+            accountsButtons.push({
+              avatarInfo: {
+                accountNumber: getCurrentAccount(),
+                peerId: rootScope.myId.toPeerId()
+              },
+              regularText: wrapUserName(user),
+              onClick: () => {
+                this.createTab(AppSettingsTab).open();
+              }
+            });
+          } else {
+            const otherManagers = createProxiedManagersForAccount(accountNumber);
+            const accountData = await AccountController.get(accountNumber)
+            const peerId = accountData?.userId?.toPeerId();
+            const user = await otherManagers.appUsersManager.getSelf();
+
+            accountsButtons.push({
+              avatarInfo: {
+                accountNumber,
+                peerId,
+                peer: user
+              },
+              regularText: wrapUserName(user),
+              onClick: () => {
+                changeAccount(accountNumber);
+              }
+            });
+          }
+        }
+
+        buttons[0].onClick = () => {
+          changeAccount((totalAccounts + 1) as ActiveAccountNumber);
+        };
+
+        buttons.splice(0, 0, ...accountsButtons);
+
         filteredButtons.splice(0, filteredButtons.length, ...buttons);
       },
       onOpen: (e, btnMenu) => {
-        const btnMenuFooter = document.createElement('a');
-        btnMenuFooter.href = 'https://github.com/morethanwords/tweb/blob/master/CHANGELOG.md';
-        setBlankToAnchor(btnMenuFooter);
-        btnMenuFooter.classList.add('btn-menu-footer');
-        btnMenuFooter.addEventListener(CLICK_EVENT_NAME, (e) => {
-          e.stopPropagation();
-          contextMenuController.close();
-        });
-        const t = document.createElement('span');
-        t.classList.add('btn-menu-footer-text');
-        t.textContent = 'Telegram Web' + App.suffix + ' '/* ' alpha ' */ + App.versionFull;
-        btnMenuFooter.append(t);
-        btnMenu.classList.add('has-footer');
-        btnMenu.append(btnMenuFooter);
+        const isDarkModeEnabled = () => themeController.getTheme().name === 'night';
+        const toggleTheme = () => {
+          const item = btns[0].element;
+          const icon = item.querySelector('.tgico');
+          const rect = icon.getBoundingClientRect();
+          themeController.switchTheme(isDarkModeEnabled() ? 'day' : 'night', {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2
+          });
+        };
 
-        const a = btnMenu.querySelector('.a .btn-menu-item-icon');
-        if(a) a.textContent = 'A';
+        const darkModeText = document.createElement('span');
+        darkModeText.append(i18n(isDarkModeEnabled() ? 'Disable': 'Enable'), ' ', i18n('DarkMode'));
+        const btns: ButtonMenuItemOptionsVerifiable[] = [{
+          icon: 'darkmode',
+          regularText: darkModeText,
+          onClick: () => {}
+        }, {
+          icon: 'animations',
+          text: 'Animations',
+          onClick: () => {},
+          checkboxField: new CheckboxField({
+            toggle: true,
+            checked: liteMode.isAvailable('animations'),
+            stateKey: joinDeepPath('settings', 'liteMode', 'animations'),
+            stateValueReverse: true
+          }),
+          verify: () => !liteMode.isEnabled()
+        }, {
+          icon: 'animations',
+          text: 'LiteMode.Title',
+          onClick: () => {
+            this.createTab(AppPowerSavingTab).open();
+          },
+          verify: () => liteMode.isEnabled()
+        }, {
+          icon: 'char' as Icon,
+          className: 'a',
+          text: 'ChatList.Menu.SwitchTo.A',
+          onClick: () => {
+            Promise.all([
+              sessionStorage.set({kz_version: 'Z'}),
+              sessionStorage.delete('tgme_sync')
+            ]).then(() => {
+              location.href = 'https://web.telegram.org/a/';
+            });
+          },
+          separator: App.isMainDomain,
+          verify: () => App.isMainDomain
+        }, {
+          icon: 'help',
+          text: 'TelegramFeatures',
+          onClick: () => {
+            const url = I18n.format('TelegramFeaturesUrl', true);
+            appImManager.openUrl(url);
+          },
+          separator: !App.isMainDomain
+        }, {
+          icon: 'bug',
+          text: 'ReportBug',
+          onClick: () => {
+            const a = document.createElement('a');
+            setBlankToAnchor(a);
+            a.href = 'https://bugs.telegram.org/?tag_ids=40&sort=time';
+            document.body.append(a);
+            a.click();
+            setTimeout(() => {
+              a.remove();
+            }, 0);
+          }
+        }, {
+          icon: 'plusround',
+          text: 'PWA.Install',
+          onClick: () => {
+            const installPrompt = getInstallPrompt();
+            installPrompt?.();
+          },
+          verify: () => !!getInstallPrompt()
+        }];
+
+        const moreBtn = filteredButtons.find(item => item.icon === 'more');
+        moreBtn.element.addEventListener(CLICK_EVENT_NAME, (e) => {
+          e.stopPropagation();
+        }, true);
+        moreBtn.element.classList.add('disable-click');
+        removeSubmenuListener = attachFloatingButtonMenu({
+          element: moreBtn.element,
+          direction: 'right-start',
+          createMenu: async() => {
+            const filtered = await filterAsync(btns, (button) => button?.verify ? button.verify() ?? false : true);
+            const menu = await ButtonMenu({
+              buttons: filtered
+            });
+
+            menu.append(getVersionLink());
+            menu.classList.add('sidebar-tools-submenu');
+
+            const darkModeBtn = btns[0].element;
+            darkModeBtn.addEventListener(CLICK_EVENT_NAME, (e) => {
+              e.stopPropagation();
+              toggleTheme();
+              pause(20).then(() => contextMenuController.close());
+            }, true);
+
+            return menu;
+          },
+          offset: [-5, -5],
+          triggerEvent: 'mouseenter'
+        });
 
         btnArchive.element?.append(this.archivedCount);
+      },
+      onClose: () => {
+        removeSubmenuListener?.();
       },
       noIcon: true
     });
@@ -937,3 +1047,25 @@ export class SettingChatListSection extends SettingSection {
 const appSidebarLeft = new AppSidebarLeft();
 MOUNT_CLASS_TO.appSidebarLeft = appSidebarLeft;
 export default appSidebarLeft;
+
+function getVersionLink() {
+  const btnMenuFooter = document.createElement('a');
+  btnMenuFooter.href = 'https://github.com/morethanwords/tweb/blob/master/CHANGELOG.md';
+  setBlankToAnchor(btnMenuFooter);
+  btnMenuFooter.classList.add('btn-menu-footer');
+  btnMenuFooter.addEventListener(CLICK_EVENT_NAME, (e) => {
+    e.stopPropagation();
+    contextMenuController.close();
+  });
+  const t = document.createElement('span');
+  t.classList.add('btn-menu-footer-text');
+  t.textContent = 'Telegram Web' + App.suffix + ' '/* ' alpha ' */ + App.version;
+  btnMenuFooter.append(t);
+
+  return btnMenuFooter;
+  // btnMenu.classList.add('has-footer');
+  // btnMenu.append(btnMenuFooter);
+
+  // const a = btnMenu.querySelector('.a .btn-menu-item-icon');
+  // if(a) a.textContent = 'A';
+}

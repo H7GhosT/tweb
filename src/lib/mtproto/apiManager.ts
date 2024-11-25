@@ -10,7 +10,7 @@
  */
 
 import type {UserAuth} from './mtproto_config';
-import type {DcAuthKey, DcId, DcServerSalt, InvokeApiOptions} from '../../types';
+import type {DcAuthKey, DcId, DcServerSalt, InvokeApiOptions, TrueDcId} from '../../types';
 import type {MethodDeclMap} from '../../layer';
 import type TcpObfuscated from './transports/tcpObfuscated';
 import sessionStorage from '../sessionStorage';
@@ -35,6 +35,7 @@ import toggleStorages from '../../helpers/toggleStorages';
 import tsNow from '../../helpers/tsNow';
 import transportController from './transports/controller';
 import MTTransport from './transports/transport';
+import AccountController from '../accountController';
 
 /* class RotatableArray<T> {
   public array: Array<T> = [];
@@ -263,16 +264,11 @@ export class ApiManager extends ApiManagerMethods {
       userAuth.dcID = baseDcId;
     }
 
-    sessionStorage.get(`account${this.getAccountNumber()}`).then(accountData => {
-      sessionStorage.set({
-        [`account${this.getAccountNumber()}`]: {
-          ...accountData,
-          date:  (userAuth as UserAuth).date,
-          userId: (userAuth as UserAuth).id,
-          dcId: (userAuth as UserAuth).dcID
-        }
-      });
-    })
+    AccountController.update(this.getAccountNumber(), {
+      date:  (userAuth as UserAuth).date,
+      userId: (userAuth as UserAuth).id,
+      dcId: (userAuth as UserAuth).dcID as TrueDcId
+    });
 
     // this.telegramMeNotify(true);
   }
@@ -398,7 +394,7 @@ export class ApiManager extends ApiManagerMethods {
     console.log('this.getAccountNumber()', this.getAccountNumber())
 
     let transport = this.chooseServer(dcId, connectionType, transportType);
-    return this.gettingNetworkers[getKey] = sessionStorage.get(`account${this.getAccountNumber()}`).then(accountData => [accountData?.[ak], accountData?.[ss]] as const)
+    return this.gettingNetworkers[getKey] = AccountController.get(this.getAccountNumber()).then(accountData => [accountData?.[ak], accountData?.[ss]] as const)
     .then(async([authKeyHex, serverSaltHex]) => {
       let networker: MTPNetworker, error: any;
       if(authKeyHex?.length === 512) {
@@ -419,24 +415,14 @@ export class ApiManager extends ApiManagerMethods {
           serverSaltHex = bytesToHex(auth.serverSalt);
 
           if(dcId === App.baseDcId) {
-            sessionStorage.get(`account${this.getAccountNumber()}`).then(accountData => {
-              sessionStorage.set({
-                [`account${this.getAccountNumber()}`]: {
-                  ...accountData,
-                  auth_key_fingerprint: authKeyHex.slice(0, 8)
-                }
-              });
+            AccountController.update(this.getAccountNumber(), {
+              auth_key_fingerprint: authKeyHex.slice(0, 8)
             });
           }
 
-          sessionStorage.get(`account${this.getAccountNumber()}`).then(accountData => {
-            sessionStorage.set({
-              [`account${this.getAccountNumber()}`]: {
-                ...accountData,
-                [ak]: authKeyHex,
-                [ss]: serverSaltHex
-              }
-            });
+          AccountController.update(this.getAccountNumber(), {
+            [ak]: authKeyHex,
+            [ss]: serverSaltHex
           });
 
           networker = this.networkerFactory.getNetworker(dcId, auth.authKey, auth.authKeyId, auth.serverSalt, options);

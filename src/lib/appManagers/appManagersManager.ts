@@ -48,9 +48,9 @@ export class AppManagersManager {
 
     this.stateManagersByAccount = {
       1: new AppStateManager(1),
-      2: new AppStateManager(2)
-      // 3: new AppStateManager(3),
-      // 4: new AppStateManager(4)
+      2: new AppStateManager(2),
+      3: new AppStateManager(3),
+      4: new AppStateManager(4)
     } as StateManagersByAccount;
   }
 
@@ -97,7 +97,7 @@ export class AppManagersManager {
   }
 
   private async createManagers() {
-    const promises = ([1, 2/* , 3, 4 */] as ActiveAccountNumber[]).map(async accountNumber => {
+    const promises = ([1, 2, 3, 4] as ActiveAccountNumber[]).map(async accountNumber => {
       const stateManager = this.stateManagersByAccount[accountNumber]
       const appStoragesManager = new AppStoragesManager(accountNumber, stateManager.resetStoragesPromise);
 

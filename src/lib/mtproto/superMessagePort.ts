@@ -140,7 +140,7 @@ export default class SuperMessagePort<
     this.listenPorts = [];
     this.sendPorts = [];
     this.pingResolves = new Map();
-    this.taskId = 0;
+    this.taskId = 0; // TODO: There are multiple tabs, will the task ids interfere with each other?
     this.awaiting = {};
     this.pending = new Map();
     this.log = logger('MP' + (logSuffix ? '-' + logSuffix : ''));

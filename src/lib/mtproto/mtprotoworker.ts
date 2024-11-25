@@ -48,6 +48,7 @@ import getObjectKeysAndSort from '../../helpers/object/getObjectKeysAndSort';
 import {reconcilePeer, reconcilePeers} from '../../stores/peers';
 import {getCurrentAccount} from '../appManagers/utils/currentAccount';
 import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
+import {createProxiedManagersForAccount} from '../appManagers/getProxiedManagers';
 
 const TEST_NO_STREAMING = false;
 
@@ -602,7 +603,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
     const [stateResult] = result;
     this.invoke('state', {...stateResult, userId: rootScope.myId.toUserId(), accountNumber: getCurrentAccount()});
 
-    for(let i = 1; i <= 2; i++) {
+    for(let i = 1; i <= 4; i++) {
       if(i !== getCurrentAccount()) {
         const otherAccountState = await loadStateForAccount(i as ActiveAccountNumber);
         const userId = (await sessionStorage.get(`account${i as ActiveAccountNumber}`))?.userId;
@@ -725,6 +726,12 @@ class ApiManagerProxy extends MTProtoMessagePort {
     return this.getMessageFromStorage(this.getHistoryMessagesStorage(peerId), messageId);
   }
 
+
+  public getPeerForAccount(peerId: PeerId, accountNumber: ActiveAccountNumber) {
+    const managers = createProxiedManagersForAccount(accountNumber);
+    return managers.appPeersManager.getPeer(peerId);
+  }
+
   public getPeer(peerId: PeerId) {
     return this.mirrors.peers[peerId];
   }
@@ -751,7 +758,12 @@ class ApiManagerProxy extends MTProtoMessagePort {
     return !!(saved && saved[size] && !(saved[size] instanceof Promise));
   }
 
-  public loadAvatar(peerId: PeerId, photo: UserProfilePhoto.userProfilePhoto | ChatPhoto.chatPhoto, size: PeerPhotoSize) {
+  public loadAvatar(peerId: PeerId, photo: UserProfilePhoto.userProfilePhoto | ChatPhoto.chatPhoto, size: PeerPhotoSize, accountNumber?: ActiveAccountNumber) {
+    if(accountNumber && accountNumber !== getCurrentAccount()) {
+      const managers = createProxiedManagersForAccount(accountNumber);
+      return managers.appAvatarsManager.loadAvatar(peerId, photo, size);
+    }
+
     const saved = this.mirrors.avatars[peerId] ??= {};
     return saved[size] ??= rootScope.managers.appAvatarsManager.loadAvatar(peerId, photo, size);
   }

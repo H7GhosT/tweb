@@ -326,7 +326,7 @@
     width: 100%;
 
     .btn-menu {
-      min-width: 260px;
+      min-width: 200px;
       max-height: calc(100 * var(--vh) - 3.75rem);
 
       &-item {
@@ -337,6 +337,18 @@
 
           .btn-menu-item-text {
             margin-right: .75rem;
+          }
+        }
+
+        .more-label {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .tgico {
+            font-size: 20px;
+            transform: rotate(-90deg);
+            color: var(--secondary-color);
           }
         }
       }
@@ -560,6 +572,10 @@
       width: 100%;
     }
   }
+}
+
+.sidebar-tools-submenu {
+  min-width: 200px;
 }
 
 #search-container {

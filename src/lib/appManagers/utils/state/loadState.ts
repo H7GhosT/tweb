@@ -23,6 +23,7 @@ import tsNow from '../../../../helpers/tsNow';
 import {getCurrentAccount} from '../currentAccount';
 import {ActiveAccountNumber} from '../currentAccountTypes';
 import StateStorage from '../../../stateStorage';
+import AccountController from '../../../accountController';
 
 const REFRESH_EVERY = 24 * 60 * 60 * 1000; // 1 day
 // const REFRESH_EVERY = 1e3;
@@ -245,7 +246,7 @@ async function loadStateInner() {
   //   });
   // } else
 
-  const accountData = await sessionStorage.get(`account${getCurrentAccount()}`);
+  const accountData = await AccountController.get(getCurrentAccount());
   const authKeyFingerprint = accountData?.auth_key_fingerprint;
   const baseDcAuthKey = accountData?.[`dc${App.baseDcId}_auth_key`];
   if(accountData?.userId) {
@@ -308,11 +309,8 @@ async function loadStateInner() {
     }
 
     if(authKeyFingerprint !== _authKeyFingerprint) {
-      await sessionStorage.set({
-        [`account${getCurrentAccount()}`]: {
-          ...accountData,
-          auth_key_fingerprint: _authKeyFingerprint
-        }
+      await AccountController.update(getCurrentAccount(), {
+        auth_key_fingerprint: _authKeyFingerprint
       });
     }
   }

@@ -42,6 +42,7 @@ import {getEnvironment} from '../../environment/utils';
 import {TimeManager} from './timeManager';
 import indexOfAndSplice from '../../helpers/array/indexOfAndSplice';
 import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
+import AccountController from '../accountController';
 
 // console.error('networker included!', new Error().stack);
 
@@ -1525,14 +1526,9 @@ export default class MTPNetworker {
   private applyServerSalt(newServerSalt: string) {
     const serverSalt = longToBytes(newServerSalt);
 
-    sessionStorage.get(`account${this.accountNumber}`).then(accountData => {
-      sessionStorage.set({
-        [`account${this.accountNumber}`]: {
-          ...accountData,
-          ['dc' + this.dcId + '_server_salt']: bytesToHex(serverSalt)
-        }
-      });
-    })
+    AccountController.update(this.accountNumber, {
+      ['dc' + this.dcId + '_server_salt']: bytesToHex(serverSalt)
+    });
 
     this.serverSalt = new Uint8Array(serverSalt);
   }
