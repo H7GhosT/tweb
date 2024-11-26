@@ -82,6 +82,7 @@ import {injectMediaEditorLangPack} from '../mediaEditor/langPack';
 import attachFloatingButtonMenu from '../floatingButtonMenu';
 import filterAsync from '../../helpers/array/filterAsync';
 import pause from '../../helpers/schedulers/pause';
+import AccountsLimitPopup from './accountsLimitPopup';
 
 export const LEFT_COLUMN_ACTIVE_CLASSNAME = 'is-left-column-shown';
 
@@ -219,12 +220,12 @@ export class AppSidebarLeft extends SidebarSlider {
       direction: 'bottom-right',
       buttons: filteredButtons,
       onOpenBefore: async() => {
+        injectMediaEditorLangPack();
         const attachMenuBots = await this.managers.appAttachMenuBotsManager.getAttachMenuBots();
         const buttons = filteredButtonsSliced.slice();
         const attachMenuBotsButtons = attachMenuBots.filter((attachMenuBot) => {
           return attachMenuBot.pFlags.show_in_side_menu;
         }).map((attachMenuBot) => {
-          injectMediaEditorLangPack();
           const icon = getAttachMenuBotIcon(attachMenuBot);
           const button: typeof buttons[0] = {
             regularText: wrapEmojiText(attachMenuBot.short_name),
@@ -308,7 +309,9 @@ export class AppSidebarLeft extends SidebarSlider {
         }
 
         buttons[0].onClick = () => {
-          changeAccount((totalAccounts + 1) as ActiveAccountNumber);
+          new AccountsLimitPopup().show();
+          // PopupElement.createPopup(PremiumAccountsPopup);
+          // changeAccount((totalAccounts + 1) as ActiveAccountNumber);
         };
 
         buttons.splice(0, 0, ...accountsButtons);

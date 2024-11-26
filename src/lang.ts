@@ -2883,6 +2883,7 @@ const lang = {
   'MediaEditor.DiscardWarning': 'Are you sure you want to discard your changes?',
   'MultiAccount.AddAccount': 'Add Account',
   'MultiAccount.More': 'More',
+  'MultiAccount.AccountsLimitDescription': 'You have reached the limit of **3** connected accounts. You can add more by subscribing to **Telegram Premium**.',
   'Enable': 'Enable'
 };
 
