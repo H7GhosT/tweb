@@ -1,4 +1,5 @@
 import PopupElement from '../popups';
+import PopupPremium from '../popups/premium';
 import AccountsLimitPopupContent from './accountsLimitPopupContent';
 
 export default class AccountsLimitPopup extends PopupElement {
@@ -7,7 +8,6 @@ export default class AccountsLimitPopup extends PopupElement {
       overlayClosable: true,
       body: true,
       title: 'LimitReached'
-      // buttons: [{}]
     });
 
     this.body.append(AccountsLimitPopupContent({
@@ -16,6 +16,7 @@ export default class AccountsLimitPopup extends PopupElement {
       },
       onSubmit: () => {
         this.hide();
+        PopupPremium.show({feature: 'double_limits'});
       }
     }) as HTMLElement)
   }
