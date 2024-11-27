@@ -208,9 +208,9 @@ class ApiManagerProxy extends MTProtoMessagePort {
       },
 
       event: ({name, args, accountNumber}) => {
-        const commonKeys = ['language_change'];
-        const isDifferentAccount = accountNumber !== getCurrentAccount()
-        if(!commonKeys.includes(name) && isDifferentAccount) return;
+        const commonEventNames = ['language_change', 'settings_updated', 'theme_changed', 'theme_change', 'background_change'];
+        const isDifferentAccount = accountNumber && accountNumber !== getCurrentAccount()
+        if(!commonEventNames.includes(name) && isDifferentAccount) return;
         // @ts-ignore
         rootScope.dispatchEventSingle(name, ...args);
       },
@@ -820,7 +820,8 @@ class ApiManagerProxy extends MTProtoMessagePort {
   // TODO: Mirror by account
   private onMirrorTask = (payload: MirrorTaskPayload) => {
     const {name, key, value, accountNumber} = payload;
-    if(accountNumber !== getCurrentAccount()) return;
+    const isSettingsUpdate = name === 'state' && key === 'settings';
+    if(!isSettingsUpdate && accountNumber !== getCurrentAccount()) return;
 
     this.processMirrorTaskMap[name]?.(payload);
     if(!payload.hasOwnProperty('key')) {

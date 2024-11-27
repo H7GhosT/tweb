@@ -24,6 +24,7 @@ import {getCurrentAccount} from '../currentAccount';
 import {ActiveAccountNumber} from '../currentAccountTypes';
 import StateStorage from '../../../stateStorage';
 import AccountController from '../../../accountController';
+import commonStateStorage from '../../../commonStateStorage';
 
 const REFRESH_EVERY = 24 * 60 * 60 * 1000; // 1 day
 // const REFRESH_EVERY = 1e3;
@@ -48,7 +49,10 @@ export async function loadStateForAccount(accountNumber: ActiveAccountNumber) {
 
   const stateStorage = new StateStorage(accountNumber);
 
-  const promises = ALL_KEYS.map((key) => stateStorage.get(key));
+  const promises = ALL_KEYS.map((key) => {
+    if(key === 'settings') return commonStateStorage.get('settings')
+    else return stateStorage.get(key)
+  });
 
   const arr = await Promise.all(promises);
 
@@ -97,7 +101,7 @@ async function loadStateInner() {
   const totalPerf = performance.now();
   const recordPromise = recordPromiseBound(log);
 
-  const promises = ALL_KEYS.map((key) => recordPromise(stateStorage.get(key), 'state ' + key))
+  const promises = ALL_KEYS.map((key) => recordPromise(key ==='settings' ? commonStateStorage.get('settings') : stateStorage.get(key), 'state ' + key))
   .concat(
     recordPromise(sessionStorage.get('user_auth'), 'auth'),
     recordPromise(sessionStorage.get('state_id'), 'auth'),

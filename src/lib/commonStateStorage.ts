@@ -3,10 +3,12 @@ import {CommonDatabase, getCommonDatabaseState} from '../config/databases/state'
 import {MOUNT_CLASS_TO} from '../config/debug';
 
 import AppStorage from './storage';
+import {StateSettings} from '../config/state';
 
 class CommonStateStorage extends AppStorage<
   {
     langPack: LangPackDifference;
+    settings: StateSettings;
   },
   CommonDatabase
 > {

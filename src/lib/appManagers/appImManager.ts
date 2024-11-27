@@ -274,6 +274,11 @@ export class AppImManager extends EventListenerBase<{
       this.dispatchEvent('premium_toggle', isPremium);
     };
     rootScope.addEventListener('premium_toggle', onPremiumToggle);
+
+    rootScope.addEventListener('background_change', () => {
+      this.applyCurrentTheme({noSetTheme: true});
+    });
+
     onPremiumToggle(rootScope.premium);
     this.managers.rootScope.getPremium().then(onPremiumToggle);
 

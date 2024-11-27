@@ -327,7 +327,8 @@ IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {
     fillLocalizedDates();
   }
 
-  rootScope.addEventListener('language_change', () => {
+  rootScope.addEventListener('language_change', (langCode) => {
+    I18n.getLangPack(langCode);
     fillLocalizedDates();
   });
 

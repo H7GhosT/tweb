@@ -4,7 +4,7 @@
  * https://github.com/morethanwords/tweb/blob/master/LICENSE
  */
 
-import type {State} from '../../config/state';
+import type {State, StateSettings} from '../../config/state';
 import rootScope from '../rootScope';
 import StateStorage from '../stateStorage';
 import setDeepProperty, {splitDeepPath} from '../../helpers/object/setDeepProperty';
@@ -12,6 +12,7 @@ import MTProtoMessagePort from '../mtproto/mtprotoMessagePort';
 import {ActiveAccountNumber} from './utils/currentAccountTypes';
 import deferredPromise, {CancellablePromise} from '../../helpers/cancellablePromise';
 import {StoragesResults} from './utils/storages/loadStorages';
+import commonStateStorage from '../commonStateStorage';
 
 export type ResetStoragesPromise = CancellablePromise<{
   storages: Set<keyof StoragesResults>,
@@ -26,6 +27,8 @@ export default class AppStateManager {
   public newVersion: string;
   public oldVersion: string;
   public userId: UserId;
+
+  public onSettingsUpdate: (value: StateSettings) => void;
 
   public readonly resetStoragesPromise: ResetStoragesPromise;
 
@@ -57,6 +60,10 @@ export default class AppStateManager {
     return this.setKeyValueToStorage(key, value, onlyLocal);
   }
 
+  public udpateLocalState<T extends keyof State>(key: T, value: State[T]) {
+    this.state[key] = value;
+  }
+
   public setKeyValueToStorage<T extends keyof State>(key: T, value: State[T] = this.state[key], onlyLocal?: boolean) {
     MTProtoMessagePort.getInstance<false>().invokeVoid('mirror', {
       name: 'state',
@@ -64,6 +71,13 @@ export default class AppStateManager {
       value,
       accountNumber: this.accountNumber
     });
+
+    if(key === 'settings') {
+      this.onSettingsUpdate?.(value as StateSettings);
+      return commonStateStorage.set({
+        [key]: value
+      })
+    }
 
     return this.storage.set({
       [key]: value
