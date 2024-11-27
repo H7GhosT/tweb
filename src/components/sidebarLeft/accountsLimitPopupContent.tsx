@@ -1,19 +1,16 @@
+import {MAX_ACCOUNTS_FREE, MAX_ACCOUNTS_PREMIUM} from '../../lib/accountController';
 import {i18n, i18n_} from '../../lib/langPack';
+
 import Button from '../button';
 import {IconTsx} from '../iconTsx';
 
-const MAX_ACCOUNTS_FREE = 3;
-const MAX_ACCOUNTS_PREMIUM = 4;
-
-export default function AccountsLimitPopupContent(props: {
-  onCancel: () => void;
-  onSubmit: () => void;
-}) {
+export default function AccountsLimitPopupContent(props: {onCancel: () => void; onSubmit: () => void}) {
   return (
     <div>
       <div class="accounts-limit__pin-container">
         <img class="accounts-limit__pin-image" src="assets/img/accounts-limit-pin-shape.svg" />
-        <IconTsx class='accounts-limit__pin-icon' icon="user" />
+        {/* TODO: Change with the icon from design */}
+        <IconTsx class="accounts-limit__pin-icon" icon="user" />
         <span class="accounts-limit__pin-count">{MAX_ACCOUNTS_FREE}</span>
       </div>
 
@@ -25,9 +22,7 @@ export default function AccountsLimitPopupContent(props: {
         </div>
       </div>
 
-      <div class="accounts-limit__description">
-        {i18n_({key: 'MultiAccount.AccountsLimitDescription'})}
-      </div>
+      <div class="accounts-limit__description">{i18n_({key: 'MultiAccount.AccountsLimitDescription'})}</div>
 
       <div class="accounts-limit__actions">
         {(() => {
@@ -37,10 +32,7 @@ export default function AccountsLimitPopupContent(props: {
         })()}
         {(() => {
           const increaseLimitButton = Button('popup-button btn primary');
-          increaseLimitButton.append(
-            i18n('IncreaseLimit'),
-            PlusOneSvg() as HTMLElement
-          );
+          increaseLimitButton.append(i18n('IncreaseLimit'), PlusOneSvg() as HTMLElement);
           increaseLimitButton.addEventListener('click', props.onSubmit);
 
           return increaseLimitButton;

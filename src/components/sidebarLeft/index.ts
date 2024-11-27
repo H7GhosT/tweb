@@ -73,7 +73,7 @@ import wrapEmojiStatus from '../wrappers/emojiStatus';
 import {makeMediaSize} from '../../helpers/mediaSize';
 import ReactionElement from '../chat/reaction';
 import setBlankToAnchor from '../../lib/richTextProcessor/setBlankToAnchor';
-import AccountController from '../../lib/accountController';
+import AccountController, {MAX_ACCOUNTS_FREE} from '../../lib/accountController';
 import {ActiveAccountNumber, CURRENT_ACCOUNT_QUERY_PARAM} from '../../lib/appManagers/utils/currentAccountTypes';
 import {getCurrentAccount} from '../../lib/appManagers/utils/currentAccount';
 import {createProxiedManagersForAccount} from '../../lib/appManagers/getProxiedManagers';
@@ -175,7 +175,15 @@ export class AppSidebarLeft extends SidebarSlider {
     const menuButtons: (ButtonMenuItemOptions & {verify?: () => boolean | Promise<boolean>})[] = [{
       icon: 'plus',
       text: 'MultiAccount.AddAccount',
-      onClick: () => {},
+      onClick: async() => {
+        const totalAccounts = await AccountController.getTotalAccounts();
+        const isPremium = rootScope.getPremium();
+        if(totalAccounts === MAX_ACCOUNTS_FREE && !isPremium) {
+          new AccountsLimitPopup().show();
+          return;
+        }
+        changeAccount((totalAccounts + 1) as ActiveAccountNumber);
+      },
       verify: async() => {
         const totalAccounts = await AccountController.getTotalAccounts();
         return totalAccounts < 4;
@@ -214,13 +222,14 @@ export class AppSidebarLeft extends SidebarSlider {
       onClick: () => {}
     }];
 
+    injectMediaEditorLangPack();
+
     const filteredButtons = menuButtons.filter(Boolean);
     const filteredButtonsSliced = filteredButtons.slice();
     this.toolsBtn = ButtonMenuToggle({
       direction: 'bottom-right',
       buttons: filteredButtons,
       onOpenBefore: async() => {
-        injectMediaEditorLangPack();
         const attachMenuBots = await this.managers.appAttachMenuBotsManager.getAttachMenuBots();
         const buttons = filteredButtonsSliced.slice();
         const attachMenuBotsButtons = attachMenuBots.filter((attachMenuBot) => {
@@ -250,21 +259,6 @@ export class AppSidebarLeft extends SidebarSlider {
 
           name = limitSymbols(name, 15, 18);
           return wrapEmojiText(name);
-        }
-
-
-        function changeAccount(accountNumber: ActiveAccountNumber) {
-          const url = new URL(location.href);
-
-          if(accountNumber === 1) url.searchParams.delete(CURRENT_ACCOUNT_QUERY_PARAM);
-          else url.searchParams.set(CURRENT_ACCOUNT_QUERY_PARAM, accountNumber + '');
-
-          appNavigationController.overrideHash();
-
-          const newUrl = url.search ? url.pathname + url.search : url.pathname;
-          history.replaceState(null, '', newUrl)
-
-          location.reload();
         }
 
         const targetIdx = 5;
@@ -307,12 +301,6 @@ export class AppSidebarLeft extends SidebarSlider {
             });
           }
         }
-
-        buttons[0].onClick = () => {
-          new AccountsLimitPopup().show();
-          // PopupElement.createPopup(PremiumAccountsPopup);
-          // changeAccount((totalAccounts + 1) as ActiveAccountNumber);
-        };
 
         buttons.splice(0, 0, ...accountsButtons);
 
@@ -1071,4 +1059,18 @@ function getVersionLink() {
 
   // const a = btnMenu.querySelector('.a .btn-menu-item-icon');
   // if(a) a.textContent = 'A';
+}
+
+function changeAccount(accountNumber: ActiveAccountNumber) {
+  const url = new URL(location.href);
+
+  if(accountNumber === 1) url.searchParams.delete(CURRENT_ACCOUNT_QUERY_PARAM);
+  else url.searchParams.set(CURRENT_ACCOUNT_QUERY_PARAM, accountNumber + '');
+
+  appNavigationController.overrideHash();
+
+  const newUrl = url.search ? url.pathname + url.search : url.pathname;
+  history.replaceState(null, '', newUrl)
+
+  location.reload();
 }
