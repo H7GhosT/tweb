@@ -7,36 +7,16 @@
 import type {Database} from '.';
 import {ActiveAccountNumber} from '../../lib/appManagers/utils/currentAccountTypes';
 
-// TODO: migrate old database
-const DATABASE_STATE: Database<'session' | 'stickerSets' | 'users' | 'chats' | 'messages' | 'dialogs'> = {
-  name: 'tweb',
+export type AccountDatabase = Database<'session' | 'stickerSets' | 'users' | 'chats' | 'messages' | 'dialogs'>;
+export type CommonDatabase = Database<'session'>;
+
+export const getCommonDatabaseState = (): Database<'session'> => ({
+  name: `tweb-common`,
   version: 7,
   stores: [{
     name: 'session'
-  }, {
-    name: 'stickerSets'
-  }, {
-    name: 'users'
-  }, {
-    name: 'chats'
-  }, {
-    name: 'dialogs'
-    // indexes: [
-    //   ...(new Array(20 + 2).fill(0)).map((_, idx) => {
-    //     const name = `index_${idx}`;
-    //     const index: IDBIndex = {
-    //       indexName: name,
-    //       keyPath: name,
-    //       objectParameters: {}
-    //     };
-
-    //     return index
-    //   })
-    // ]
-  }, {
-    name: 'messages'
   }]
-};
+});
 
 export const getDatabaseState = (accountNumber: ActiveAccountNumber): Database<'session' | 'stickerSets' | 'users' | 'chats' | 'messages' | 'dialogs'> => ({
   name: `tweb-account-${accountNumber}`,
@@ -54,6 +34,4 @@ export const getDatabaseState = (accountNumber: ActiveAccountNumber): Database<'
   }, {
     name: 'messages'
   }]
-})
-
-export default DATABASE_STATE;
+});

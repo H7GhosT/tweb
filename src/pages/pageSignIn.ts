@@ -30,6 +30,7 @@ import apiManagerProxy from '../lib/mtproto/mtprotoworker';
 import CountryInputField from '../components/countryInputField';
 import {getCurrentAccount} from '../lib/appManagers/utils/currentAccount';
 import AccountController from '../lib/accountController';
+import commonStateStorage from '../lib/commonStateStorage';
 
 // import _countries from '../countries_pretty.json';
 let btnNext: HTMLButtonElement = null, btnQr: HTMLButtonElement;
@@ -237,7 +238,7 @@ const onFirstMount = () => {
 
   const tryAgain = () => {
     rootScope.managers.apiManager.invokeApi('help.getNearestDc').then((nearestDcResult) => {
-      const langPack = stateStorage.getFromCache('langPack');
+      const langPack = commonStateStorage.getFromCache('langPack');
       if(langPack && !langPack.countries?.hash) {
         I18n.getLangPack(langPack.lang_code).then(() => {
           telInputField.simulateInputEvent();

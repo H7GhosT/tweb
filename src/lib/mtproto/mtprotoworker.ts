@@ -208,7 +208,9 @@ class ApiManagerProxy extends MTProtoMessagePort {
       },
 
       event: ({name, args, accountNumber}) => {
-        if(accountNumber !== getCurrentAccount()) return;
+        const commonKeys = ['language_change'];
+        const isDifferentAccount = accountNumber !== getCurrentAccount()
+        if(!commonKeys.includes(name) && isDifferentAccount) return;
         // @ts-ignore
         rootScope.dispatchEventSingle(name, ...args);
       },
@@ -222,6 +224,10 @@ class ApiManagerProxy extends MTProtoMessagePort {
 
       receivedServiceMessagePort: () => {
         this.log.warn('mtproto worker received service message port');
+      },
+
+      log: (payload) => {
+        console.log('Received log from shared worker', payload);
       }
 
       // hello: () => {
@@ -286,6 +292,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
     // });
 
     rootScope.addEventListener('language_change', (language) => {
+      console.log('change from ApiManagerProxy');
       rootScope.managers.networkerFactory.setLanguage(language);
       rootScope.managers.appAttachMenuBotsManager.onLanguageChange();
     });
@@ -550,6 +557,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
 
     let worker: SharedWorker | Worker;
     if(IS_SHARED_WORKER_SUPPORTED) {
+      console.log('import.meta.url', new URL('./mtproto.worker.ts', import.meta.url).href);
       worker = new SharedWorker(
         new URL('./mtproto.worker.ts', import.meta.url),
         {type: 'module'}

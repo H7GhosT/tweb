@@ -7,14 +7,14 @@
 import type {Chat} from '../../../../layer';
 import type {Dialog} from '../../appMessagesManager';
 import type {User} from '../../appUsersManager';
-import DATABASE_STATE, {getDatabaseState} from '../../../../config/databases/state';
+import {AccountDatabase, getDatabaseState} from '../../../../config/databases/state';
 import AppStorage from '../../../storage';
 import {ActiveAccountNumber} from '../currentAccountTypes';
 
 export type StoragesStorages = {
-  users: AppStorage<Record<UserId, User>, typeof DATABASE_STATE>,
-  chats: AppStorage<Record<ChatId, Chat>, typeof DATABASE_STATE>,
-  dialogs: AppStorage<Record<PeerId, Dialog>, typeof DATABASE_STATE>
+  users: AppStorage<Record<UserId, User>, AccountDatabase>,
+  chats: AppStorage<Record<ChatId, Chat>, AccountDatabase>,
+  dialogs: AppStorage<Record<PeerId, Dialog>, AccountDatabase>
 };
 
 export default function createStorages(accountNumber: ActiveAccountNumber) {
