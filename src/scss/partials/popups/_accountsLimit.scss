@@ -27,7 +27,7 @@
 
     transform-origin: 50% 100%;
 
-    animation: accounts-limit-pin-animation 0.6s forwards;
+    animation: accounts-limit-pin-animation 0.8s forwards linear;
   }
 
   &__pin-icon {
@@ -45,6 +45,9 @@
     line-height: 20px;
     color: white;
     font-weight: 500;
+    opacity: 0;
+    transform: translateY(100%);
+    animation: accounts-limit-pin-count-animation 0.12s forwards 0.4s;
   }
 
   &__bar {
@@ -106,24 +109,35 @@
 
 @keyframes accounts-limit-pin-animation {
   0% {
-    transform: translateX(-160px);
+    transform: translateX(-160px) rotate(-16deg);
     opacity: 0.5;
   }
 
   30% {
-    transform: translateX(0px) rotate(0deg);
+    transform: translateX(0px) rotate(-16deg);
     opacity: 1;
   }
 
   50% {
-    transform: rotate(8deg);
+    transform: translateX(0px) rotate(12deg);
   }
 
   75% {
-    transform: rotate(-3deg);
+    transform: rotate(-5deg);
   }
 
   100% {
     transform: rotate(0deg);
+  }
+}
+
+@keyframes accounts-limit-pin-count-animation {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0%);
   }
 }
