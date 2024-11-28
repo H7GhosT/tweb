@@ -26,6 +26,7 @@ import {MOUNT_CLASS_TO} from '../config/debug';
 import MTProtoMessagePort from './mtproto/mtprotoMessagePort';
 import {IS_WORKER} from '../helpers/context';
 import {RtmpCallInstance} from './calls/rtmpCallsController';
+import {ActiveAccountNumber} from './appManagers/utils/currentAccountTypes';
 
 export type BroadcastEvents = {
   'chat_full_update': ChatId,
@@ -178,7 +179,7 @@ export type BroadcastEvents = {
 
   'service_notification': Update.updateServiceNotification,
 
-  'logging_out': void,
+  'logging_out': {accountNumber: ActiveAccountNumber},
 
   'payment_sent': {peerId: PeerId, mid: number, receiptMessage: Message.messageService},
 

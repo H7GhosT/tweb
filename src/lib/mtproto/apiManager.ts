@@ -325,7 +325,7 @@ export class ApiManager extends ApiManagerMethods {
       }
       // TODO: Cache controller cleanup too?
       IDB.closeDatabases();
-      this.rootScope.dispatchEvent('logging_out');
+      this.rootScope.dispatchEvent('logging_out', {accountNumber});
     };
 
     setTimeout(clear, 1e3);

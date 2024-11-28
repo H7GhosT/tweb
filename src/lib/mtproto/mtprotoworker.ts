@@ -49,6 +49,7 @@ import {reconcilePeer, reconcilePeers} from '../../stores/peers';
 import {getCurrentAccount} from '../appManagers/utils/currentAccount';
 import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
 import {createProxiedManagersForAccount} from '../appManagers/getProxiedManagers';
+import noop from '../../helpers/noop';
 
 const TEST_NO_STREAMING = false;
 
@@ -117,6 +118,8 @@ class ApiManagerProxy extends MTProtoMessagePort {
   };
 
   private appConfig: MaybePromise<MTAppConfig>;
+
+  private closeMTProtoWorker = noop;
 
   constructor() {
     super();
@@ -208,7 +211,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
       },
 
       event: ({name, args, accountNumber}) => {
-        const commonEventNames = ['language_change', 'settings_updated', 'theme_changed', 'theme_change', 'background_change'];
+        const commonEventNames = ['language_change', 'settings_updated', 'theme_changed', 'theme_change', 'background_change', 'logging_out'];
         const isDifferentAccount = accountNumber && accountNumber !== getCurrentAccount()
         if(!commonEventNames.includes(name) && isDifferentAccount) return;
         // @ts-ignore
@@ -301,12 +304,13 @@ class ApiManagerProxy extends MTProtoMessagePort {
       rootScope.managers.networkerFactory.forceReconnectTimeout();
     });
 
-    rootScope.addEventListener('logging_out', () => {
+    rootScope.addEventListener('logging_out', ({accountNumber}) => {
       // const toClear: CacheStorageDbName[] = ['cachedFiles', 'cachedStreamChunks'];
       Promise.all([
         // toggleStorages(false, true),
         // sessionStorage.clear(),
         Promise.race([
+          // TODO: Check here
           telegramMeWebManager.setAuthorized(false),
           pause(3000)
         ]),
@@ -314,8 +318,20 @@ class ApiManagerProxy extends MTProtoMessagePort {
         // Promise.all(toClear.map((cacheName) => caches.delete(cacheName)))
       ]).finally(() => {
         const url = new URL(location.href);
-        url.pathname = '';
+
+        const currentAccount = getCurrentAccount();
+        if(currentAccount > accountNumber) {
+          const newAccountNumber = currentAccount - 1;
+          url.pathname = newAccountNumber === 1 ? '' : newAccountNumber + '';
+        } else if(currentAccount === accountNumber) {
+          url.pathname = '';
+        }
+
         history.replaceState(null, '', url);
+
+        // Make sure managers don't have any obsolete data
+        this.closeMTProtoWorker();
+
         appRuntimeManager.reload();
       });
     });
@@ -560,16 +576,17 @@ class ApiManagerProxy extends MTProtoMessagePort {
 
     let worker: SharedWorker | Worker;
     if(IS_SHARED_WORKER_SUPPORTED) {
-      console.log('import.meta.url', new URL('./mtproto.worker.ts', import.meta.url).href);
       worker = new SharedWorker(
         new URL('./mtproto.worker.ts', import.meta.url),
         {type: 'module'}
       );
+      this.closeMTProtoWorker = () => (worker as SharedWorker).port.close();
     } else {
       worker = new Worker(
         new URL('./mtproto.worker.ts', import.meta.url),
         {type: 'module'}
       );
+      this.closeMTProtoWorker = () => (worker as Worker).terminate();
     }
 
     this.onWorkerFirstMessage(worker);
