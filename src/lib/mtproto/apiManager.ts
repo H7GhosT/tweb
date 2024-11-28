@@ -36,6 +36,8 @@ import tsNow from '../../helpers/tsNow';
 import transportController from './transports/controller';
 import MTTransport from './transports/transport';
 import AccountController from '../accountController';
+import {AppStoragesManager} from '../appManagers/appStoragesManager';
+import commonStateStorage from '../commonStateStorage';
 
 /* class RotatableArray<T> {
   public array: Array<T> = [];
@@ -294,27 +296,34 @@ export class ApiManager extends ApiManagerMethods {
     }
 
     this.loggingOut = true;
-    const storageKeys: Array<DcAuthKey> = [];
 
-    const prefix = 'dc';
-    for(let dcId = 1; dcId <= 5; dcId++) {
-      storageKeys.push(prefix + dcId + '_auth_key' as any);
-    }
-
-    // WebPushApiManager.forceUnsubscribe(); // WARNING // moved to worker's master
-    const storageResult = await Promise.all(storageKeys.map((key) => sessionStorage.get(key)));
+    const totalAccounts = await AccountController.getTotalAccounts();
+    const accountNumber = this.getAccountNumber();
+    const accountData = await AccountController.get(accountNumber);
 
     const logoutPromises: Promise<any>[] = [];
-    for(let i = 0; i < storageResult.length; i++) {
-      if(storageResult[i]) {
-        logoutPromises.push(this.invokeApi('auth.logOut', {}, {dcId: (i + 1) as DcId, ignoreErrors: true}));
+
+    for(let dcId = 1; dcId <= 5; dcId++) {
+      const key = `dc${dcId as TrueDcId}_auth_key` as const;
+      if(accountData?.[key]) {
+        logoutPromises.push(this.invokeApi('auth.logOut', {}, {dcId, ignoreErrors: true}));
       }
     }
 
     const clear = async() => {
       this.baseDcId = undefined;
       // this.telegramMeNotify(false);
-      await toggleStorages(false, true);
+      // TODO: Toggle storages for keepSigned=false
+      // await toggleStorages(false, true);
+      if(totalAccounts === 1) {
+        await sessionStorage.delete(`account1`);
+        await AppStoragesManager.clearAllStoresForAccount(1);
+        await commonStateStorage.clear();
+      } else {
+        await AccountController.shiftAccounts(accountNumber);
+        await AppStoragesManager.shiftStorages(accountNumber);
+      }
+      // TODO: Cache controller cleanup too?
       IDB.closeDatabases();
       this.rootScope.dispatchEvent('logging_out');
     };

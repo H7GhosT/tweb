@@ -6,6 +6,7 @@
 
 import type {Database} from '.';
 import {ActiveAccountNumber} from '../../lib/appManagers/utils/currentAccountTypes';
+import {MOUNT_CLASS_TO} from '../debug';
 
 export type AccountDatabase = Database<'session' | 'stickerSets' | 'users' | 'chats' | 'messages' | 'dialogs'>;
 export type CommonDatabase = Database<'session'>;
@@ -13,25 +14,38 @@ export type CommonDatabase = Database<'session'>;
 export const getCommonDatabaseState = (): Database<'session'> => ({
   name: `tweb-common`,
   version: 7,
-  stores: [{
-    name: 'session'
-  }]
+  stores: [
+    {
+      name: 'session'
+    }
+  ]
 });
 
-export const getDatabaseState = (accountNumber: ActiveAccountNumber): Database<'session' | 'stickerSets' | 'users' | 'chats' | 'messages' | 'dialogs'> => ({
+export const getDatabaseState = (
+  accountNumber: ActiveAccountNumber
+): Database<'session' | 'stickerSets' | 'users' | 'chats' | 'messages' | 'dialogs'> => ({
   name: `tweb-account-${accountNumber}`,
   version: 7,
-  stores: [{
-    name: 'session'
-  }, {
-    name: 'stickerSets'
-  }, {
-    name: 'users'
-  }, {
-    name: 'chats'
-  }, {
-    name: 'dialogs'
-  }, {
-    name: 'messages'
-  }]
+  stores: [
+    {
+      name: 'session'
+    },
+    {
+      name: 'stickerSets'
+    },
+    {
+      name: 'users'
+    },
+    {
+      name: 'chats'
+    },
+    {
+      name: 'dialogs'
+    },
+    {
+      name: 'messages'
+    }
+  ]
 });
+
+MOUNT_CLASS_TO.getDatabaseState = getDatabaseState;

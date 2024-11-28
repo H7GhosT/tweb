@@ -302,17 +302,20 @@ class ApiManagerProxy extends MTProtoMessagePort {
     });
 
     rootScope.addEventListener('logging_out', () => {
-      const toClear: CacheStorageDbName[] = ['cachedFiles', 'cachedStreamChunks'];
+      // const toClear: CacheStorageDbName[] = ['cachedFiles', 'cachedStreamChunks'];
       Promise.all([
-        toggleStorages(false, true),
-        sessionStorage.clear(),
+        // toggleStorages(false, true),
+        // sessionStorage.clear(),
         Promise.race([
           telegramMeWebManager.setAuthorized(false),
           pause(3000)
         ]),
-        webPushApiManager.forceUnsubscribe(),
-        Promise.all(toClear.map((cacheName) => caches.delete(cacheName)))
+        webPushApiManager.forceUnsubscribe()
+        // Promise.all(toClear.map((cacheName) => caches.delete(cacheName)))
       ]).finally(() => {
+        const url = new URL(location.href);
+        url.pathname = '';
+        history.replaceState(null, '', url);
         appRuntimeManager.reload();
       });
     });
@@ -638,6 +641,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
     return cryptoMessagePort.invokeCrypto(method, ...args);
   }
 
+  // Keep signed ! need to enable caching depending on it and per account
   public async toggleStorages(enabled: boolean, clearWrite: boolean) {
     await toggleStorages(enabled, clearWrite);
     this.invoke('toggleStorages', {enabled, clearWrite});
