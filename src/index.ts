@@ -405,7 +405,7 @@ IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {
       await doubleRaf();
       el.classList.add('auth-pages-entering');
 
-      await pause(400);
+      await pause(1000); // Need a little more time for the animation to finish
       el.classList.remove('auth-pages-enter', 'auth-pages-entering');
     }
 

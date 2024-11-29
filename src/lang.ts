@@ -2884,7 +2884,9 @@ const lang = {
   'MultiAccount.AddAccount': 'Add Account',
   'MultiAccount.More': 'More',
   'MultiAccount.AccountsLimitDescription': 'You have reached the limit of **3** connected accounts. You can add more by subscribing to **Telegram Premium**.',
-  'Enable': 'Enable'
+  'EnableDarkMode': 'Enable Dark Mode',
+  'DisableDarkMode': 'Disable Dark Mode',
+  'DisableAnimations': 'Disable Animations'
 };
 
 export default lang;

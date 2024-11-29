@@ -1278,3 +1278,38 @@
     height: 100px;
   }
 }
+
+.animations-icon-off {
+  position: relative;
+  --amount: 8.4%;
+  --shift: 5.8%;
+  --opposite: calc(100% - var(--amount));
+  clip-path: polygon(
+    calc(var(--amount) - var(--shift)) 0,
+    100% 0%,
+    100% calc(var(--opposite) + var(--shift)),
+    calc(var(--amount) - var(--shift)) 0,
+    0% 0%,
+    0 calc(var(--amount) + var(--shift)),
+    calc(var(--opposite) - var(--shift)) 100%,
+    0% 100%,
+    0 0
+  );
+  // clip-path: polygon(15% 0, 100% 0%, 100% 85%, 15% 0, 0% 0%, 0 15%, 85% 100%, 0% 100%, 0 0);
+
+  &::after {
+    content: '';
+    display: block;
+
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-47%, -111%) rotate(45deg);
+
+    width: 115%;
+    height: 8.4%;
+
+    border-radius: 10px;
+    background-color: currentColor;
+  }
+}

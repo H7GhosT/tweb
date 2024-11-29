@@ -32,6 +32,7 @@ type AvatarInfo = {
 };
 
 export type ButtonMenuItemOptions = {
+  id?: any;
   icon?: Icon,
   iconDoc?: Document.document,
   avatarInfo?: AvatarInfo,

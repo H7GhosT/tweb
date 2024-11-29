@@ -337,21 +337,20 @@ export class AppSidebarLeft extends SidebarSlider {
         };
 
         const darkModeText = document.createElement('span');
-        darkModeText.append(i18n(isDarkModeEnabled() ? 'Disable': 'Enable'), ' ', i18n('DarkMode'));
+        darkModeText.append(i18n(isDarkModeEnabled() ? 'DisableDarkMode': 'EnableDarkMode'));
+        const animationsText = document.createElement('span');
+
         const btns: ButtonMenuItemOptionsVerifiable[] = [{
           icon: 'darkmode',
           regularText: darkModeText,
           onClick: () => {}
         }, {
+          id: 'animations-toggle',
           icon: 'animations',
-          text: 'Animations',
-          onClick: () => {},
-          checkboxField: new CheckboxField({
-            toggle: true,
-            checked: liteMode.isAvailable('animations'),
-            stateKey: joinDeepPath('settings', 'liteMode', 'animations'),
-            stateValueReverse: true
-          }),
+          regularText: animationsText,
+          onClick: () => {
+            toggleAnimations();
+          },
           verify: () => !liteMode.isEnabled()
         }, {
           icon: 'animations',
@@ -405,6 +404,36 @@ export class AppSidebarLeft extends SidebarSlider {
           verify: () => !!getInstallPrompt()
         }];
 
+
+        async function hasAnimations() {
+          const state = await apiManagerProxy.getState();
+          return !state.settings.liteMode.animations;
+        }
+
+        async function initAnimationsToggleIcon() {
+          updateAnimationsToggleButton(await hasAnimations());
+        }
+
+        async function toggleAnimations() {
+          updateAnimationsToggleButton(!(await hasAnimations()));
+          rootScope.managers.appStateManager.setByKey(
+            joinDeepPath('settings', 'liteMode', 'animations'),
+            await hasAnimations() // The value is already reversed
+          );
+        }
+
+        async function updateAnimationsToggleButton(enabled: boolean) {
+          const animationToggleButton = btns.find(button => button.id === 'animations-toggle')?.element;
+          if(!animationToggleButton) return;
+
+          const icon = animationToggleButton.querySelector('.tgico');
+          enabled ?
+            icon?.classList.add('animations-icon-off') :
+            icon?.classList.remove('animations-icon-off');
+
+          animationsText.replaceChildren(i18n(enabled ? 'DisableAnimations' : 'EnableAnimations'));
+        }
+
         const moreBtn = filteredButtons.find(item => item.icon === 'more');
         moreBtn.element.addEventListener(CLICK_EVENT_NAME, (e) => {
           e.stopPropagation();
@@ -428,6 +457,8 @@ export class AppSidebarLeft extends SidebarSlider {
               toggleTheme();
               pause(20).then(() => contextMenuController.close());
             }, true);
+
+            initAnimationsToggleIcon();
 
             return menu;
           },
