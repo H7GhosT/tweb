@@ -1,0 +1,25 @@
+import appNavigationController from '../components/appNavigationController';
+import {ActiveAccountNumber, CURRENT_ACCOUNT_QUERY_PARAM} from './appManagers/utils/currentAccountTypes';
+
+export function changeAccount(accountNumber: ActiveAccountNumber) {
+  const url = new URL(location.href);
+
+  if(accountNumber === 1) url.pathname = '';
+  else url.pathname = accountNumber + '';
+
+  history.replaceState(null, '', url.href);
+
+  location.reload();
+
+  return;
+
+  if(accountNumber === 1) url.searchParams.delete(CURRENT_ACCOUNT_QUERY_PARAM);
+  else url.searchParams.set(CURRENT_ACCOUNT_QUERY_PARAM, accountNumber + '');
+
+  appNavigationController.overrideHash();
+
+  const newUrl = url.search ? url.pathname + url.search : url.pathname;
+  history.replaceState(null, '', newUrl);
+
+  location.reload();
+}

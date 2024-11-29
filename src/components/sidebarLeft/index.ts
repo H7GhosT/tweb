@@ -49,7 +49,7 @@ import apiManagerProxy from '../../lib/mtproto/mtprotoworker';
 import SettingSection, {SettingSectionOptions} from '../settingSection';
 import {FOLDER_ID_ARCHIVE, TEST_NO_STORIES} from '../../lib/mtproto/mtproto_config';
 import mediaSizes from '../../helpers/mediaSizes';
-import {fastRaf} from '../../helpers/schedulers';
+import {doubleRaf, fastRaf} from '../../helpers/schedulers';
 import {getInstallPrompt} from '../../helpers/dom/installPrompt';
 import liteMode from '../../helpers/liteMode';
 import AppPowerSavingTab from './tabs/powerSaving';
@@ -73,7 +73,7 @@ import wrapEmojiStatus from '../wrappers/emojiStatus';
 import {makeMediaSize} from '../../helpers/mediaSize';
 import ReactionElement from '../chat/reaction';
 import setBlankToAnchor from '../../lib/richTextProcessor/setBlankToAnchor';
-import AccountController, {MAX_ACCOUNTS_FREE} from '../../lib/accountController';
+import AccountController, {MAX_ACCOUNTS, MAX_ACCOUNTS_FREE} from '../../lib/accountController';
 import {ActiveAccountNumber, CURRENT_ACCOUNT_QUERY_PARAM} from '../../lib/appManagers/utils/currentAccountTypes';
 import {getCurrentAccount} from '../../lib/appManagers/utils/currentAccount';
 import {createProxiedManagersForAccount} from '../../lib/appManagers/getProxiedManagers';
@@ -83,6 +83,7 @@ import attachFloatingButtonMenu from '../floatingButtonMenu';
 import filterAsync from '../../helpers/array/filterAsync';
 import pause from '../../helpers/schedulers/pause';
 import AccountsLimitPopup from './accountsLimitPopup';
+import {changeAccount} from '../../lib/changeAccount';
 
 export const LEFT_COLUMN_ACTIVE_CLASSNAME = 'is-left-column-shown';
 
@@ -177,16 +178,28 @@ export class AppSidebarLeft extends SidebarSlider {
       text: 'MultiAccount.AddAccount',
       onClick: async() => {
         const totalAccounts = await AccountController.getTotalAccounts();
+        if(totalAccounts >= MAX_ACCOUNTS) return;
+
         const isPremium = rootScope.getPremium();
         if(totalAccounts === MAX_ACCOUNTS_FREE && !isPremium) {
           new AccountsLimitPopup().show();
           return;
         }
+
+        localStorage.setItem('should-animate-auth', 'true');
+        localStorage.setItem('previous-account', getCurrentAccount() + '');
+
+        const chatsPageEl = document.querySelector('.page-chats');
+        chatsPageEl.classList.add('main-screen-exit');
+        await doubleRaf();
+        chatsPageEl.classList.add('main-screen-exiting');
+        await pause(200);
+
         changeAccount((totalAccounts + 1) as ActiveAccountNumber);
       },
       verify: async() => {
         const totalAccounts = await AccountController.getTotalAccounts();
-        return totalAccounts < 4;
+        return totalAccounts < MAX_ACCOUNTS;
       }
     }, {
       icon: 'savedmessages',
@@ -295,7 +308,12 @@ export class AppSidebarLeft extends SidebarSlider {
                 peer: user
               },
               regularText: wrapUserName(user),
-              onClick: () => {
+              onClick: async() => {
+                const chatListEl = document.querySelector('.chatlist-container')?.firstElementChild;
+                chatListEl.classList.add('chatlist-exit');
+                await doubleRaf();
+                chatListEl.classList.add('chatlist-exiting');
+                await pause(200);
                 changeAccount(accountNumber);
               }
             });
@@ -1061,16 +1079,3 @@ function getVersionLink() {
   // if(a) a.textContent = 'A';
 }
 
-function changeAccount(accountNumber: ActiveAccountNumber) {
-  const url = new URL(location.href);
-
-  if(accountNumber === 1) url.searchParams.delete(CURRENT_ACCOUNT_QUERY_PARAM);
-  else url.searchParams.set(CURRENT_ACCOUNT_QUERY_PARAM, accountNumber + '');
-
-  appNavigationController.overrideHash();
-
-  const newUrl = url.search ? url.pathname + url.search : url.pathname;
-  history.replaceState(null, '', newUrl)
-
-  location.reload();
-}
