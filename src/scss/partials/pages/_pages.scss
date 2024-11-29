@@ -289,7 +289,7 @@
 }
 
 .main-screen-enter {
-  transition: 0.3s;
+  transition: 0.2s;
   transform: scale(1.75);
   opacity: 0;
 }
@@ -300,7 +300,7 @@
 }
 
 .main-screen-exit {
-  transition: 0.3s, transform 0.3s ease-in;
+  transition: 0.2s, transform 0.2s ease-in;
   transform: scale(1);
   opacity: 1;
 }
@@ -322,7 +322,7 @@
 }
 
 .auth-pages-enter {
-  transition: 0.3s;
+  transition: 0.4s;
   opacity: 0;
   transform: translateX(100px);
 }
@@ -333,7 +333,7 @@
 }
 
 .auth-pages-exit {
-  transition: 0.3s;
+  transition: 0.2s;
   transform: scale(1);
   opacity: 1;
 }

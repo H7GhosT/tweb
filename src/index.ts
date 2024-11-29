@@ -405,7 +405,7 @@ IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {
       await doubleRaf();
       el.classList.add('auth-pages-entering');
 
-      await pause(200);
+      await pause(400);
       el.classList.remove('auth-pages-enter', 'auth-pages-entering');
     }
 
@@ -482,7 +482,8 @@ IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {
         ]) :
         Promise.resolve();
 
-      promise.then(() => {
+      promise.then(async() => {
+        await pause(100);
         finishEnteringAnimation();
       });
 
