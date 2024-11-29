@@ -555,6 +555,10 @@ body {
   background-color: var(--body-background-color);
   color: var(--primary-text-color);
   user-select: none;
+
+  &.has-auth-pages {
+    background-color: var(--surface-color);
+  }
 }
 
 

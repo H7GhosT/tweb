@@ -6,14 +6,13 @@
 
 import {MOUNT_CLASS_TO} from '../../config/debug';
 import type {getEnvironment} from '../../environment/utils';
-import type loadState from '../appManagers/utils/state/loadState';
 import type {StoragesResults} from '../appManagers/utils/storages/loadStorages';
 import type {LocalStorageProxyTask} from '../localStorage';
-import type {Awaited} from '../../types';
-import type {Mirrors, MirrorTaskPayload, NotificationBuildTaskPayload, TabState} from './mtprotoworker';
+import type {MirrorTaskPayload, NotificationBuildTaskPayload, TabState} from './mtprotoworker';
 import type toggleStorages from '../../helpers/toggleStorages';
 import SuperMessagePort from './superMessagePort';
 import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
+import {LoadStateResult} from '../appManagers/utils/state/loadState';
 
 export type MTProtoManagerTaskPayload = {name: string, method: string, args: any[], accountNumber: ActiveAccountNumber};
 
@@ -24,7 +23,7 @@ type MTProtoBroadcastEvent = {
 export default class MTProtoMessagePort<Master extends boolean = true> extends SuperMessagePort<{
   environment: (environment: ReturnType<typeof getEnvironment>) => void,
   crypto: (payload: {method: string, args: any[]}) => Promise<any>,
-  state: (payload: {userId: UserId, accountNumber: ActiveAccountNumber} & Awaited<ReturnType<typeof loadState>> & {storagesResults?: StoragesResults}) => void,
+  state: (payload: {userId: UserId, accountNumber: ActiveAccountNumber} & LoadStateResult & {storagesResults?: StoragesResults}) => void,
   manager: (payload: MTProtoManagerTaskPayload) => any,
   toggleStorages: (payload: {enabled: boolean, clearWrite: boolean}) => ReturnType<typeof toggleStorages>,
   serviceWorkerOnline: (online: boolean) => void,
@@ -40,6 +39,7 @@ export default class MTProtoMessagePort<Master extends boolean = true> extends S
   mirror: (payload: MirrorTaskPayload) => void,
   notificationBuild: (payload: NotificationBuildTaskPayload) => void,
   receivedServiceMessagePort: (payload: void) => void,
+  log: (payload: any) => void
   // hello: () => void
 } & MTProtoBroadcastEvent, Master> {
   private static INSTANCE: MTProtoMessagePort;

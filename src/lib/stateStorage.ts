@@ -7,9 +7,8 @@
 import type {ChatSavedPosition} from './appManagers/appImManager';
 import type {AppDraftsManager} from './appManagers/appDraftsManager';
 import type {State} from '../config/state';
-import {LangPackDifference} from '../layer';
 import AppStorage from './storage';
-import {AccountDatabase, getDatabaseState} from '../config/databases/state';
+import {AccountDatabase, getDatabaseState, getOldDatabaseState} from '../config/databases/state';
 import {ActiveAccountNumber} from './appManagers/utils/currentAccountTypes';
 
 export default class StateStorage extends AppStorage<{
@@ -19,7 +18,11 @@ export default class StateStorage extends AppStorage<{
   drafts: AppDraftsManager['drafts'],
   user_auth: any, // support old webk format
 } & State, AccountDatabase> {
-  constructor(accountNumber: ActiveAccountNumber) {
-    super(getDatabaseState(accountNumber), 'session');
+  constructor(accountNumber: ActiveAccountNumber | 'old') {
+    const db = accountNumber === 'old' ?
+      getOldDatabaseState() :
+      getDatabaseState(accountNumber);
+
+    super(db, 'session');
   }
 }

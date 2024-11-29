@@ -23,7 +23,7 @@ import appRuntimeManager from '../appManagers/appRuntimeManager';
 import telegramMeWebManager from './telegramMeWebManager';
 import pause from '../../helpers/schedulers/pause';
 import ENVIRONMENT from '../../environment';
-import loadState, {loadStateForAccount} from '../appManagers/utils/state/loadState';
+import loadStateForAllAccountsOnce from '../appManagers/utils/state/loadState';
 import opusDecodeController from '../opusDecodeController';
 import MTProtoMessagePort from './mtprotoMessagePort';
 import cryptoMessagePort from '../crypto/cryptoMessagePort';
@@ -50,6 +50,7 @@ import {getCurrentAccount} from '../appManagers/utils/currentAccount';
 import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
 import {createProxiedManagersForAccount} from '../appManagers/getProxiedManagers';
 import noop from '../../helpers/noop';
+import AccountController from '../accountController';
 
 const TEST_NO_STREAMING = false;
 
@@ -612,42 +613,47 @@ class ApiManagerProxy extends MTProtoMessagePort {
     }
   }
 
-  private loadState() {
-    return Promise.all([
-      loadState().then((stateResult) => {
-        this.newVersion = stateResult.newVersion;
-        this.oldVersion = stateResult.oldVersion;
-        this.mirrors['state'] = stateResult.state;
-        setAppStateSilent(stateResult.state);
-        return stateResult;
-      })
-      // loadStorages(createStorages()),
-    ]);
+  private async loadAllStates() {
+    const loadedStates = await loadStateForAllAccountsOnce();
+
+    this.dispatchUserAuth();
+
+    const stateForThisAccount = loadedStates[getCurrentAccount()];
+
+    rootScope.settings = stateForThisAccount.state.settings;
+
+    this.newVersion = stateForThisAccount.newVersion;
+    this.oldVersion = stateForThisAccount.oldVersion;
+    this.mirrors['state'] = stateForThisAccount.state;
+    setAppStateSilent(stateForThisAccount.state);
+
+    return loadedStates;
   }
 
-  public async sendState() {
-    const result = await this.loadState();
 
-    const [stateResult] = result;
-    this.invoke('state', {...stateResult, userId: rootScope.myId.toUserId(), accountNumber: getCurrentAccount()});
+  private async dispatchUserAuth() {
+    const accountData = await AccountController.get(getCurrentAccount());
+
+    if(accountData?.userId) {
+      rootScope.dispatchEvent('user_auth',
+        {dcID: accountData.dcId || 0, date: accountData.date || (Date.now() / 1000 | 0), id: accountData.userId.toPeerId(false)}
+      );
+    }
+  }
+
+  public async sendAllStates() {
+    const loadedStates = await this.loadAllStates();
+
 
     for(let i = 1; i <= 4; i++) {
-      if(i !== getCurrentAccount()) {
-        const otherAccountState = await loadStateForAccount(i as ActiveAccountNumber);
-        const userId = (await sessionStorage.get(`account${i as ActiveAccountNumber}`))?.userId;
-        this.invoke('state', {
-          ...otherAccountState,
-          resetStorages: new Set(),
-          newVersion: stateResult.newVersion,
-          oldVersion: stateResult.oldVersion,
-          userId,
-          accountNumber: i as ActiveAccountNumber
-        });
-      }
+      const userId = (await sessionStorage.get(`account${i as ActiveAccountNumber}`))?.userId;
+      this.invoke('state', {
+        ...loadedStates[i as ActiveAccountNumber],
+        userId,
+        accountNumber: i as ActiveAccountNumber
+      });
     }
-    // this.invoke('state', {...stateResult, state: {...STATE_INIT}, userId: (0).toUserId(), accountNumber: 3});
-    // this.invoke('state', {...stateResult, state: {...STATE_INIT}, userId: (0).toUserId(), accountNumber: 4});
-    return result;
+    return loadedStates;
   }
 
   public invokeCrypto<Method extends keyof CryptoMethods>(method: Method, ...args: Parameters<CryptoMethods[typeof method]>): Promise<Awaited<ReturnType<CryptoMethods[typeof method]>>> {

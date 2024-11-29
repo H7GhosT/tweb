@@ -5,6 +5,7 @@
  */
 
 import {AuthBackButton} from '../components/authBackButton';
+import {getCurrentAccount} from '../lib/appManagers/utils/currentAccount';
 import pagesManager from './pagesManager';
 
 export default class Page {
@@ -52,7 +53,7 @@ export default class Page {
   }
 
   private mountBackButtonIfAuth() {
-    if(!this.isAuthPage) return;
+    if(!this.isAuthPage || getCurrentAccount() === 1) return;
 
     const closeContainer = document.getElementById('auth-pages-close');
     closeContainer?.style.removeProperty('display');

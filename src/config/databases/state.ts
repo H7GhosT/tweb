@@ -11,6 +11,31 @@ import {MOUNT_CLASS_TO} from '../debug';
 export type AccountDatabase = Database<'session' | 'stickerSets' | 'users' | 'chats' | 'messages' | 'dialogs'>;
 export type CommonDatabase = Database<'session'>;
 
+export const getOldDatabaseState = (): AccountDatabase => ({
+  name: `tweb`,
+  version: 7,
+  stores: [
+    {
+      name: 'session'
+    },
+    {
+      name: 'stickerSets'
+    },
+    {
+      name: 'users'
+    },
+    {
+      name: 'chats'
+    },
+    {
+      name: 'dialogs'
+    },
+    {
+      name: 'messages'
+    }
+  ]
+});
+
 export const getCommonDatabaseState = (): Database<'session'> => ({
   name: `tweb-common`,
   version: 7,

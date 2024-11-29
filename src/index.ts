@@ -40,6 +40,7 @@ import {IS_OVERLAY_SCROLL_SUPPORTED, USE_CUSTOM_SCROLL, USE_NATIVE_SCROLL} from 
 import IMAGE_MIME_TYPES_SUPPORTED, {IMAGE_MIME_TYPES_SUPPORTED_PROMISE} from './environment/imageMimeTypesSupport';
 import MEDIA_MIME_TYPES_SUPPORTED from './environment/mediaMimeTypesSupport';
 import {doubleRaf} from './helpers/schedulers';
+import {getCurrentAccount} from './lib/appManagers/utils/currentAccount';
 
 
 IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {
@@ -311,7 +312,7 @@ IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {
 
   const [stateResult, langPack] = await Promise.all([
     // loadState(),
-    apiManagerProxy.sendState().then(([stateResult]) => stateResult),
+    apiManagerProxy.sendAllStates().then((loadedStates) => loadedStates[getCurrentAccount()]),
     langPromise
   ]);
   I18n.setTimeFormat(stateResult.state.settings.timeFormat);
@@ -392,6 +393,8 @@ IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {
 
   if(authState._ !== 'authStateSignedIn'/*  || 1 === 1 */) {
     console.log('Will mount auth page:', authState._, Date.now() / 1000);
+
+    document.body.classList.add('has-auth-pages');
 
     const el = document.getElementById('auth-pages');
     let scrollable: HTMLElement;

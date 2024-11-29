@@ -12,19 +12,17 @@ import copy from '../../../../helpers/object/copy';
 import validateInitObject from '../../../../helpers/object/validateInitObject';
 import {UserAuth} from '../../../mtproto/mtproto_config';
 import rootScope from '../../../rootScope';
-import stateStorage from '../../../stateStorageInstance';
 import sessionStorage from '../../../sessionStorage';
 import {recordPromiseBound} from '../../../../helpers/recordPromise';
-// import RESET_STORAGES_PROMISE from "../storages/resetStoragesPromise";
 import {StoragesResults} from '../storages/loadStorages';
 import {LogTypes, logger} from '../../../logger';
 import {WallPaper} from '../../../../layer';
-import tsNow from '../../../../helpers/tsNow';
-import {getCurrentAccount} from '../currentAccount';
-import {ActiveAccountNumber} from '../currentAccountTypes';
+import {AccountSessionData, ActiveAccountNumber} from '../currentAccountTypes';
 import StateStorage from '../../../stateStorage';
 import AccountController from '../../../accountController';
 import commonStateStorage from '../../../commonStateStorage';
+import {TrueDcId} from '../../../../types';
+import {getOldDatabaseState} from '../../../../config/databases/state';
 
 const REFRESH_EVERY = 24 * 60 * 60 * 1000; // 1 day
 // const REFRESH_EVERY = 1e3;
@@ -44,7 +42,7 @@ const REFRESH_KEYS: Array<keyof State> = [
 
 // const REFRESH_KEYS_WEEK = ['dialogs', 'allDialogsLoaded', 'updates', 'pinnedOrders'] as any as Array<keyof State>;
 
-export async function loadStateForAccount(accountNumber: ActiveAccountNumber) {
+async function loadStateForAccount(accountNumber: ActiveAccountNumber): Promise<LoadStateResult> {
   const log = logger(`STATE-LOADER-ACCOUNT-${accountNumber}`, LogTypes.Error);
 
   const stateStorage = new StateStorage(accountNumber);
@@ -83,25 +81,40 @@ export async function loadStateForAccount(accountNumber: ActiveAccountNumber) {
       log('will refresh state', state.stateCreatedTime, time);
     }
 
-    const r = (keys: typeof REFRESH_KEYS) => {
-      keys.forEach((key) => {
-        pushToState(key, copy(STATE_INIT[key]));
-      });
-    };
-
-    r(REFRESH_KEYS);
+    REFRESH_KEYS.forEach((key) => {
+      pushToState(key, copy(STATE_INIT[key]));
+    });
   }
 
-  return {state, pushedKeys};
+  const SKIP_VALIDATING_PATHS: Set<string> = new Set([
+    'settings.themes'
+  ]);
+  validateInitObject(STATE_INIT, state, (missingKey) => {
+    pushToState(missingKey as keyof State, state[missingKey as keyof State]);
+  }, undefined, SKIP_VALIDATING_PATHS);
+
+  const accountData = await AccountController.get(accountNumber);
+  if(accountData?.userId) {
+    state.authState = {_: 'authStateSignedIn'};
+  }
+
+  let newVersion: string, oldVersion: string;
+  if(compareVersion(state.version, STATE_VERSION) !== 0) {
+    newVersion = STATE_VERSION;
+    oldVersion = state.version;
+  }
+
+  return {state, pushedKeys, newVersion, oldVersion, resetStorages: new Set};
 }
 
-async function loadStateInner() {
+async function loadOldState() {
   const log = logger('STATE-LOADER', LogTypes.Error);
+  const stateStorage = new StateStorage('old');
 
   const totalPerf = performance.now();
   const recordPromise = recordPromiseBound(log);
 
-  const promises = ALL_KEYS.map((key) => recordPromise(key ==='settings' ? commonStateStorage.get('settings') : stateStorage.get(key), 'state ' + key))
+  const promises = ALL_KEYS.map((key) => recordPromise(stateStorage.get(key), 'state ' + key))
   .concat(
     recordPromise(sessionStorage.get('user_auth'), 'auth'),
     recordPromise(sessionStorage.get('state_id'), 'auth'),
@@ -183,32 +196,31 @@ async function loadStateInner() {
   arr.splice(0, ALL_KEYS.length);
 
   // * Read auth
-  // let auth = arr.shift() as UserAuth | number;
+  let auth = arr.shift() as UserAuth | number;
   const stateId = arr.shift() as number;
   const sessionBuild = arr.shift() as number;
-  arr.shift(); arr.shift();
-  // const authKeyFingerprint = arr.shift() as string;
-  // const baseDcAuthKey = arr.shift() as string;
+  const authKeyFingerprint = arr.shift() as string;
+  const baseDcAuthKey = arr.shift() as string;
   const shiftedWebKAuth = arr.shift() as UserAuth | number;
-  // if(!auth && shiftedWebKAuth) { // support old webk auth
-  //   auth = shiftedWebKAuth;
-  //   const keys: string[] = ['dc', 'server_time_offset', 'xt_instance'];
-  //   for(let i = 1; i <= 5; ++i) {
-  //     keys.push(`dc${i}_server_salt`);
-  //     keys.push(`dc${i}_auth_key`);
-  //   }
+  if(!auth && shiftedWebKAuth) { // support old webk auth
+    auth = shiftedWebKAuth;
+    const keys: string[] = ['dc', 'server_time_offset', 'xt_instance'];
+    for(let i = 1; i <= 5; ++i) {
+      keys.push(`dc${i}_server_salt`);
+      keys.push(`dc${i}_auth_key`);
+    }
 
-  //   const values = await Promise.all(keys.map((key) => stateStorage.get(key as any)));
-  //   keys.push('user_auth');
-  //   values.push(typeof(auth) === 'number' || typeof(auth) === 'string' ? {dcID: values[0] || App.baseDcId, date: Date.now() / 1000 | 0, id: auth.toPeerId(false)} as UserAuth : auth);
+    const values = await Promise.all(keys.map((key) => stateStorage.get(key as any)));
+    keys.push('user_auth');
+    values.push(typeof(auth) === 'number' || typeof(auth) === 'string' ? {dcID: values[0] || App.baseDcId, date: Date.now() / 1000 | 0, id: auth.toPeerId(false)} as UserAuth : auth);
 
-  //   const obj: any = {};
-  //   keys.forEach((key, idx) => {
-  //     obj[key] = values[idx];
-  //   });
+    const obj: any = {};
+    keys.forEach((key, idx) => {
+      obj[key] = values[idx];
+    });
 
-  //   await sessionStorage.set(obj);
-  // }
+    await sessionStorage.set(obj);
+  }
 
   /* if(!auth) { // try to read Webogram's session from localStorage
     try {
@@ -234,41 +246,13 @@ async function loadStateInner() {
     }
   } */
 
-
-  // const currentAccount = getCurrentAccount();
-
-  // const accountKey = `account${currentAccount}` as const;
-  // const accountData = await sessionStorage.get(accountKey);
-
-  // if(accountData?.userId) {
-  //   const dcId = await sessionStorage.get('dc');
-  //   state.authState = {_: 'authStateSignedIn'};
-  //   rootScope.dispatchEvent('user_auth', {
-  //     dcID: dcId || 0,
-  //     date: tsNow(true),
-  //     id: accountData.userId.toPeerId(false)
-  //   });
-  // } else
-
-  const accountData = await AccountController.get(getCurrentAccount());
-  const authKeyFingerprint = accountData?.auth_key_fingerprint;
-  const baseDcAuthKey = accountData?.[`dc${App.baseDcId}_auth_key`];
-  if(accountData?.userId) {
+  if(auth) {
     // ! Warning ! DON'T delete this
     state.authState = {_: 'authStateSignedIn'};
-    rootScope.dispatchEvent('user_auth',
-      {dcID: accountData.dcId || 0, date: accountData.date || (Date.now() / 1000 | 0), id: accountData.userId.toPeerId(false)}
-    );
     // rootScope.dispatchEvent('user_auth', typeof(auth) === 'number' || typeof(auth) === 'string' ?
     //   {dcID: 0, date: Date.now() / 1000 | 0, id: auth.toPeerId(false)} :
     //   auth); // * support old version
-  } else {
-    state.authState = {_: 'authStateSignQr'}; // TODO: depends on device and try to keep on refresh if changed
   }
-
-  // if(!accountData?.userId && state.authState._ === 'authStateSignedIn') {
-  //   state.authState = {_: 'authStateSignQr'}; // TODO: depends on device
-  // }
 
   const resetStorages: Set<keyof StoragesResults> = new Set();
   const resetState = (preserveKeys: (keyof State)[]) => {
@@ -303,7 +287,6 @@ async function loadStateInner() {
     });
   }
 
-  // TODO: Check here
   if(baseDcAuthKey) {
     const _authKeyFingerprint = baseDcAuthKey.slice(0, 8);
     if(!authKeyFingerprint) { // * migration, preserve settings
@@ -313,7 +296,7 @@ async function loadStateInner() {
     }
 
     if(authKeyFingerprint !== _authKeyFingerprint) {
-      await AccountController.update(getCurrentAccount(), {
+      await sessionStorage.set({
         auth_key_fingerprint: _authKeyFingerprint
       });
     }
@@ -537,12 +520,73 @@ async function loadStateInner() {
 
   // RESET_STORAGES_PROMISE.resolve(appStateManager.resetStorages);
 
-  // console.log('state', {...state});
-
   return {state, resetStorages, newVersion, oldVersion, pushedKeys};
 }
 
-let promise: ReturnType<typeof loadStateInner>;
-export default function loadState() {
-  return promise ??= loadStateInner();
+async function moveAccessKeysToMultiAccountFormat() {
+  const data: Partial<AccountSessionData> = {};
+
+  for(let i = 1; i <= 5; i++) {
+    const authKeyKey = `dc${i as TrueDcId}_auth_key` as const;
+    const serverSaltKey = `dc${i as TrueDcId}_server_salt` as const;
+
+    data[authKeyKey] = await sessionStorage.get(authKeyKey);
+    data[serverSaltKey] = await sessionStorage.get(serverSaltKey);
+
+    sessionStorage.delete(authKeyKey);
+    sessionStorage.delete(serverSaltKey);
+  }
+
+  const userAuth = await sessionStorage.get(`user_auth`);
+  const fingerprint = await sessionStorage.get(`auth_key_fingerprint`);
+
+  sessionStorage.delete('user_auth');
+  sessionStorage.delete('auth_key_fingerprint');
+
+  data['auth_key_fingerprint'] = fingerprint;
+  data['userId'] = typeof userAuth === 'string' || typeof userAuth === 'number' ? +userAuth : userAuth?.id;
+
+  await AccountController.update(1, data, true);
+}
+
+export type LoadStateResult = {
+  state: State;
+  resetStorages: Set<keyof StoragesResults>;
+  newVersion: string;
+  oldVersion: string;
+  pushedKeys: (keyof State)[];
+}
+
+async function checkIfHasMultiAccount() {
+  return !!(await AccountController.get(1));
+}
+
+async function deleteOldDatabase() {
+  indexedDB.deleteDatabase(getOldDatabaseState().name);
+}
+
+async function loadStateForAllAccounts() {
+  const hasMultiAccount = await checkIfHasMultiAccount();
+
+  let stateForFirstAccount: LoadStateResult;
+
+  if(!hasMultiAccount) {
+    stateForFirstAccount = await loadOldState();
+    moveAccessKeysToMultiAccountFormat();
+    deleteOldDatabase();
+  } else {
+    stateForFirstAccount = await loadStateForAccount(1);
+  }
+
+  return {
+    1: stateForFirstAccount,
+    2: await loadStateForAccount(2),
+    3: await loadStateForAccount(3),
+    4: await loadStateForAccount(4)
+  }
+}
+
+let promise: ReturnType<typeof loadStateForAllAccounts>;
+export default function loadStateForAllAccountsOnce() {
+  return promise ??= loadStateForAllAccounts();
 }
