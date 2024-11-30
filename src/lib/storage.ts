@@ -310,7 +310,6 @@ export default class AppStorage<
         storage.keysToDelete.clear();
         storage.getPromises.forEach((deferred) => deferred.resolve(undefined));
         storage.getPromises.clear();
-        return storage.clear(true);
       } else {
         return storage.set(storage.cache);
       }

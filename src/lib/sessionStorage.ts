@@ -13,7 +13,6 @@ import {AccountSessionData, ActiveAccountNumber} from './appManagers/utils/curre
 
 const sessionStorage = new LocalStorageController<{
   dc: DcId,
-  user_auth: UserAuth,
   state_id: number,
 
   account1: AccountSessionData,
@@ -22,6 +21,7 @@ const sessionStorage = new LocalStorageController<{
   account4: AccountSessionData,
 
   // <-- DEPRECATED, use only for going to and from 'A' (a.k.a. 'Z') version
+  user_auth: UserAuth,
   dc1_auth_key: string,
   dc2_auth_key: string,
   dc3_auth_key: string,

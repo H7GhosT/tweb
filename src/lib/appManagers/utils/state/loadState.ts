@@ -565,6 +565,13 @@ async function deleteOldDatabase() {
   indexedDB.deleteDatabase(getOldDatabaseState().name);
 }
 
+async function applyBuildVersionToStorage() {
+  const sessionBuild = await sessionStorage.get('k_build');
+  if(sessionBuild !== BUILD && (!sessionBuild || sessionBuild < BUILD)) {
+    sessionStorage.set({k_build: BUILD});
+  }
+}
+
 async function loadStateForAllAccounts() {
   const hasMultiAccount = await checkIfHasMultiAccount();
 
@@ -577,6 +584,8 @@ async function loadStateForAllAccounts() {
   } else {
     stateForFirstAccount = await loadStateForAccount(1);
   }
+
+  applyBuildVersionToStorage();
 
   return {
     1: stateForFirstAccount,

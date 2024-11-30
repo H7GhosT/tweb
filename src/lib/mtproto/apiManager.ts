@@ -31,13 +31,13 @@ import isObject from '../../helpers/object/isObject';
 import pause from '../../helpers/schedulers/pause';
 import ApiManagerMethods from './api_methods';
 import {getEnvironment} from '../../environment/utils';
-import toggleStorages from '../../helpers/toggleStorages';
 import tsNow from '../../helpers/tsNow';
 import transportController from './transports/controller';
 import MTTransport from './transports/transport';
 import AccountController from '../accountController';
 import {AppStoragesManager} from '../appManagers/appStoragesManager';
 import commonStateStorage from '../commonStateStorage';
+import CacheStorageController from '../files/cacheStorage';
 
 /* class RotatableArray<T> {
   public array: Array<T> = [];
@@ -319,6 +319,7 @@ export class ApiManager extends ApiManagerMethods {
         await sessionStorage.delete(`account1`);
         await AppStoragesManager.clearAllStoresForAccount(1);
         await commonStateStorage.clear();
+        await CacheStorageController.deleteAllStorages();
       } else {
         await AccountController.shiftAccounts(accountNumber);
         await AppStoragesManager.shiftStorages(accountNumber);

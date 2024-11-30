@@ -21,6 +21,7 @@ import appTabsManager from '../appManagers/appTabsManager';
 import callbackify from '../../helpers/callbackify';
 import Modes from '../../config/modes';
 import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
+import AccountController from '../accountController';
 
 const log = logger('MTPROTO');
 // let haveState = false;
@@ -114,11 +115,42 @@ appTabsManager.start();
 
 let isFirst = true;
 
+// const randomId = Math.random()
+
+// setInterval(() => {
+//   port.invokeVoid('log', `Random id ${randomId}`);
+//   port.invokeVoid('log', `SendPorts count ${port.getSendPorts().length}`);
+//   port.invokeVoid('log', `ListenPorts count ${port.getListenPorts().length}`);
+// }, 3000);
+
+// let count = 0;
 // let sentHello = false;
+
+async function logoutSingleUseAccounts() {
+  const managersByAccount = await appManagersManager.getManagersByAccount();
+
+  for(let i = 1; i <= 4; i++) {
+    const accountNumber = i as ActiveAccountNumber;
+
+    const managers = managersByAccount[accountNumber];
+    const state = await managers.appStateManager.getState();
+
+    const accountData = await AccountController.get(accountNumber);
+
+    if(state.keepSigned !== false || !accountData?.userId) continue;
+
+    // Theoretically requests won't fire until the managers are fully initialized
+    managers.apiManager.logOut();
+    return;
+  }
+}
+
 listenMessagePort(port, (source) => {
   appTabsManager.addTab(source);
   if(isFirst) {
     isFirst = false;
+    logoutSingleUseAccounts();
+    // port.invoke('log', 'Shared worker first connection')
   } else {
     callbackify(appManagersManager.getManagersByAccount(), (managers) => {
       for(const key in managers) {

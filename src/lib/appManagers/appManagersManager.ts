@@ -128,6 +128,7 @@ export class AppManagersManager {
 
     const accountNumberToManagersPairs = await Promise.all(promises);
     this.managersByAccount = Object.fromEntries(accountNumberToManagersPairs) as ManagersByAccount;
+
     return this.managersByAccount;
   }
 
