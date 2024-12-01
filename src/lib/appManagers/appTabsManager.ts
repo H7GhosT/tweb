@@ -46,6 +46,7 @@ export class AppTabsManager {
 
   public deleteTab(source: MessageEventSource) {
     this.tabs.delete(source);
+    MTProtoMessagePort.getInstance<false>().invokeVoid('tabsUpdated', [...this.tabs.values()].map(({state}) => state));
   }
 }
 
