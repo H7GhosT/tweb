@@ -151,6 +151,8 @@ export type BroadcastEvents = {
   'notification_reset': string,
   'notification_cancel': string,
 
+  'notification_count_update': void,
+
   'language_change': string,
 
   'theme_change': {x: number, y: number} | void,

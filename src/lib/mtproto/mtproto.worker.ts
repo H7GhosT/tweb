@@ -22,6 +22,7 @@ import callbackify from '../../helpers/callbackify';
 import Modes from '../../config/modes';
 import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
 import AccountController from '../accountController';
+import commonStateStorage from '../commonStateStorage';
 
 const log = logger('MTPROTO');
 // let haveState = false;
@@ -145,11 +146,18 @@ async function logoutSingleUseAccounts() {
   }
 }
 
+function resetNotificationsCount() {
+  commonStateStorage.set({
+    notificationsCount: {}
+  });
+}
+
 listenMessagePort(port, (source) => {
   appTabsManager.addTab(source);
   if(isFirst) {
     isFirst = false;
     logoutSingleUseAccounts();
+    resetNotificationsCount();
     // port.invoke('log', 'Shared worker first connection')
   } else {
     callbackify(appManagersManager.getManagersByAccount(), (managers) => {

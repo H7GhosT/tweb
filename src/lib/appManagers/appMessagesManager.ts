@@ -6979,19 +6979,26 @@ export class AppMessagesManager extends AppManager {
     }
 
     const tabs = appTabsManager.getTabs();
+    tabs.sort((a, b) => a.state.idleStartTime - b.state.idleStartTime);
+
     let tab = tabs.find((tab) => {
-      const {chatPeerIds} = tab.state;
-      return chatPeerIds[chatPeerIds.length - 1] === peerId;
+      const {chatPeerIds, accountNumber} = tab.state;
+      return accountNumber === this.getAccountNumber() && chatPeerIds[chatPeerIds.length - 1] === peerId;
     });
 
+    if(!tab) {
+      tab = tabs.find(tab => tab.state.accountNumber === this.getAccountNumber());
+    }
+
     if(!tab && tabs.length) {
-      tabs.sort((a, b) => a.state.idleStartTime - b.state.idleStartTime);
       tab = !tabs[0].state.idleStartTime ? tabs[0] : tabs[tabs.length - 1];
     }
 
     const port = MTProtoMessagePort.getInstance<false>();
     port.invokeVoid('notificationBuild', {
       message,
+      accountNumber: this.getAccountNumber(),
+      isOtherTabActive: !!tab.state.idleStartTime,
       ...options
     }, tab?.source);
   }

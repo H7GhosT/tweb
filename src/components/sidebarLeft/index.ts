@@ -84,6 +84,7 @@ import filterAsync from '../../helpers/array/filterAsync';
 import pause from '../../helpers/schedulers/pause';
 import AccountsLimitPopup from './accountsLimitPopup';
 import {changeAccount} from '../../lib/changeAccount';
+import {UiNotificationsManager} from '../../lib/appManagers/uiNotificationsManager';
 
 export const LEFT_COLUMN_ACTIVE_CLASSNAME = 'is-left-column-shown';
 
@@ -93,6 +94,7 @@ export class AppSidebarLeft extends SidebarSlider {
   public inputSearch: InputSearch;
 
   public archivedCount: HTMLSpanElement;
+  private totalNotificationsCount: HTMLSpanElement;
   public rect: DOMRect;
 
   private newBtnMenu: HTMLElement;
@@ -280,12 +282,13 @@ export class AppSidebarLeft extends SidebarSlider {
         buttons[targetIdx].separator = true;
 
         const totalAccounts = await AccountController.getTotalAccounts();
-        const accountsButtons: typeof buttons = [];
+        const notificationsCount = await UiNotificationsManager.getNotificationsCountForAllAccounts();
+        const accountButtons: typeof buttons = [];
         for(let i = 1; i <= totalAccounts; i++) {
           const accountNumber = i as ActiveAccountNumber;
           if(accountNumber === getCurrentAccount()) {
             const user = await this.managers.appUsersManager.getSelf();
-            accountsButtons.push({
+            accountButtons.push({
               avatarInfo: {
                 accountNumber: getCurrentAccount(),
                 peerId: rootScope.myId.toPeerId()
@@ -301,13 +304,23 @@ export class AppSidebarLeft extends SidebarSlider {
             const peerId = accountData?.userId?.toPeerId();
             const user = await otherManagers.appUsersManager.getSelf();
 
-            accountsButtons.push({
+            const content = document.createElement('span');
+            content.append(wrapUserName(user));
+
+            if(notificationsCount[accountNumber]) {
+              const badge = createBadge('span', 20, 'primary');
+              setBadgeContent(badge, '' + notificationsCount[accountNumber]);
+              content.append(badge);
+            }
+
+            accountButtons.push({
               avatarInfo: {
                 accountNumber,
                 peerId,
                 peer: user
               },
-              regularText: wrapUserName(user),
+              className: 'btn-menu-account-item',
+              regularText: content,
               onClick: async() => {
                 const chatListEl = document.querySelector('.chatlist-container')?.firstElementChild;
                 chatListEl.classList.add('chatlist-exit');
@@ -320,7 +333,7 @@ export class AppSidebarLeft extends SidebarSlider {
           }
         }
 
-        buttons.splice(0, 0, ...accountsButtons);
+        buttons.splice(0, 0, ...accountButtons);
 
         filteredButtons.splice(0, filteredButtons.length, ...buttons);
       },
@@ -473,7 +486,21 @@ export class AppSidebarLeft extends SidebarSlider {
       },
       noIcon: true
     });
+
     this.toolsBtn.classList.add('sidebar-tools-button', 'is-visible');
+    this.totalNotificationsCount = createBadge('span', 20, 'primary');
+    this.toolsBtn.append(this.totalNotificationsCount);
+
+    rootScope.addEventListener('notification_count_update', async() => {
+      const notificationsCount = await UiNotificationsManager.getNotificationsCountForAllAccounts();
+      const count = Object.entries(notificationsCount).reduce(
+        (prev, [accountNumber, count]) =>
+          prev +
+          (+accountNumber !== getCurrentAccount() ? count || 0 : 0)
+        , 0);
+
+      setBadgeContent(this.totalNotificationsCount, '' + (count || ''));
+    });
 
     this.backBtn.parentElement.insertBefore(this.toolsBtn, this.backBtn);
 

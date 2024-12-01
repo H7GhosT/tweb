@@ -61,7 +61,7 @@ import ChatBackgroundPatternRenderer from '../../components/chat/patternRenderer
 import {IS_CHROMIUM, IS_FIREFOX} from '../../environment/userAgent';
 import compareVersion from '../../helpers/compareVersion';
 import {AppManagers} from './managers';
-import uiNotificationsManager from './uiNotificationsManager';
+import {UiNotificationsManager} from './uiNotificationsManager';
 import appMediaPlaybackController from '../../components/appMediaPlaybackController';
 import wrapEmojiText from '../richTextProcessor/wrapEmojiText';
 import wrapRichText from '../richTextProcessor/wrapRichText';
@@ -131,6 +131,7 @@ import {setQuizHint} from '../../components/poll';
 import anchorCallback from '../../helpers/dom/anchorCallback';
 import PopupPremium from '../../components/popups/premium';
 import stateStorage from '../stateStorageInstance';
+import {createProxiedManagersForAccount} from './getProxiedManagers';
 
 export type ChatSavedPosition = {
   mids: number[],
@@ -208,14 +209,10 @@ export class AppImManager extends EventListenerBase<{
     this.managers = managers;
     internalLinkProcessor.construct(managers);
 
-    const {
-      apiUpdatesManager
-    } = managers;
-    apiUpdatesManager.attach(I18n.lastRequestedLangCode);
+
+    UiNotificationsManager.start();
 
     appMediaPlaybackController.construct(managers);
-    uiNotificationsManager.construct(managers);
-    uiNotificationsManager.start();
 
     this.log = logger('IM', LogTypes.Log | LogTypes.Warn | LogTypes.Debug | LogTypes.Error);
 
@@ -579,13 +576,16 @@ export class AppImManager extends EventListenerBase<{
     });
 
     apiManagerProxy.addEventListener('notificationBuild', async(options) => {
-      const isForum = await this.managers.appPeersManager.isForum(options.message.peerId);
+      const {accountNumber} = options;
+      const managers = createProxiedManagersForAccount(accountNumber);
+      const isForum = await managers.appPeersManager.isForum(options.message.peerId);
       const threadId = getMessageThreadId(options.message, isForum);
+
       if(this.chat.peerId === options.message.peerId && this.chat.threadId === threadId && !idleController.isIdle) {
         return;
       }
 
-      uiNotificationsManager.buildNotificationQueue(options);
+      UiNotificationsManager.byAccount[accountNumber]?.buildNotificationQueue(options);
     });
 
     this.addEventListener('peer_changed', async({peerId}) => {

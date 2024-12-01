@@ -26,6 +26,8 @@ export class AppTabsManager {
     port.addEventListener('tabState', (state, source) => {
       const tab = this.tabs.get(source);
       tab.state = state;
+
+      port.invokeVoid('tabsUpdated', [...this.tabs.values()].map(({state}) => state));
     });
   }
 

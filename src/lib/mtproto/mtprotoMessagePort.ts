@@ -40,6 +40,7 @@ export default class MTProtoMessagePort<Master extends boolean = true> extends S
   notificationBuild: (payload: NotificationBuildTaskPayload) => void,
   receivedServiceMessagePort: (payload: void) => void,
   log: (payload: any) => void
+  tabsUpdated: (payload: TabState[]) => void,
   // hello: () => void
 } & MTProtoBroadcastEvent, Master> {
   private static INSTANCE: MTProtoMessagePort;

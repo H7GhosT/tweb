@@ -7,7 +7,6 @@
 import type {PushNotificationObject} from '../serviceWorker/push';
 import getPeerTitle from '../../components/wrappers/getPeerTitle';
 import wrapMessageForReply from '../../components/wrappers/messageForReply';
-import {MOUNT_CLASS_TO} from '../../config/debug';
 import {FontFamily} from '../../config/font';
 import {NOTIFICATION_BADGE_PATH, NOTIFICATION_ICON_PATH} from '../../config/notifications';
 import {IS_MOBILE} from '../../environment/userAgent';
@@ -18,23 +17,29 @@ import customProperties from '../../helpers/dom/customProperties';
 import idleController from '../../helpers/idleController';
 import deepEqual from '../../helpers/object/deepEqual';
 import tsNow from '../../helpers/tsNow';
-import {Message, MessagePeerReaction, PeerNotifySettings, Reaction} from '../../layer';
+import {Reaction, User} from '../../layer';
 import I18n, {FormatterArguments, LangPackKey} from '../langPack';
-import apiManagerProxy from '../mtproto/mtprotoworker';
 import singleInstance from '../mtproto/singleInstance';
-import webPushApiManager, {PushSubscriptionNotify} from '../mtproto/webPushApiManager';
 import fixEmoji from '../richTextProcessor/fixEmoji';
 import getAbbreviation from '../richTextProcessor/getAbbreviation';
 import wrapPlainText from '../richTextProcessor/wrapPlainText';
-import rootScope from '../rootScope';
-import appImManager from './appImManager';
-import appRuntimeManager from './appRuntimeManager';
 import {AppManagers} from './managers';
 import getMessageThreadId from './utils/messages/getMessageThreadId';
 import {getPeerAvatarColorByPeer} from './utils/peers/getPeerColorById';
 import getPeerId from './utils/peers/getPeerId';
 import {logger} from '../logger';
 import LazyLoadQueueBase from '../../components/lazyLoadQueueBase';
+import webPushApiManager, {PushSubscriptionNotify} from '../mtproto/webPushApiManager';
+import rootScope from '../rootScope';
+import appImManager from './appImManager';
+import appRuntimeManager from './appRuntimeManager';
+import {getCurrentAccount} from './utils/currentAccount';
+import limitSymbols from '../../helpers/string/limitSymbols';
+import apiManagerProxy, {NotificationBuildTaskPayload} from '../mtproto/mtprotoworker';
+import commonStateStorage from '../commonStateStorage';
+import {ActiveAccountNumber} from './utils/currentAccountTypes';
+import {createProxiedManagersForAccount} from './getProxiedManagers';
+import AccountController from '../accountController';
 
 type MyNotification = Notification & {
   hidden?: boolean,
@@ -65,22 +70,21 @@ export class UiNotificationsManager {
   private notificationsUiSupport: boolean;
   private notificationsShown: {[key: string]: MyNotification | true} = {};
   private notificationIndex = 0;
-  private notificationsCount = 0;
   private soundsPlayed: {[tag: string]: number} = {};
   private vibrateSupport = IS_VIBRATE_SUPPORTED;
   private nextSoundAt: number;
   private prevSoundVolume: number;
 
-  private faviconElements = Array.from(document.head.querySelectorAll<HTMLLinkElement>('link[rel="icon"], link[rel="alternate icon"]'));
+  private static faviconElements = Array.from(document.head.querySelectorAll<HTMLLinkElement>('link[rel="icon"], link[rel="alternate icon"]'));
 
-  private titleBackup = document.title;
-  private titleChanged = false;
-  private titleInterval: number;
-  private prevFavicon: string;
+  private static titleBackup = document.title;
+  private static titleChanged = false;
+  private static titleInterval: number;
+  private static prevFavicon: string;
 
   private notifySoundEl: HTMLElement;
 
-  private stopped = false;
+  private static stopped = false;
 
   private topMessagesDeferred: CancellablePromise<void>;
 
@@ -89,6 +93,7 @@ export class UiNotificationsManager {
   private registeredDevice: any;
   private pushInited = false;
 
+  private accountNumber: ActiveAccountNumber;
   private managers: AppManagers;
   private setAppBadge: (contents?: any) => Promise<void>;
 
@@ -96,14 +101,40 @@ export class UiNotificationsManager {
   private avatarContext: CanvasRenderingContext2D;
   private avatarGradients: {[color: string]: CanvasGradient};
 
-  private log: ReturnType<typeof logger>;
+  private static log = logger('NOTIFICATIONS');
 
   private notificationsQueue: LazyLoadQueueBase;
 
-  construct(managers: AppManagers) {
-    this.managers = managers;
+  public static byAccount = {} as Record<ActiveAccountNumber, UiNotificationsManager>;
 
-    this.log = logger('NOTIFICATIONS');
+  static async getNotificationsCountForAllAccounts() {
+    const notificationsCount = await commonStateStorage.get('notificationsCount', false);
+    return notificationsCount;
+  }
+
+
+  async getNotificationsCount() {
+    const notificationsCount = await commonStateStorage.get('notificationsCount', false);
+    return notificationsCount[this.accountNumber];
+  }
+
+  async setNotificationCount(valueOrFn: number | ((prev: number) => number)) {
+    const notificationsCount = await commonStateStorage.get('notificationsCount', false);
+    await commonStateStorage.set({
+      notificationsCount: {
+        ...notificationsCount,
+        [this.accountNumber]: valueOrFn instanceof Function ?
+          valueOrFn(notificationsCount[this.accountNumber] || 0) :
+          valueOrFn
+      }
+    });
+    rootScope.dispatchEvent('notification_count_update')
+  }
+
+  construct(accountNumber: ActiveAccountNumber) {
+    this.managers = createProxiedManagersForAccount(accountNumber);
+    this.accountNumber = accountNumber;
+
     this.notificationsQueue = new LazyLoadQueueBase(1);
 
     navigator.vibrate = navigator.vibrate || (navigator as any).mozVibrate || (navigator as any).webkitVibrate;
@@ -117,28 +148,6 @@ export class UiNotificationsManager {
     document.body.append(this.notifySoundEl);
 
     this.topMessagesDeferred = deferredPromise<void>();
-
-    singleInstance.addEventListener('deactivated', () => {
-      this.stop();
-    });
-
-    singleInstance.addEventListener('activated', () => {
-      if(this.stopped) {
-        this.start();
-      }
-    });
-
-    idleController.addEventListener('change', (idle) => {
-      if(this.stopped) {
-        return;
-      }
-
-      if(!idle) {
-        this.clear();
-      }
-
-      this.toggleToggler();
-    });
 
     rootScope.addEventListener('notification_reset', (peerString) => {
       this.soundReset(peerString);
@@ -232,9 +241,11 @@ export class UiNotificationsManager {
           return;
         }
 
+        const lastMsgId = await this.managers.appMessagesIdsManager.generateMessageId(+notificationData.custom.msg_id, channelId)
+
         appImManager.setInnerPeer({
           peerId,
-          lastMsgId: await this.managers.appMessagesIdsManager.generateMessageId(+notificationData.custom.msg_id, channelId)
+          lastMsgId
         });
       });
     });
@@ -250,20 +261,16 @@ export class UiNotificationsManager {
     message,
     fwdCount,
     peerReaction,
-    peerTypeNotifySettings
-  }: {
-    message: Message.message | Message.messageService,
-    fwdCount?: number,
-    peerReaction?: MessagePeerReaction,
-    peerTypeNotifySettings?: PeerNotifySettings
-  }) {
+    peerTypeNotifySettings,
+    isOtherTabActive
+  }: NotificationBuildTaskPayload) {
     const peerId = message.peerId;
     const isAnyChat = peerId.isAnyChat();
     const notification: NotifyOptions = {};
     const [peerString, isForum = false, peer] = await Promise.all([
       this.managers.appPeersManager.getPeerString(peerId),
       isAnyChat && this.managers.appPeersManager.isForum(peerId),
-      apiManagerProxy.getPeer(peerId)
+      this.managers.appPeersManager.getPeer(peerId)
     ]);
     let notificationMessage: string;
     let wrappedMessage = false;
@@ -328,10 +335,36 @@ export class UiNotificationsManager {
         notification.title;
     }
 
+    function wrapUserName(user: User.user) {
+      let name = user.first_name;
+      if(user.last_name) name += ' ' + user.last_name;
+
+      name = limitSymbols(name, 12, 15);
+      return wrapPlainText(name);
+    }
+
+    const accountNumber = await this.managers.apiManager.getAccountNumber()
+    const isDifferentAccount = accountNumber !== getCurrentAccount();
+    if(isOtherTabActive || isDifferentAccount) {
+      // ' ➜ '
+      notification.title += ' \u279C ' + wrapUserName(await this.managers.appUsersManager.getSelf());
+    }
+
     notification.title = wrapPlainText(notification.title);
 
     notification.onclick = () => {
-      appImManager.setInnerPeer({peerId, lastMsgId: message.mid, threadId});
+      if(isDifferentAccount) {
+        const params = new URLSearchParams();
+        params.set('p', '' + peerId);
+        if(message.mid) params.set('message', '' + message.mid);
+        if(threadId) params.set('thread', '' + threadId);
+        const url = new URL(location.href);
+        url.hash = `#/im?${params.toString()}`;
+        url.pathname = accountNumber === 1 ? '' : '/' + accountNumber;
+        window.open(url, '_blank');
+      } else {
+        appImManager.setInnerPeer({peerId, lastMsgId: message.mid, threadId});
+      }
     };
 
     notification.message = notificationMessage;
@@ -412,7 +445,57 @@ export class UiNotificationsManager {
     }
   }
 
-  private toggleToggler(enable = idleController.isIdle) {
+  static start() {
+    this.stopped = false;
+
+    (async() => {
+      const totalAccounts = await AccountController.getTotalAccounts();
+      for(let i = 1; i <= totalAccounts; i++) {
+        const accountNumber = i as ActiveAccountNumber;
+
+        if(this.byAccount[accountNumber]) {
+          this.byAccount[accountNumber].start();
+          continue;
+        }
+
+        const managers = createProxiedManagersForAccount(accountNumber);
+
+        managers.apiUpdatesManager.attach(I18n.lastRequestedLangCode);
+
+        const uiNotificationManager = this.byAccount[accountNumber] = new UiNotificationsManager;
+
+        uiNotificationManager.construct(accountNumber);
+        uiNotificationManager.start();
+      }
+
+      this.byAccount[getCurrentAccount()].setNotificationCount(0);
+    })();
+
+
+    singleInstance.addEventListener('deactivated', () => {
+      this.stop();
+    });
+
+    singleInstance.addEventListener('activated', () => {
+      if(this.stopped) {
+        this.start();
+      }
+    });
+
+    idleController.addEventListener('change', (idle) => {
+      if(this.stopped) {
+        return;
+      }
+
+      if(!idle) {
+        this.byAccount[getCurrentAccount()].clear();
+      }
+
+      this.toggleToggler();
+    });
+  }
+
+  private static toggleToggler(enable = idleController.isIdle) {
     if(IS_MOBILE) return;
 
     const resetTitle = (isBlink?: boolean) => {
@@ -427,10 +510,19 @@ export class UiNotificationsManager {
     if(!enable) {
       resetTitle();
     } else {
-      this.titleInterval = window.setInterval(() => {
-        const count = this.notificationsCount;
+      this.titleInterval = window.setInterval(async() => {
+        const notificationsCount = await this.getNotificationsCountForAllAccounts();
+        const shouldCount = (accountNumber: string) =>
+          +accountNumber === getCurrentAccount() ||
+          !apiManagerProxy.hasTabOpenFor(+accountNumber as ActiveAccountNumber);
+
+        const count = Object.entries(notificationsCount).reduce(
+          (prev, [accountNumber, count]) => prev + (shouldCount(accountNumber) ? count : 0) || 0,
+          0
+        );
+
         if(!count) {
-          this.toggleToggler(false);
+          return;
         } else if(this.titleChanged) {
           resetTitle(true);
         } else {
@@ -483,7 +575,7 @@ export class UiNotificationsManager {
     }
   }
 
-  private setFavicon(href?: string) {
+  private static setFavicon(href?: string) {
     if(this.prevFavicon === href) {
       return;
     }
@@ -501,20 +593,20 @@ export class UiNotificationsManager {
   }
 
   public async notify(data: NotifyOptions, pushData: PushNotificationObject) {
-    this.log('notify', data, idleController.isIdle, this.notificationsUiSupport, this.stopped);
+    UiNotificationsManager.log('notify', data, idleController.isIdle, this.notificationsUiSupport, UiNotificationsManager.stopped);
 
-    if(this.stopped) {
+    if(UiNotificationsManager.stopped) {
       return;
     }
 
     data.image ||= NOTIFICATION_ICON_PATH;
 
     if(!data.noIncrement) {
-      ++this.notificationsCount;
+      this.setNotificationCount(prev => ++prev);
     }
 
-    if(!this.titleInterval) {
-      this.toggleToggler();
+    if(!UiNotificationsManager.titleInterval) {
+      UiNotificationsManager.toggleToggler();
     }
 
     const idx = ++this.notificationIndex;
@@ -581,7 +673,7 @@ export class UiNotificationsManager {
         const notifications = await registration.getNotifications({tag: notificationOptions.tag});
         notification = notifications[notifications.length - 1];
       } catch(err) {
-        this.log.error('creating push error', err, data, notificationOptions);
+        UiNotificationsManager.log.error('creating push error', err, data, notificationOptions);
       }
 
       if(!notification) {
@@ -592,7 +684,7 @@ export class UiNotificationsManager {
     }
 
     notification.onclick = () => {
-      this.log('notification onclick');
+      UiNotificationsManager.log('notification onclick');
       notification.close();
       appRuntimeManager.focus();
       this.clear();
@@ -600,7 +692,7 @@ export class UiNotificationsManager {
     };
 
     notification.onclose = () => {
-      this.log('notification onclose');
+      UiNotificationsManager.log('notification onclose');
       if(!notification.hidden) {
         delete this.notificationsShown[key];
         this.clear();
@@ -646,7 +738,7 @@ export class UiNotificationsManager {
       webPushApiManager.setSettings(this.settings);
     });
 
-    apiManagerProxy.getState().then((state) => {
+    this.managers.appStateManager.getState().then((state) => {
       this.settings.nosound = !state.settings.notifications.sound;
     });
   }
@@ -695,12 +787,12 @@ export class UiNotificationsManager {
     }, {once: true});
   }
 
-  public cancel(key: string) {
+  public async cancel(key: string) {
     const notification = this.notificationsShown[key];
-    this.log('cancel', key, notification);
+    UiNotificationsManager.log('cancel', key, notification);
     if(notification) {
-      if(this.notificationsCount > 0) {
-        --this.notificationsCount;
+      if(await this.getNotificationsCount() > 0) {
+        this.setNotificationCount(prev => --prev);
       }
 
       this.closeNotification(notification);
@@ -711,7 +803,7 @@ export class UiNotificationsManager {
   private closeNotification(notification: boolean | MyNotification) {
     try {
       if(typeof(notification) !== 'boolean' && notification.close) {
-        this.log('close notification', notification);
+        UiNotificationsManager.log('close notification', notification);
         notification.hidden = true;
         notification.close();
       }
@@ -719,7 +811,7 @@ export class UiNotificationsManager {
   }
 
   public clear = () => {
-    this.log.warn('clear');
+    UiNotificationsManager.log.warn('clear');
 
     for(const i in this.notificationsShown) {
       const notification = this.notificationsShown[i];
@@ -727,19 +819,18 @@ export class UiNotificationsManager {
     }
 
     this.notificationsShown = {};
-    this.notificationsCount = 0;
+    this.setNotificationCount(0);
 
     webPushApiManager.hidePushNotifications();
   };
 
   public start() {
-    this.log('start');
-    this.stopped = false;
+    UiNotificationsManager.log('start');
 
     this.updateLocalSettings();
     rootScope.addEventListener('settings_updated', this.updateLocalSettings);
-    apiManagerProxy.getState().then((state) => {
-      if(this.stopped || !state.keepSigned) {
+    this.managers.appStateManager.getState().then((state) => {
+      if(UiNotificationsManager.stopped || !state.keepSigned) {
         return;
       }
 
@@ -761,10 +852,14 @@ export class UiNotificationsManager {
     } catch(e) {}
   }
 
-  private stop() {
-    this.log('stop');
+  private static stop() {
+    UiNotificationsManager.log('stop');
 
-    this.clear();
+    for(const key in this.byAccount) {
+      const accountNumber = key as unknown as ActiveAccountNumber;
+      this.byAccount[accountNumber].clear();
+    }
+
     window.clearInterval(this.titleInterval);
     this.titleInterval = 0;
     this.setFavicon();
@@ -783,7 +878,7 @@ export class UiNotificationsManager {
       app_sandbox: false,
       secret: new Uint8Array()
     }).then(() => {
-      this.log('registered device');
+      UiNotificationsManager.log('registered device');
       this.registeredDevice = tokenData;
     }, (error) => {
       error.handled = true;
@@ -807,6 +902,6 @@ export class UiNotificationsManager {
   }
 }
 
-const uiNotificationsManager = new UiNotificationsManager();
-MOUNT_CLASS_TO && (MOUNT_CLASS_TO.uiNotificationsManager = uiNotificationsManager);
-export default uiNotificationsManager;
+// const uiNotificationsManager = new UiNotificationsManager();
+// MOUNT_CLASS_TO && (MOUNT_CLASS_TO.uiNotificationsManager = uiNotificationsManager);
+// export default uiNotificationsManager;

@@ -89,12 +89,15 @@ export type NotificationBuildTaskPayload = {
   message: Message.message | Message.messageService,
   fwdCount?: number,
   peerReaction?: MessagePeerReaction,
-  peerTypeNotifySettings?: PeerNotifySettings
+  peerTypeNotifySettings?: PeerNotifySettings,
+  accountNumber?: ActiveAccountNumber,
+  isOtherTabActive?: boolean
 };
 
 export type TabState = {
   chatPeerIds: PeerId[],
   idleStartTime: number,
+  accountNumber: number
 };
 
 class ApiManagerProxy extends MTProtoMessagePort {
@@ -106,6 +109,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
   public oldVersion: string;
 
   private tabState: TabState;
+  private allTabStates: TabState[];
 
   public share: ShareData;
 
@@ -188,6 +192,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
     };
 
     this.tabState = {
+      accountNumber: getCurrentAccount(),
       chatPeerIds: [],
       idleStartTime: 0
     };
@@ -212,7 +217,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
       },
 
       event: ({name, args, accountNumber}) => {
-        const commonEventNames = ['language_change', 'settings_updated', 'theme_changed', 'theme_change', 'background_change', 'logging_out'];
+        const commonEventNames = ['language_change', 'settings_updated', 'theme_changed', 'theme_change', 'background_change', 'logging_out', 'notification_count_update'];
         const isDifferentAccount = accountNumber && accountNumber !== getCurrentAccount()
         if(!commonEventNames.includes(name) && isDifferentAccount) return;
         // @ts-ignore
@@ -228,6 +233,11 @@ class ApiManagerProxy extends MTProtoMessagePort {
 
       receivedServiceMessagePort: () => {
         this.log.warn('mtproto worker received service message port');
+      },
+
+      tabsUpdated: (payload) => {
+        this.allTabStates = payload;
+        rootScope.dispatchEvent('notification_count_update');
       },
 
       log: (payload) => {
@@ -639,6 +649,10 @@ class ApiManagerProxy extends MTProtoMessagePort {
         {dcID: accountData.dcId || 0, date: accountData.date || (Date.now() / 1000 | 0), id: accountData.userId.toPeerId(false)}
       );
     }
+  }
+
+  public hasTabOpenFor(accountNumber: ActiveAccountNumber) {
+    return !!this.allTabStates.find((tab) => tab.accountNumber === accountNumber);
   }
 
   public async sendAllStates() {
