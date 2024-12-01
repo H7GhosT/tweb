@@ -82,7 +82,8 @@ export type StateSettings = {
   nightTheme?: boolean, // ! DEPRECATED
   timeFormat: 'h12' | 'h23',
   liteMode: {[key in LiteModeKey]: boolean},
-  savedAsForum: boolean
+  savedAsForum: boolean,
+  notifyAllAccounts: boolean
 };
 
 export type State = {
@@ -326,7 +327,8 @@ export const STATE_INIT: State = {
       stickers_panel: false,
       video: false
     },
-    savedAsForum: false
+    savedAsForum: false,
+    notifyAllAccounts: true
   },
   playbackParams: {
     volume: 1,

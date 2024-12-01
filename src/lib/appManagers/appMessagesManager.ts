@@ -6967,7 +6967,7 @@ export class AppMessagesManager extends AppManager {
     });
   }
 
-  private notifyAboutMessage(message: MyMessage, options: Partial<{
+  private async notifyAboutMessage(message: MyMessage, options: Partial<{
     fwdCount: number,
     peerReaction: MessagePeerReaction,
     peerTypeNotifySettings: PeerNotifySettings
@@ -6978,7 +6978,12 @@ export class AppMessagesManager extends AppManager {
       return;
     }
 
-    const tabs = appTabsManager.getTabs();
+    const state = await this.appStateManager.getState();
+
+    let tabs = appTabsManager.getTabs();
+    if(!state.settings.notifyAllAccounts)
+      tabs = tabs.filter(tab => tab.state.accountNumber === this.getAccountNumber());
+
     tabs.sort((a, b) => a.state.idleStartTime - b.state.idleStartTime);
 
     let tab = tabs.find((tab) => {
