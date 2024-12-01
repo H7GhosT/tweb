@@ -58,6 +58,7 @@ import customProperties from '../../helpers/dom/customProperties';
 import drawCircle from '../../helpers/canvas/drawCircle';
 import getAbbreviation from '../richTextProcessor/getAbbreviation';
 import {FontFamily} from '../../config/font';
+import {NOTIFICATION_BADGE_PATH} from '../../config/notifications';
 
 const TEST_NO_STREAMING = false;
 
@@ -225,7 +226,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
 
       event: ({name, args, accountNumber}) => {
         const commonEventNames = ['language_change', 'settings_updated', 'theme_changed', 'theme_change', 'background_change', 'logging_out', 'notification_count_update'];
-        const isDifferentAccount = accountNumber && accountNumber !== getCurrentAccount()
+        const isDifferentAccount = accountNumber && accountNumber !== getCurrentAccount();
         if(!commonEventNames.includes(name) && isDifferentAccount) return;
         // @ts-ignore
         rootScope.dispatchEventSingle(name, ...args);
@@ -256,7 +257,8 @@ class ApiManagerProxy extends MTProtoMessagePort {
 
         const notification = new Notification(title, {
           body: I18n.format('Call.StatusCalling', true),
-          icon: await this.createNotificationImage(managers, peerId, title)
+          icon: await this.createNotificationImage(managers, peerId, title),
+          badge: NOTIFICATION_BADGE_PATH
         });
         notification.onclick = () => {
           const peerId = peer.id;
