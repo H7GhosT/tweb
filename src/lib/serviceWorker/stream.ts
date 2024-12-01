@@ -31,7 +31,7 @@ const PRELOAD_SIZE = 20 * 1024 * 1024;
 const clearOldChunks = () => {
   return cacheStorage.timeoutOperation((cache) => {
     return cache.keys().then((requests) => {
-      const filtered: Map<StreamId, Request> = new Map();
+      const filtered: Map<DocId, Request> = new Map();
       const timestamp = Date.now() / 1000 | 0;
       for(const request of requests) {
         const match = request.url.match(/\/(\d+?)\?/);
@@ -75,7 +75,8 @@ setInterval(() => {
 }, 120e3);
 
 type StreamRange = [number, number];
-type StreamId = DocId;
+type StreamId = `${ActiveAccountNumber}-${DocId}`;
+
 const streams: Map<StreamId, Stream> = new Map();
 (ctx as any).streams = streams;
 class Stream {
@@ -102,7 +103,7 @@ class Stream {
     this.destroyDebounced.clearTimeout();
     streams.delete(this.id);
     serviceMessagePort.invokeVoid('cancelFilePartRequests', {
-      docId: this.id,
+      docId: Stream.getDocId(this.info),
       accountNumber: this.info.accountNumber
     }, getMtprotoMessagePort());
   };
@@ -116,7 +117,7 @@ class Stream {
 
   private async requestFilePartFromWorker(alignedOffset: number, limit: number, fromPreload = false) {
     const payload: ServiceRequestFilePartTaskPayload = {
-      docId: this.id,
+      docId: Stream.getDocId(this.info),
       dcId: this.info.dcId,
       offset: alignedOffset,
       limit,
@@ -305,7 +306,11 @@ class Stream {
     return streams.get(this.getId(info)) ?? new Stream(info);
   }
 
-  private static getId(info: DownloadOptions) {
+  private static getId(info: DownloadOptions): StreamId {
+    return `${info.accountNumber}-${this.getDocId(info)}`;
+  }
+
+  private static getDocId(info: DownloadOptions) {
     return (info.location as InputFileLocation.inputDocumentFileLocation).id;
   }
 }
