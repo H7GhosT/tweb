@@ -16,6 +16,12 @@ import {LoadStateResult} from '../appManagers/utils/state/loadState';
 
 export type MTProtoManagerTaskPayload = {name: string, method: string, args: any[], accountNumber: ActiveAccountNumber};
 
+type CallNotificationPayload = {
+  callerId: string | number,
+  callId: string | number,
+  accountNumber: ActiveAccountNumber
+}
+
 type MTProtoBroadcastEvent = {
   event: (payload: {name: string, args: any[], accountNumber: ActiveAccountNumber}, source: MessageEventSource) => void
 };
@@ -41,6 +47,7 @@ export default class MTProtoMessagePort<Master extends boolean = true> extends S
   receivedServiceMessagePort: (payload: void) => void,
   log: (payload: any) => void
   tabsUpdated: (payload: TabState[]) => void,
+  callNotification: (payload: CallNotificationPayload) => void
   // hello: () => void
 } & MTProtoBroadcastEvent, Master> {
   private static INSTANCE: MTProtoMessagePort;

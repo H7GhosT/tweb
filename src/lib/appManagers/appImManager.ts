@@ -148,8 +148,9 @@ export type ChatSetPeerOptions = {
   commentId?: number,
   type?: ChatType,
   mediaTimestamp?: number,
-  text?: string
-  entities?: MessageEntity[]
+  text?: string,
+  entities?: MessageEntity[],
+  call?: string | number
 } & Partial<ChatSearchKeys>;
 
 export type ChatSetInnerPeerOptions = Modify<ChatSetPeerOptions, {
@@ -1298,7 +1299,8 @@ export class AppImManager extends EventListenerBase<{
               this.op({
                 peer,
                 lastMsgId: messageId,
-                threadId
+                threadId,
+                call: params.call
               });
             });
             break;
@@ -1366,6 +1368,11 @@ export class AppImManager extends EventListenerBase<{
         threadId = options.threadId = lastMsgId;
         lastMsgId = options.lastMsgId = undefined;
       }
+    }
+
+    if(options.call) {
+      const call = await rootScope.managers.appCallsManager.getCall(options.call);
+      rootScope.dispatchEvent('call_update', call);
     }
 
     if(threadId) {

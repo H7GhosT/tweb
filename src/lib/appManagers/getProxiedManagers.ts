@@ -8,7 +8,7 @@ import type createManagers from './createManagers';
 import type {AckedResult} from '../mtproto/superMessagePort';
 import {ModifyFunctionsToAsync} from '../../types';
 import apiManagerProxy from '../mtproto/mtprotoworker';
-import DEBUG from '../../config/debug';
+import DEBUG, {MOUNT_CLASS_TO} from '../../config/debug';
 import dT from '../../helpers/dT';
 import noop from '../../helpers/noop';
 import copy from '../../helpers/object/copy';
@@ -122,7 +122,7 @@ type AA<T> = {
 };
 
 type T = Awaited<ReturnType<typeof createManagers>>;
-type ProxiedManagers = {
+export type ProxiedManagers = {
   [name in keyof T]?: ModifyFunctionsToAsync<T[name]>;
 };
 
@@ -144,6 +144,8 @@ function createProxyProxy(proxied: any, accountNumber: ActiveAccountNumber, ack?
 export function createProxiedManagersForAccount(accountNumber: ActiveAccountNumber): ProxiedManagers {
   return createProxyProxy({}, accountNumber);
 }
+
+MOUNT_CLASS_TO.createProxiedManagersForAccount = createProxiedManagersForAccount;
 
 let proxied: ProxiedAndAcknowledgedManagers;
 export default function getProxiedManagers() {

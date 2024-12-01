@@ -73,8 +73,10 @@ export default async function wrapMessageForReply<T extends WrapMessageForReplyO
     }
   };
 
-  const managers = rootScope.managers;
+  const managers = options.managers || rootScope.managers;
   const appMessagesManager = managers.appMessagesManager;
+
+  const getMyId = () => options.managers ? options.managers.rootScope.getMyId() : rootScope.myId;
 
   const isRestricted = isMessageRestricted(message as any);
 
@@ -217,7 +219,7 @@ export default async function wrapMessageForReply<T extends WrapMessageForReplyO
         case 'messageMediaStory': {
           if(media.pFlags.via_mention) {
             const storyPeerId = getPeerId(media.peer);
-            const isMyStory = storyPeerId === rootScope.myId;
+            const isMyStory = storyPeerId === await getMyId();
             addPart(
               isMyStory ? 'StoryMentionYou' : 'StoryMention',
               undefined,

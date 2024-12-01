@@ -262,6 +262,10 @@ export class RootScope extends EventListenerBase<BroadcastEventsListeners> {
     return this.premium;
   }
 
+  public getMyId() {
+    return this.myId;
+  }
+
   public dispatchEventSingle(...args: any[]) {
     // @ts-ignore
     super.dispatchEvent(...args);

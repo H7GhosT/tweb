@@ -320,17 +320,17 @@ export class UiNotificationsManager {
 
     const threadId = isForum ? getMessageThreadId(message, isForum) : undefined;
     const notificationFromPeerId = peerReaction ? getPeerId(peerReaction.peer_id) : message.fromId;
-    const peerTitle = notification.title = await getPeerTitle({...peerTitleOptions, peerId, threadId: threadId});
+    const peerTitle = notification.title = await getPeerTitle({...peerTitleOptions, peerId, threadId: threadId, managers: this.managers, useManagers: true});
     if(isForum) {
       const peerTitle = await getPeerTitle({...peerTitleOptions, peerId});
       notification.title += ` (${peerTitle})`;
 
       if(wrappedMessage && notificationFromPeerId !== message.peerId) {
-        notificationMessage = await getPeerTitle({...peerTitleOptions, peerId: notificationFromPeerId}) +
+        notificationMessage = await getPeerTitle({...peerTitleOptions, peerId: notificationFromPeerId, managers: this.managers, useManagers: true}) +
           ': ' + notificationMessage;
       }
     } else if(isAnyChat && notificationFromPeerId !== message.peerId) {
-      notification.title = await getPeerTitle({...peerTitleOptions, peerId: notificationFromPeerId}) +
+      notification.title = await getPeerTitle({...peerTitleOptions, peerId: notificationFromPeerId, managers: this.managers, useManagers: true}) +
         ' @ ' +
         notification.title;
     }

@@ -182,8 +182,15 @@ export class AppSidebarLeft extends SidebarSlider {
         const totalAccounts = await AccountController.getTotalAccounts();
         if(totalAccounts >= MAX_ACCOUNTS) return;
 
-        const isPremium = rootScope.getPremium();
-        if(totalAccounts === MAX_ACCOUNTS_FREE && !isPremium) {
+        let hasSomeonePremium = false;
+        for(let i = 1; i <= totalAccounts; i++) {
+          const accountNumber = i as ActiveAccountNumber;
+          const managers = createProxiedManagersForAccount(accountNumber);
+          hasSomeonePremium ||= await managers.rootScope.getPremium();
+          if(hasSomeonePremium) break;
+        }
+
+        if(totalAccounts === MAX_ACCOUNTS_FREE && !hasSomeonePremium) {
           new AccountsLimitPopup().show();
           return;
         }

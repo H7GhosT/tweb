@@ -48,9 +48,16 @@ import getObjectKeysAndSort from '../../helpers/object/getObjectKeysAndSort';
 import {reconcilePeer, reconcilePeers} from '../../stores/peers';
 import {getCurrentAccount} from '../appManagers/utils/currentAccount';
 import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
-import {createProxiedManagersForAccount} from '../appManagers/getProxiedManagers';
+import {createProxiedManagersForAccount, ProxiedManagers} from '../appManagers/getProxiedManagers';
 import noop from '../../helpers/noop';
 import AccountController from '../accountController';
+import getPeerTitle from '../../components/wrappers/getPeerTitle';
+import I18n from '../langPack';
+import {getPeerAvatarColorByPeer} from '../appManagers/utils/peers/getPeerColorById';
+import customProperties from '../../helpers/dom/customProperties';
+import drawCircle from '../../helpers/canvas/drawCircle';
+import getAbbreviation from '../richTextProcessor/getAbbreviation';
+import {FontFamily} from '../../config/font';
 
 const TEST_NO_STREAMING = false;
 
@@ -240,6 +247,29 @@ class ApiManagerProxy extends MTProtoMessagePort {
         rootScope.dispatchEvent('notification_count_update');
       },
 
+      callNotification: async(payload) => {
+        const {accountNumber} = payload;
+        const managers = createProxiedManagersForAccount(accountNumber);
+        const peerId = payload.callerId.toPeerId();
+        const peer = await managers.appPeersManager.getPeer(peerId);
+        const title = await getPeerTitle({peerId: peerId, managers, plainText: true, limitSymbols: 20, useManagers: true});
+
+        const notification = new Notification(title, {
+          body: I18n.format('Call.StatusCalling', true),
+          icon: await this.createNotificationImage(managers, peerId, title)
+        });
+        notification.onclick = () => {
+          const peerId = peer.id;
+          const params = new URLSearchParams();
+          params.set('p', '' + peerId);
+          params.set('call', '' + payload.callId);
+          const url = new URL(location.href);
+          url.hash = `#/im?${params.toString()}`;
+          url.pathname = accountNumber === 1 ? '' : '/' + accountNumber;
+          window.open(url, '_blank');
+        };
+      },
+
       log: (payload) => {
         console.log('Received log from shared worker', payload);
       }
@@ -353,6 +383,47 @@ class ApiManagerProxy extends MTProtoMessagePort {
     this.updateTabStateIdle(idleController.isIdle);
 
     // this.sendState();
+  }
+
+  async createNotificationImage(managers: ProxiedManagers, peerId: PeerId, peerTitle: string) {
+    const peer = await managers.appPeersManager.getPeer(peerId);
+    const peerPhoto = await managers.appPeersManager.getPeerPhoto(peerId);
+    if(peerPhoto) {
+      const url = await managers.appAvatarsManager.loadAvatar(peerId, peerPhoto, 'photo_small');
+
+      return url;
+    }
+    const avatarCanvas = document.createElement('canvas');
+    const avatarContext = avatarCanvas.getContext('2d');
+
+    const SIZE = 54;
+    const dpr = 1;
+    avatarCanvas.dpr = dpr;
+    avatarCanvas.width = avatarCanvas.height = SIZE * dpr;
+
+    const color = getPeerAvatarColorByPeer(peer);
+    const gradient = avatarContext.createLinearGradient(avatarCanvas.width / 2, 0, avatarCanvas.width / 2, avatarCanvas.height);
+
+    const colorTop = customProperties.getProperty(`peer-avatar-${color}-top`);
+    const colorBottom = customProperties.getProperty(`peer-avatar-${color}-bottom`);
+    gradient.addColorStop(0, colorTop);
+    gradient.addColorStop(1, colorBottom);
+
+    avatarContext.fillStyle = gradient;
+
+    drawCircle(avatarContext, avatarCanvas.width / 2, avatarCanvas.height / 2, avatarCanvas.width / 2);
+    avatarContext.fill();
+
+    const fontSize = 20 * avatarCanvas.dpr;
+    const abbreviation = getAbbreviation(peerTitle);
+
+    avatarContext.font = `700 ${fontSize}px ${FontFamily}`;
+    avatarContext.textBaseline = 'middle';
+    avatarContext.textAlign = 'center';
+    avatarContext.fillStyle = 'white';
+    avatarContext.fillText(abbreviation.text, avatarCanvas.width / 2, avatarCanvas.height * (window.devicePixelRatio > 1 || true ? .5625 : .5));
+
+    return avatarCanvas.toDataURL();
   }
 
   public sendEnvironment() {
