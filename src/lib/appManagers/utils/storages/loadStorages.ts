@@ -50,7 +50,7 @@ export default async function loadStorages(storages: StoragesStorages, resetStor
     await Promise.all(clearPromises).catch(noop);
   }
 
-  callback();
+  await callback();
 
   return storagesResults;
 }

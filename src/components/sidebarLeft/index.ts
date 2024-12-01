@@ -178,7 +178,7 @@ export class AppSidebarLeft extends SidebarSlider {
     const menuButtons: (ButtonMenuItemOptions & {verify?: () => boolean | Promise<boolean>})[] = [{
       icon: 'plus',
       text: 'MultiAccount.AddAccount',
-      onClick: async() => {
+      onClick: async(e) => {
         const totalAccounts = await AccountController.getTotalAccounts();
         if(totalAccounts >= MAX_ACCOUNTS) return;
 
@@ -195,16 +195,18 @@ export class AppSidebarLeft extends SidebarSlider {
           return;
         }
 
-        localStorage.setItem('should-animate-auth', 'true');
         localStorage.setItem('previous-account', getCurrentAccount() + '');
+        if(!e.ctrlKey) {
+          localStorage.setItem('should-animate-auth', 'true');
 
-        const chatsPageEl = document.querySelector('.page-chats');
-        chatsPageEl.classList.add('main-screen-exit');
-        await doubleRaf();
-        chatsPageEl.classList.add('main-screen-exiting');
-        await pause(200);
+          const chatsPageEl = document.querySelector('.page-chats');
+          chatsPageEl.classList.add('main-screen-exit');
+          await doubleRaf();
+          chatsPageEl.classList.add('main-screen-exiting');
+          await pause(200);
+        }
 
-        changeAccount((totalAccounts + 1) as ActiveAccountNumber);
+        changeAccount((totalAccounts + 1) as ActiveAccountNumber, e.ctrlKey);
       },
       verify: async() => {
         const totalAccounts = await AccountController.getTotalAccounts();
@@ -328,13 +330,15 @@ export class AppSidebarLeft extends SidebarSlider {
               },
               className: 'btn-menu-account-item',
               regularText: content,
-              onClick: async() => {
-                const chatListEl = document.querySelector('.chatlist-container')?.firstElementChild;
-                chatListEl.classList.add('chatlist-exit');
-                await doubleRaf();
-                chatListEl.classList.add('chatlist-exiting');
-                await pause(200);
-                changeAccount(accountNumber);
+              onClick: async(e) => {
+                if(!e.ctrlKey) {
+                  const chatListEl = document.querySelector('.chatlist-container')?.firstElementChild;
+                  chatListEl.classList.add('chatlist-exit');
+                  await doubleRaf();
+                  chatListEl.classList.add('chatlist-exiting');
+                  await pause(200);
+                }
+                changeAccount(accountNumber, e.ctrlKey);
               }
             });
           }

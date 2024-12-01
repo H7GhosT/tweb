@@ -1,14 +1,18 @@
 import appNavigationController from '../components/appNavigationController';
 import {ActiveAccountNumber, CURRENT_ACCOUNT_QUERY_PARAM} from './appManagers/utils/currentAccountTypes';
 
-export function changeAccount(accountNumber: ActiveAccountNumber) {
+export function changeAccount(accountNumber: ActiveAccountNumber, newTab = false) {
   const url = new URL(location.href);
 
   if(accountNumber === 1) url.pathname = '';
   else url.pathname = accountNumber + '';
 
-  history.replaceState(null, '', url.href);
+  if(newTab) {
+    window.open(url, '_blank');
+    return;
+  }
 
+  history.replaceState(null, '', url.href);
   location.reload();
 
   return;

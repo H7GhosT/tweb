@@ -60,11 +60,10 @@ port.addMultipleEventsListeners({
     // TODO: Understand why is this needed
     appStateManager.resetStoragesPromise.resolve({
       storages: resetStorages,
-      callback: () => {
-        console.log('calling callback for account', accountNumber);
-        (Object.keys(state) as any as (keyof State)[]).forEach((key) => {
-          appStateManager.pushToState(key, state[key], true, !pushedKeys.includes(key));
-        });
+      callback: async() => {
+        for(const key of (Object.keys(state) as any as (keyof State)[])) {
+          await appStateManager.pushToState(key, state[key], true, !pushedKeys.includes(key));
+        }
       }
     });
     // haveState = true;

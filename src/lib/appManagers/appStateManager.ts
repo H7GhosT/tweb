@@ -16,7 +16,7 @@ import commonStateStorage from '../commonStateStorage';
 
 export type ResetStoragesPromise = CancellablePromise<{
   storages: Set<keyof StoragesResults>,
-  callback: () => void
+  callback: () => Promise<void>
 }>;
 // Check RootScope
 export default class AppStateManager {
@@ -76,7 +76,7 @@ export default class AppStateManager {
       this.onSettingsUpdate?.(value as StateSettings);
       return commonStateStorage.set({
         [key]: value
-      })
+      }, onlyLocal);
     }
 
     return this.storage.set({
