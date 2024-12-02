@@ -17,7 +17,6 @@ import {MessageSendPort} from '../mtproto/superMessagePort';
 import handleDownload from './download';
 import onShareFetch, {checkWindowClientForDeferredShare} from './share';
 import {onRtmpFetch, onRtmpLeftCall} from './rtmp';
-import {getCurrentAccountFromURL} from '../appManagers/utils/currentAccountFromURL';
 
 // #if MTPROTO_SW
 // import '../mtproto/mtproto.worker';
@@ -145,14 +144,6 @@ const onFetch = (event: FetchEvent): void => {
   }
 
   try {
-    function showClient() {
-      ctx.clients.get(event.clientId).then(client => {
-        // if(client.type === 'window')
-        console.log('client.url', client.url)
-        console.log('accountNumber', getCurrentAccountFromURL(client.url));
-        // client.url
-      })
-    }
     // const [, url, scope, params] = /http[:s]+\/\/.*?(\/(.*?)(?:$|\/(.*)$))/.exec(event.request.url) || [];
     const [scope, _params] = event.request.url.split('/').slice(-2);
     const [params, search] = _params.split('?');
@@ -161,26 +152,22 @@ const onFetch = (event: FetchEvent): void => {
 
     switch(scope) {
       case 'stream': {
-        showClient();
         onStreamFetch(event, params, search);
         break;
       }
 
       case 'd':
       case 'download': {
-        showClient();
         onDownloadFetch(event, params);
         break;
       }
 
       case 'share': {
-        showClient();
         onShareFetch(event, params);
         break;
       }
 
       case 'ping': {
-        showClient();
         event.respondWith(new Response('pong'));
         break;
       }

@@ -199,7 +199,9 @@ export type BroadcastEvents = {
 
   'config': Config,
   'app_config': MTAppConfig,
-  'managers_ready': void // ! inner
+  'managers_ready': void, // ! inner
+
+  'account_logged_in': {accountNumber: ActiveAccountNumber}
 };
 
 export type BroadcastEventsListeners = {

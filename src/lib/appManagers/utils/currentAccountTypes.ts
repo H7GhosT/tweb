@@ -9,4 +9,4 @@ export type AccountSessionData = Record<DcAuthKey, string> & Record<DcServerSalt
   date: number;
 };
 
-export const CURRENT_ACCOUNT_QUERY_PARAM = 'ac';
+export const CURRENT_ACCOUNT_QUERY_PARAM = 'account';

@@ -258,7 +258,6 @@ export class ApiManager extends ApiManagerMethods {
       userAuth = {dcID: 0, date: tsNow(true), id: userAuth.toPeerId(false)};
     }
 
-    console.log('dispatching userAuth', userAuth)
     this.rootScope.dispatchEvent('user_auth', userAuth);
 
     if(!userAuth.dcID) {
@@ -313,8 +312,6 @@ export class ApiManager extends ApiManagerMethods {
     const clear = async() => {
       this.baseDcId = undefined;
       // this.telegramMeNotify(false);
-      // TODO: Toggle storages for keepSigned=false
-      // await toggleStorages(false, true);
       if(totalAccounts === 1) {
         await sessionStorage.delete(`account1`);
         await AppStoragesManager.clearAllStoresForAccount(1);
@@ -324,7 +321,6 @@ export class ApiManager extends ApiManagerMethods {
         await AccountController.shiftAccounts(accountNumber);
         await AppStoragesManager.shiftStorages(accountNumber);
       }
-      // TODO: Cache controller cleanup too?
       IDB.closeDatabases();
       this.rootScope.dispatchEvent('logging_out', {accountNumber});
     };

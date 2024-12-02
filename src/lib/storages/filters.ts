@@ -83,7 +83,6 @@ export default class FiltersStorage extends AppManager {
     });
 
     return this.appStateManager.getState().then((state) => {
-      console.log('state from here', state)
       const filtersArr = this.prependFilters(state.filtersArr);
       filtersArr.map((filter) => {
         this.saveDialogFilter(filter, false, true);

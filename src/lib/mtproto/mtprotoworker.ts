@@ -5,8 +5,7 @@
  */
 
 import type {Awaited} from '../../types';
-import type {CacheStorageDbName} from '../files/cacheStorage';
-import {STATE_INIT, type State} from '../../config/state';
+import {type State} from '../../config/state';
 import type {Chat, ChatPhoto, Message, MessagePeerReaction, PeerNotifySettings, User, UserProfilePhoto} from '../../layer';
 import type {CryptoMethods} from '../crypto/crypto_methods';
 import type {ThumbStorageMedia} from '../storages/thumbs';
@@ -14,7 +13,7 @@ import type ThumbsStorage from '../storages/thumbs';
 import type {AppReactionsManager} from '../appManagers/appReactionsManager';
 import type {MessagesStorageKey} from '../appManagers/appMessagesManager';
 import type {AppAvatarsManager, PeerPhotoSize} from '../appManagers/appAvatarsManager';
-import rootScope from '../rootScope';
+import rootScope, {BroadcastEvents} from '../rootScope';
 import webpWorkerController from '../webp/webpWorkerController';
 import {MOUNT_CLASS_TO} from '../../config/debug';
 import sessionStorage from '../sessionStorage';
@@ -47,7 +46,7 @@ import {setAppStateSilent} from '../../stores/appState';
 import getObjectKeysAndSort from '../../helpers/object/getObjectKeysAndSort';
 import {reconcilePeer, reconcilePeers} from '../../stores/peers';
 import {getCurrentAccount} from '../appManagers/utils/currentAccount';
-import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
+import {ActiveAccountNumber, CURRENT_ACCOUNT_QUERY_PARAM} from '../appManagers/utils/currentAccountTypes';
 import {createProxiedManagersForAccount, ProxiedManagers} from '../appManagers/getProxiedManagers';
 import noop from '../../helpers/noop';
 import AccountController from '../accountController';
@@ -59,6 +58,7 @@ import drawCircle from '../../helpers/canvas/drawCircle';
 import getAbbreviation from '../richTextProcessor/getAbbreviation';
 import {FontFamily} from '../../config/font';
 import {NOTIFICATION_BADGE_PATH} from '../../config/notifications';
+import {createAppURLForAccount} from '../createAppURLForAccount';
 
 const TEST_NO_STREAMING = false;
 
@@ -225,9 +225,18 @@ class ApiManagerProxy extends MTProtoMessagePort {
       },
 
       event: ({name, args, accountNumber}) => {
-        const commonEventNames = ['language_change', 'settings_updated', 'theme_changed', 'theme_change', 'background_change', 'logging_out', 'notification_count_update'];
+        const commonEventNames: (keyof BroadcastEvents)[] = [
+          'language_change',
+          'settings_updated',
+          'theme_changed',
+          'theme_change',
+          'background_change',
+          'logging_out',
+          'notification_count_update',
+          'account_logged_in'
+        ];
         const isDifferentAccount = accountNumber && accountNumber !== getCurrentAccount();
-        if(!commonEventNames.includes(name) && isDifferentAccount) return;
+        if(!commonEventNames.includes(name as keyof BroadcastEvents) && isDifferentAccount) return;
         // @ts-ignore
         rootScope.dispatchEventSingle(name, ...args);
       },
@@ -262,12 +271,10 @@ class ApiManagerProxy extends MTProtoMessagePort {
         });
         notification.onclick = () => {
           const peerId = peer.id;
-          const params = new URLSearchParams();
-          params.set('p', '' + peerId);
-          params.set('call', '' + payload.callId);
-          const url = new URL(location.href);
-          url.hash = `#/im?${params.toString()}`;
-          url.pathname = accountNumber === 1 ? '' : '/' + accountNumber;
+          const url = createAppURLForAccount(accountNumber, {
+            p: '' + peerId.toPeerId(),
+            call: '' + payload.callId
+          });
           window.open(url, '_blank');
           notification.close();
         };
@@ -354,7 +361,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
     rootScope.addEventListener('logging_out', ({accountNumber}) => {
       // const toClear: CacheStorageDbName[] = ['cachedFiles', 'cachedStreamChunks'];
       Promise.all([
-        // toggleStorages(false, true),
+        toggleStorages(false, true),
         // sessionStorage.clear(),
         Promise.race([
           // TODO: Check here
@@ -369,9 +376,12 @@ class ApiManagerProxy extends MTProtoMessagePort {
         const currentAccount = getCurrentAccount();
         if(currentAccount > accountNumber) {
           const newAccountNumber = currentAccount - 1;
-          url.pathname = newAccountNumber === 1 ? '' : newAccountNumber + '';
+          if(newAccountNumber === 1) url.searchParams.delete(CURRENT_ACCOUNT_QUERY_PARAM);
+          else url.searchParams.set(CURRENT_ACCOUNT_QUERY_PARAM, newAccountNumber + '');
+          //
         } else if(currentAccount === accountNumber) {
-          url.pathname = '';
+          url.hash = '';
+          url.search = '';
         }
 
         history.replaceState(null, '', url);
@@ -768,6 +778,10 @@ class ApiManagerProxy extends MTProtoMessagePort {
 
   public getState() {
     return this.getMirror('state');
+  }
+
+  public getAllTabStates() {
+    return [...this.allTabStates];
   }
 
   public getCacheContext(

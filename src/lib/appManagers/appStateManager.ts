@@ -18,7 +18,7 @@ export type ResetStoragesPromise = CancellablePromise<{
   storages: Set<keyof StoragesResults>,
   callback: () => Promise<void>
 }>;
-// Check RootScope
+
 export default class AppStateManager {
   private state: State = {} as any;
   public readonly storage: StateStorage;

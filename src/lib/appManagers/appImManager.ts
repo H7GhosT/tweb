@@ -210,8 +210,7 @@ export class AppImManager extends EventListenerBase<{
     this.managers = managers;
     internalLinkProcessor.construct(managers);
 
-
-    UiNotificationsManager.start();
+    UiNotificationsManager.constructAndStartAll();
 
     appMediaPlaybackController.construct(managers);
 

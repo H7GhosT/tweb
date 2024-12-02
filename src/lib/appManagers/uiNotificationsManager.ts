@@ -40,6 +40,7 @@ import commonStateStorage from '../commonStateStorage';
 import {ActiveAccountNumber} from './utils/currentAccountTypes';
 import {createProxiedManagersForAccount} from './getProxiedManagers';
 import AccountController from '../accountController';
+import {createAppURLForAccount} from '../createAppURLForAccount';
 
 type MyNotification = Notification & {
   hidden?: boolean,
@@ -148,6 +149,8 @@ export class UiNotificationsManager {
     document.body.append(this.notifySoundEl);
 
     this.topMessagesDeferred = deferredPromise<void>();
+
+    rootScope.addEventListener('settings_updated', this.updateLocalSettings);
 
     rootScope.addEventListener('notification_reset', (peerString) => {
       this.soundReset(peerString);
@@ -354,13 +357,12 @@ export class UiNotificationsManager {
 
     notification.onclick = () => {
       if(isDifferentAccount) {
-        const params = new URLSearchParams();
-        params.set('p', '' + peerId);
-        if(message.mid) params.set('message', '' + message.mid);
-        if(threadId) params.set('thread', '' + threadId);
-        const url = new URL(location.href);
-        url.hash = `#/im?${params.toString()}`;
-        url.pathname = accountNumber === 1 ? '' : '/' + accountNumber;
+        const url = createAppURLForAccount(accountNumber, {
+          p: '' + peerId,
+          message: '' + (message.mid || ''),
+          thread: '' + (threadId || '')
+        });
+
         window.open(url, '_blank');
       } else {
         appImManager.setInnerPeer({peerId, lastMsgId: message.mid, threadId});
@@ -445,31 +447,29 @@ export class UiNotificationsManager {
     }
   }
 
-  static start() {
-    this.stopped = false;
+  private static constructAndStartNotificationManagerFor(accountNumber: ActiveAccountNumber) {
+    if(this.byAccount[accountNumber]) {
+      this.byAccount[accountNumber].start();
+      return;
+    }
 
-    (async() => {
-      const totalAccounts = await AccountController.getTotalAccounts();
-      for(let i = 1; i <= totalAccounts; i++) {
-        const accountNumber = i as ActiveAccountNumber;
+    const managers = createProxiedManagersForAccount(accountNumber);
 
-        if(this.byAccount[accountNumber]) {
-          this.byAccount[accountNumber].start();
-          continue;
-        }
+    managers.apiUpdatesManager.attach(I18n.lastRequestedLangCode);
 
-        const managers = createProxiedManagersForAccount(accountNumber);
+    const uiNotificationManager = this.byAccount[accountNumber] = new UiNotificationsManager;
 
-        managers.apiUpdatesManager.attach(I18n.lastRequestedLangCode);
+    uiNotificationManager.construct(accountNumber);
+    uiNotificationManager.start();
+  }
 
-        const uiNotificationManager = this.byAccount[accountNumber] = new UiNotificationsManager;
+  static constructAndStartAll() {
+    this.start();
 
-        uiNotificationManager.construct(accountNumber);
-        uiNotificationManager.start();
-      }
-
-      this.byAccount[getCurrentAccount()].setNotificationCount(0);
-    })();
+    rootScope.addEventListener('account_logged_in', async({accountNumber}) => {
+      if(this.byAccount[accountNumber]) return;
+      this.constructAndStartNotificationManagerFor(accountNumber);
+    });
 
 
     singleInstance.addEventListener('deactivated', () => {
@@ -493,6 +493,18 @@ export class UiNotificationsManager {
 
       this.toggleToggler();
     });
+  }
+
+  static async start() {
+    this.stopped = false;
+
+    const totalAccounts = await AccountController.getTotalAccounts();
+    for(let i = 1; i <= totalAccounts; i++) {
+      const accountNumber = i as ActiveAccountNumber;
+      this.constructAndStartNotificationManagerFor(accountNumber);
+    }
+
+    this.byAccount[getCurrentAccount()].setNotificationCount(0);
   }
 
   private static toggleToggler(enable = idleController.isIdle) {
@@ -828,7 +840,6 @@ export class UiNotificationsManager {
     UiNotificationsManager.log('start');
 
     this.updateLocalSettings();
-    rootScope.addEventListener('settings_updated', this.updateLocalSettings);
     this.managers.appStateManager.getState().then((state) => {
       if(UiNotificationsManager.stopped || !state.keepSigned) {
         return;

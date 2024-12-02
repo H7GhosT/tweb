@@ -320,13 +320,14 @@ function parseInfo(params: string) {
 }
 
 export default function onStreamFetch(event: FetchEvent, params: string, search: string) {
-  async function fn() {
+  async function performRequest() {
     const range = parseRange(event.request.headers.get('Range'));
     const info = parseInfo(params);
+
     const client = await ctx.clients.get(event.clientId);
     // Theoretically should never happen otherwise
     if(client?.type === 'window') info.accountNumber = getCurrentAccountFromURL(client.url);
-    console.log('info here', info)
+
     const stream = Stream.get(info);
 
     if(search === '_crbug1250841') {
@@ -340,7 +341,7 @@ export default function onStreamFetch(event: FetchEvent, params: string, search:
 
   event.respondWith(Promise.race([
     timeout(45 * 1000),
-    fn()
+    performRequest()
   ]));
 }
 

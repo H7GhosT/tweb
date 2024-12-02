@@ -4,26 +4,15 @@ import {ActiveAccountNumber, CURRENT_ACCOUNT_QUERY_PARAM} from './appManagers/ut
 export function changeAccount(accountNumber: ActiveAccountNumber, newTab = false) {
   const url = new URL(location.href);
 
-  if(accountNumber === 1) url.pathname = '';
-  else url.pathname = accountNumber + '';
-
-  if(newTab) {
-    window.open(url, '_blank');
-    return;
-  }
-
-  history.replaceState(null, '', url.href);
-  location.reload();
-
-  return;
-
   if(accountNumber === 1) url.searchParams.delete(CURRENT_ACCOUNT_QUERY_PARAM);
   else url.searchParams.set(CURRENT_ACCOUNT_QUERY_PARAM, accountNumber + '');
 
-  appNavigationController.overrideHash();
-
   const newUrl = url.search ? url.pathname + url.search : url.pathname;
-  history.replaceState(null, '', newUrl);
-
-  location.reload();
+  if(newTab) {
+    window.open(newUrl, '_blank');
+  } else {
+    appNavigationController.overrideHash();
+    history.replaceState(null, '', newUrl);
+    location.reload();
+  }
 }

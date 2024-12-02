@@ -115,17 +115,6 @@ appTabsManager.start();
 
 let isFirst = true;
 
-// const randomId = Math.random()
-
-// setInterval(() => {
-//   port.invokeVoid('log', `Random id ${randomId}`);
-//   port.invokeVoid('log', `SendPorts count ${port.getSendPorts().length}`);
-//   port.invokeVoid('log', `ListenPorts count ${port.getListenPorts().length}`);
-// }, 3000);
-
-// let count = 0;
-// let sentHello = false;
-
 async function logoutSingleUseAccounts() {
   const managersByAccount = await appManagersManager.getManagersByAccount();
 
