@@ -269,7 +269,11 @@ class ApiManagerProxy extends MTProtoMessagePort {
           url.hash = `#/im?${params.toString()}`;
           url.pathname = accountNumber === 1 ? '' : '/' + accountNumber;
           window.open(url, '_blank');
+          notification.close();
         };
+        setTimeout(() => {
+          notification.close();
+        }, 5_000);
       },
 
       log: (payload) => {
@@ -751,7 +755,6 @@ class ApiManagerProxy extends MTProtoMessagePort {
     return cryptoMessagePort.invokeCrypto(method, ...args);
   }
 
-  // Keep signed ! need to enable caching depending on it and per account
   public async toggleStorages(enabled: boolean, clearWrite: boolean) {
     await toggleStorages(enabled, clearWrite);
     this.invoke('toggleStorages', {enabled, clearWrite});
@@ -931,7 +934,6 @@ class ApiManagerProxy extends MTProtoMessagePort {
     this.updateTabState('idleStartTime', idle ? Date.now() : 0);
   }
 
-  // TODO: Mirror by account
   private onMirrorTask = (payload: MirrorTaskPayload) => {
     const {name, key, value, accountNumber} = payload;
     const isSettingsUpdate = name === 'state' && key === 'settings';

@@ -156,7 +156,6 @@ export class AppManagersManager {
       this.serviceMessagePort = new ServiceMessagePort();
       this.serviceMessagePort.addMultipleEventsListeners({
         requestFilePart: (payload) => {
-          // TODO: choose right managers here
           return callbackify(appManagersManager.getManagersByAccount(), (managersByAccount) => {
             const {docId, dcId, offset, limit, accountNumber} = payload;
             console.log('accountNumber from worker', accountNumber)

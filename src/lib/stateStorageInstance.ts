@@ -4,11 +4,7 @@ import {ActiveAccountNumber} from './appManagers/utils/currentAccountTypes';
 import StateStorage from './stateStorage';
 
 
-// TODO: Create common storage for settings and translations
-let currentAccount: ActiveAccountNumber = 1;
-try {
-  currentAccount = getCurrentAccount();
-} catch{}
+const currentAccount = getCurrentAccount();
 
 const stateStorage = new StateStorage(currentAccount);
 console.log('StateStorage typeof window', typeof window)
