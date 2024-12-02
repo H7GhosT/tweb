@@ -76,7 +76,7 @@ export class AppStoragesManager extends AppManager {
 
   public static async shiftStorages(upTo: ActiveAccountNumber) {
     for(let i = upTo; i <= MAX_ACCOUNTS; i++) {
-      this.clearAllStoresForAccount(i);
+      await this.clearAllStoresForAccount(i);
       if(i < MAX_ACCOUNTS) {
         await this.moveAccountStorages((i + 1) as ActiveAccountNumber, i as ActiveAccountNumber);
       }
