@@ -181,7 +181,7 @@ export type BroadcastEvents = {
 
   'service_notification': Update.updateServiceNotification,
 
-  'logging_out': {accountNumber: ActiveAccountNumber},
+  'logging_out': {accountNumber: ActiveAccountNumber, migrateTo?: ActiveAccountNumber},
 
   'payment_sent': {peerId: PeerId, mid: number, receiptMessage: Message.messageService},
 
@@ -201,7 +201,7 @@ export type BroadcastEvents = {
   'app_config': MTAppConfig,
   'managers_ready': void, // ! inner
 
-  'account_logged_in': {accountNumber: ActiveAccountNumber}
+  'account_logged_in': {accountNumber: ActiveAccountNumber, userId: UserId}
 };
 
 export type BroadcastEventsListeners = {

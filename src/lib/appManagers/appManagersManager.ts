@@ -15,6 +15,8 @@ import {AppStoragesManager} from './appStoragesManager';
 import createManagers from './createManagers';
 import {ActiveAccountNumber} from './utils/currentAccountTypes';
 import AppStateManager from './appStateManager';
+import rootScope from '../rootScope';
+import AccountController from '../accountController';
 
 type Managers = Awaited<ReturnType<typeof createManagers>>;
 
@@ -104,6 +106,18 @@ export class AppManagersManager {
       const newURLs = new Array(maxLength - length).fill(undefined).map(() => URL.createObjectURL(blob));
       this.cryptoWorkersURLs.push(...newURLs);
       return this.cryptoWorkersURLs;
+    });
+
+
+    rootScope.addEventListener('account_logged_in', async({accountNumber, userId}) => {
+      for(let i = 1; i < accountNumber; i++) {
+        const otherAccountNumber = i as ActiveAccountNumber;
+        const accountData = await AccountController.get(otherAccountNumber);
+        if(accountData?.userId && accountData?.userId === userId) {
+          const managersByAccount = await this.getManagersByAccount();
+          managersByAccount[accountNumber].apiManager.logOut(otherAccountNumber);
+        }
+      }
     });
   }
 

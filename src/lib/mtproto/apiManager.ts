@@ -38,6 +38,7 @@ import AccountController from '../accountController';
 import {AppStoragesManager} from '../appManagers/appStoragesManager';
 import commonStateStorage from '../commonStateStorage';
 import CacheStorageController from '../files/cacheStorage';
+import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
 
 /* class RotatableArray<T> {
   public array: Array<T> = [];
@@ -289,7 +290,7 @@ export class ApiManager extends ApiManagerMethods {
     });
   }
 
-  public async logOut() {
+  public async logOut(migrateAccountTo?: ActiveAccountNumber) {
     if(this.loggingOut) {
       return;
     }
@@ -322,7 +323,7 @@ export class ApiManager extends ApiManagerMethods {
         await AppStoragesManager.shiftStorages(accountNumber);
       }
       IDB.closeDatabases();
-      this.rootScope.dispatchEvent('logging_out', {accountNumber});
+      this.rootScope.dispatchEvent('logging_out', {accountNumber, migrateTo: migrateAccountTo});
     };
 
     setTimeout(clear, 1e3);

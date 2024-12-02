@@ -358,7 +358,7 @@ class ApiManagerProxy extends MTProtoMessagePort {
       rootScope.managers.networkerFactory.forceReconnectTimeout();
     });
 
-    rootScope.addEventListener('logging_out', ({accountNumber}) => {
+    rootScope.addEventListener('logging_out', ({accountNumber, migrateTo}) => {
       // const toClear: CacheStorageDbName[] = ['cachedFiles', 'cachedStreamChunks'];
       Promise.all([
         toggleStorages(false, true),
@@ -371,17 +371,19 @@ class ApiManagerProxy extends MTProtoMessagePort {
         webPushApiManager.forceUnsubscribe()
         // Promise.all(toClear.map((cacheName) => caches.delete(cacheName)))
       ]).finally(() => {
-        const url = new URL(location.href);
+        let url = new URL(location.href);
 
         const currentAccount = getCurrentAccount();
         if(currentAccount > accountNumber) {
           const newAccountNumber = currentAccount - 1;
-          if(newAccountNumber === 1) url.searchParams.delete(CURRENT_ACCOUNT_QUERY_PARAM);
-          else url.searchParams.set(CURRENT_ACCOUNT_QUERY_PARAM, newAccountNumber + '');
+          url = createAppURLForAccount(newAccountNumber as ActiveAccountNumber, undefined, true);
           //
         } else if(currentAccount === accountNumber) {
-          url.hash = '';
-          url.search = '';
+          if(migrateTo) url = createAppURLForAccount(migrateTo);
+          else {
+            url.hash = '';
+            url.search = '';
+          }
         }
 
         history.replaceState(null, '', url);

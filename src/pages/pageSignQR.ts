@@ -18,6 +18,7 @@ import fixBase64String from '../helpers/fixBase64String';
 import bytesCmp from '../helpers/bytes/bytesCmp';
 import bytesToBase64 from '../helpers/bytes/bytesToBase64';
 import textToSvgURL from '../helpers/textToSvgURL';
+import AccountController from '../lib/accountController';
 
 const FETCH_INTERVAL = 3;
 
@@ -71,14 +72,14 @@ const onFirstMount = async() => {
   let prevToken: Uint8Array | number[];
 
   const iterate = async(isLoop: boolean) => {
-    console.log('iterating');
     try {
+      const userIds = await AccountController.getUserIds();
       let loginToken = await rootScope.managers.apiManager.invokeApi('auth.exportLoginToken', {
         api_id: App.id,
         api_hash: App.hash,
-        except_ids: [] // TODO: Except other logged accounts??
+        except_ids: userIds.map(userId => userId.toUserId())
+        // except_ids: []
       }, {ignoreErrors: true});
-      console.log('loginToken1', loginToken)
 
       if(loginToken._ === 'auth.loginTokenMigrateTo') {
         if(!options.dcId) {
@@ -92,10 +93,8 @@ const onFirstMount = async() => {
         }, options) as AuthLoginToken.authLoginToken;
       }
 
-      console.log('loginToken2', loginToken)
       if(loginToken._ === 'auth.loginTokenSuccess') {
         const authorization = loginToken.authorization as any as AuthAuthorization.authAuthorization;
-        console.log('Set user to api manager');
         await rootScope.managers.apiManager.setUser(authorization.user);
         import('./pageIm').then((m) => m.default.mount());
         return true;
@@ -220,13 +219,11 @@ const onFirstMount = async() => {
     stop = false;
 
     do {
-      console.log('stop', stop)
       if(stop) {
         break;
       }
 
       const needBreak = await iterate(true);
-      console.log('needBreak', needBreak)
       if(needBreak) {
         break;
       }

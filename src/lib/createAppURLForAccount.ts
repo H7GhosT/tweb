@@ -1,6 +1,6 @@
 import {ActiveAccountNumber, CURRENT_ACCOUNT_QUERY_PARAM} from './appManagers/utils/currentAccountTypes';
 
-export function createAppURLForAccount(accountNumber: ActiveAccountNumber, hashParams?: Record<string, string>) {
+export function createAppURLForAccount(accountNumber: ActiveAccountNumber, hashParams?: Record<string, string>, keepHash = false) {
   const url = new URL(location.href);
 
   const filteredEntries = Object.entries(hashParams || {}).filter(entry => entry[1]);
@@ -12,7 +12,7 @@ export function createAppURLForAccount(accountNumber: ActiveAccountNumber, hashP
       hashSearchParams.set(key, filteredParams[key]);
     }
     url.hash = `#/im?${hashSearchParams.toString()}`;
-  } else {
+  } else if(!keepHash) {
     url.hash = '';
   }
 
