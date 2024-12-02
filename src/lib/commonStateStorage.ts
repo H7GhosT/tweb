@@ -4,7 +4,7 @@ import {MOUNT_CLASS_TO} from '../config/debug';
 import {StateSettings} from '../config/state';
 
 import AppStorage from './storage';
-import {ActiveAccountNumber} from './appManagers/utils/currentAccountTypes';
+import {ActiveAccountNumber} from './accounts/types';
 
 class CommonStateStorage extends AppStorage<
   {

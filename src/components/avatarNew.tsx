@@ -45,8 +45,8 @@ import wrapPhoto from './wrappers/photo';
 import customProperties from '../helpers/dom/customProperties';
 import {appState} from '../stores/appState';
 import useIsNightTheme from '../hooks/useIsNightTheme';
-import {ActiveAccountNumber} from '../lib/appManagers/utils/currentAccountTypes';
-import {getCurrentAccount} from '../lib/appManagers/utils/currentAccount';
+import {ActiveAccountNumber} from '../lib/accounts/types';
+import {getCurrentAccount} from '../lib/accounts/getCurrentAccount';
 
 const FADE_IN_DURATION = 200;
 const TEST_SWAPPING = 0;

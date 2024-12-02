@@ -9,11 +9,8 @@ import type {AckedResult} from '../mtproto/superMessagePort';
 import {ModifyFunctionsToAsync} from '../../types';
 import apiManagerProxy from '../mtproto/mtprotoworker';
 import DEBUG, {MOUNT_CLASS_TO} from '../../config/debug';
-import dT from '../../helpers/dT';
-import noop from '../../helpers/noop';
-import copy from '../../helpers/object/copy';
-import {getCurrentAccount} from './utils/currentAccount';
-import {ActiveAccountNumber} from './utils/currentAccountTypes';
+import {getCurrentAccount} from '../accounts/getCurrentAccount';
+import {ActiveAccountNumber} from '../accounts/types';
 
 // let stats: {
 //   [manager: string]: {

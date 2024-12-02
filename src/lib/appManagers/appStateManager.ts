@@ -9,7 +9,7 @@ import rootScope from '../rootScope';
 import StateStorage from '../stateStorage';
 import setDeepProperty, {splitDeepPath} from '../../helpers/object/setDeepProperty';
 import MTProtoMessagePort from '../mtproto/mtprotoMessagePort';
-import {ActiveAccountNumber} from './utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../accounts/types';
 import deferredPromise, {CancellablePromise} from '../../helpers/cancellablePromise';
 import {StoragesResults} from './utils/storages/loadStorages';
 import commonStateStorage from '../commonStateStorage';

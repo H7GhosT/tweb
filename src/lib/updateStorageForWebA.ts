@@ -1,8 +1,8 @@
 import tsNow from '../helpers/tsNow';
 import {TrueDcId} from '../types';
 
-import AccountController from './accountController';
-import {getCurrentAccount} from './appManagers/utils/currentAccount';
+import AccountController from './accounts/accountController';
+import {getCurrentAccount} from './accounts/getCurrentAccount';
 import sessionStorage from './sessionStorage';
 
 export async function updateStorageForWebA() {

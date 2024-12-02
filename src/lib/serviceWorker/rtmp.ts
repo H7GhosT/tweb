@@ -15,8 +15,8 @@ import {logger} from '../logger';
 import assumeType from '../../helpers/assumeType';
 import clamp from '../../helpers/number/clamp';
 import pause from '../../helpers/schedulers/pause';
-import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
-import {getCurrentAccountFromURL} from '../appManagers/utils/currentAccountFromURL';
+import {ActiveAccountNumber} from '../accounts/types';
+import {getCurrentAccountFromURL} from '../accounts/getCurrentAccountFromURL';
 
 const ctx = self as any as ServiceWorkerGlobalScope;
 

@@ -11,7 +11,7 @@ import SuperMessagePort from '../mtproto/superMessagePort';
 import {MOUNT_CLASS_TO} from '../../config/debug';
 import {InputFileLocation, InputGroupCall} from '../../layer';
 import {GroupCallRtmpState} from '../appManagers/appGroupCallsManager';
-import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../accounts/types';
 
 export type ServicePushPingTaskPayload = {
   localNotifications: boolean,

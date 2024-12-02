@@ -1,9 +1,14 @@
-import {ActiveAccountNumber, CURRENT_ACCOUNT_QUERY_PARAM} from './appManagers/utils/currentAccountTypes';
+import {CURRENT_ACCOUNT_QUERY_PARAM} from './constants';
+import {ActiveAccountNumber} from './types';
 
-export function createAppURLForAccount(accountNumber: ActiveAccountNumber, hashParams?: Record<string, string>, keepHash = false) {
+export function createAppURLForAccount(
+  accountNumber: ActiveAccountNumber,
+  hashParams?: Record<string, string>,
+  keepHash = false
+) {
   const url = new URL(location.href);
 
-  const filteredEntries = Object.entries(hashParams || {}).filter(entry => entry[1]);
+  const filteredEntries = Object.entries(hashParams || {}).filter((entry) => entry[1]);
   const filteredParams = Object.fromEntries(filteredEntries);
 
   if(filteredEntries.length) {

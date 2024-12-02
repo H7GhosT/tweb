@@ -45,11 +45,11 @@ import {MTAppConfig} from './appConfig';
 import {setAppStateSilent} from '../../stores/appState';
 import getObjectKeysAndSort from '../../helpers/object/getObjectKeysAndSort';
 import {reconcilePeer, reconcilePeers} from '../../stores/peers';
-import {getCurrentAccount} from '../appManagers/utils/currentAccount';
-import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
+import {getCurrentAccount} from '../accounts/getCurrentAccount';
+import {ActiveAccountNumber} from '../accounts/types';
 import {createProxiedManagersForAccount, ProxiedManagers} from '../appManagers/getProxiedManagers';
 import noop from '../../helpers/noop';
-import AccountController from '../accountController';
+import AccountController from '../accounts/accountController';
 import getPeerTitle from '../../components/wrappers/getPeerTitle';
 import I18n from '../langPack';
 import {getPeerAvatarColorByPeer} from '../appManagers/utils/peers/getPeerColorById';
@@ -58,7 +58,7 @@ import drawCircle from '../../helpers/canvas/drawCircle';
 import getAbbreviation from '../richTextProcessor/getAbbreviation';
 import {FontFamily} from '../../config/font';
 import {NOTIFICATION_BADGE_PATH} from '../../config/notifications';
-import {createAppURLForAccount} from '../createAppURLForAccount';
+import {createAppURLForAccount} from '../accounts/createAppURLForAccount';
 
 const TEST_NO_STREAMING = false;
 

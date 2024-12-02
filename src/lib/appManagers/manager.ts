@@ -56,7 +56,7 @@ import type AppBusinessManager from './appBusinessManager';
 import type AppTranslationsManager from './appTranslationsManager';
 import type {AppManagers} from './managers';
 import AppGifsManager from './appGifsManager';
-import {ActiveAccountNumber} from './utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../accounts/types';
 
 export class AppManager {
   private accountNumber: ActiveAccountNumber;

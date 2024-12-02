@@ -40,9 +40,10 @@ import {IS_OVERLAY_SCROLL_SUPPORTED, USE_CUSTOM_SCROLL, USE_NATIVE_SCROLL} from 
 import IMAGE_MIME_TYPES_SUPPORTED, {IMAGE_MIME_TYPES_SUPPORTED_PROMISE} from './environment/imageMimeTypesSupport';
 import MEDIA_MIME_TYPES_SUPPORTED from './environment/mediaMimeTypesSupport';
 import {doubleRaf} from './helpers/schedulers';
-import {getCurrentAccount} from './lib/appManagers/utils/currentAccount';
-import AccountController, {MAX_ACCOUNTS_FREE, MAX_ACCOUNTS_PREMIUM} from './lib/accountController';
-import {changeAccount} from './lib/changeAccount';
+import {getCurrentAccount} from './lib/accounts/getCurrentAccount';
+import AccountController from './lib/accounts/accountController';
+import {changeAccount} from './lib/accounts/changeAccount';
+import {MAX_ACCOUNTS_FREE, MAX_ACCOUNTS_PREMIUM} from './lib/accounts/constants';
 
 
 IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {

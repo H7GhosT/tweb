@@ -57,7 +57,7 @@ import AppStatisticsManager from './appStatisticsManager';
 import AppBusinessManager from './appBusinessManager';
 import AppTranslationsManager from './appTranslationsManager';
 import AppGifsManager from './appGifsManager';
-import {ActiveAccountNumber} from './utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../accounts/types';
 import {AppManager} from './manager';
 
 export default function createManagers(

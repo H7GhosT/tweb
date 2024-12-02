@@ -5,13 +5,13 @@
  */
 
 import {getDatabaseState} from '../../config/databases/state';
-import {MAX_ACCOUNTS} from '../accountController';
+import {MAX_ACCOUNTS} from '../accounts/constants';
 import {logger} from '../logger';
 import MTProtoMessagePort from '../mtproto/mtprotoMessagePort';
 import AppStorage from '../storage';
 import {ResetStoragesPromise} from './appStateManager';
 import {AppManager} from './manager';
-import {ActiveAccountNumber} from './utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../accounts/types';
 import createStorages from './utils/storages/createStorages';
 import loadStorages from './utils/storages/loadStorages';
 

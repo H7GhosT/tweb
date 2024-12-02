@@ -13,10 +13,10 @@ import cryptoMessagePort from '../crypto/cryptoMessagePort';
 import MTProtoMessagePort from '../mtproto/mtprotoMessagePort';
 import {AppStoragesManager} from './appStoragesManager';
 import createManagers from './createManagers';
-import {ActiveAccountNumber} from './utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../accounts/types';
 import AppStateManager from './appStateManager';
 import rootScope from '../rootScope';
-import AccountController from '../accountController';
+import AccountController from '../accounts/accountController';
 
 type Managers = Awaited<ReturnType<typeof createManagers>>;
 

@@ -9,7 +9,7 @@ import type {UserAuth} from './mtproto/mtproto_config';
 import type {DcId} from '../types';
 import {MOUNT_CLASS_TO} from '../config/debug';
 import LocalStorageController from './localStorage';
-import {AccountSessionData, ActiveAccountNumber} from './appManagers/utils/currentAccountTypes';
+import {AccountSessionData} from './accounts/types';
 
 const sessionStorage = new LocalStorageController<{
   dc: DcId,

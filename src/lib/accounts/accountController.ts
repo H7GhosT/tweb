@@ -1,11 +1,9 @@
-import {MOUNT_CLASS_TO} from '../config/debug';
+import {MOUNT_CLASS_TO} from '../../config/debug';
 
-import {AccountSessionData, ActiveAccountNumber} from './appManagers/utils/currentAccountTypes';
-import sessionStorage from './sessionStorage';
+import sessionStorage from '../sessionStorage';
 
-export const MAX_ACCOUNTS_FREE = 3;
-export const MAX_ACCOUNTS_PREMIUM = 4;
-export const MAX_ACCOUNTS = MAX_ACCOUNTS_PREMIUM;
+import {AccountSessionData, ActiveAccountNumber} from './types';
+import {MAX_ACCOUNTS} from './constants';
 
 export class AccountController {
   static async getTotalAccounts() {

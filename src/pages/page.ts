@@ -5,7 +5,7 @@
  */
 
 import {AuthBackButton} from '../components/authBackButton';
-import {getCurrentAccount} from '../lib/appManagers/utils/currentAccount';
+import {getCurrentAccount} from '../lib/accounts/getCurrentAccount';
 import pagesManager from './pagesManager';
 
 export default class Page {

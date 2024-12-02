@@ -1,7 +1,9 @@
 import {doubleRaf} from '../helpers/schedulers';
 import pause from '../helpers/schedulers/pause';
-import {getValidatedAccount} from '../lib/appManagers/utils/currentAccountFromURL';
-import {changeAccount} from '../lib/changeAccount';
+
+import {getValidatedAccount} from '../lib/accounts/getValidatedAccount';
+import {changeAccount} from '../lib/accounts/changeAccount';
+
 import ButtonIcon from './buttonIcon';
 
 export function AuthBackButton() {

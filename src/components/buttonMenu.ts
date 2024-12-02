@@ -21,8 +21,7 @@ import RadioForm from './radioForm';
 import wrapAttachBotIcon from './wrappers/attachBotIcon';
 import {createRoot} from 'solid-js';
 import {AvatarNew} from './avatarNew';
-import rootScope from '../lib/rootScope';
-import {ActiveAccountNumber} from '../lib/appManagers/utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../lib/accounts/types';
 
 type ButtonMenuItemInner = Omit<Parameters<typeof ButtonMenuSync>[0], 'listenerSetter'>;
 type AvatarInfo = {

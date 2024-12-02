@@ -26,7 +26,7 @@ import {MOUNT_CLASS_TO} from '../config/debug';
 import MTProtoMessagePort from './mtproto/mtprotoMessagePort';
 import {IS_WORKER} from '../helpers/context';
 import {RtmpCallInstance} from './calls/rtmpCallsController';
-import {ActiveAccountNumber} from './appManagers/utils/currentAccountTypes';
+import {ActiveAccountNumber} from './accounts/types';
 
 export type BroadcastEvents = {
   'chat_full_update': ChatId,

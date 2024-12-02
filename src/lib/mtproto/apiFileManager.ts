@@ -44,7 +44,7 @@ import isWebFileLocation from '../appManagers/utils/webFiles/isWebFileLocation';
 import appManagersManager from '../appManagers/appManagersManager';
 import clamp from '../../helpers/number/clamp';
 import insertInDescendSortedArray from '../../helpers/array/insertInDescendSortedArray';
-import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../accounts/types';
 
 export type DownloadOptions = {
   dcId: DcId,

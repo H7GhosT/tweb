@@ -34,11 +34,11 @@ import {getEnvironment} from '../../environment/utils';
 import tsNow from '../../helpers/tsNow';
 import transportController from './transports/controller';
 import MTTransport from './transports/transport';
-import AccountController from '../accountController';
+import AccountController from '../accounts/accountController';
 import {AppStoragesManager} from '../appManagers/appStoragesManager';
 import commonStateStorage from '../commonStateStorage';
 import CacheStorageController from '../files/cacheStorage';
-import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../accounts/types';
 
 /* class RotatableArray<T> {
   public array: Array<T> = [];

@@ -20,8 +20,8 @@ import toggleStorages from '../../helpers/toggleStorages';
 import appTabsManager from '../appManagers/appTabsManager';
 import callbackify from '../../helpers/callbackify';
 import Modes from '../../config/modes';
-import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
-import AccountController from '../accountController';
+import {ActiveAccountNumber} from '../accounts/types';
+import AccountController from '../accounts/accountController';
 import commonStateStorage from '../commonStateStorage';
 
 const log = logger('MTPROTO');

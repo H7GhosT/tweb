@@ -1,5 +1,7 @@
-import appNavigationController from '../components/appNavigationController';
-import {ActiveAccountNumber, CURRENT_ACCOUNT_QUERY_PARAM} from './appManagers/utils/currentAccountTypes';
+import appNavigationController from '../../components/appNavigationController';
+
+import {CURRENT_ACCOUNT_QUERY_PARAM} from './constants';
+import {ActiveAccountNumber} from './types';
 
 export function changeAccount(accountNumber: ActiveAccountNumber, newTab = false) {
   const url = new URL(location.href);

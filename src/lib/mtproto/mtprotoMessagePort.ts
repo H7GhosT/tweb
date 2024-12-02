@@ -11,7 +11,7 @@ import type {LocalStorageProxyTask} from '../localStorage';
 import type {MirrorTaskPayload, NotificationBuildTaskPayload, TabState} from './mtprotoworker';
 import type toggleStorages from '../../helpers/toggleStorages';
 import SuperMessagePort from './superMessagePort';
-import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../accounts/types';
 import {LoadStateResult} from '../appManagers/utils/state/loadState';
 
 export type MTProtoManagerTaskPayload = {name: string, method: string, args: any[], accountNumber: ActiveAccountNumber};

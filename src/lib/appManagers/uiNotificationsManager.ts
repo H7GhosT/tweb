@@ -33,14 +33,14 @@ import webPushApiManager, {PushSubscriptionNotify} from '../mtproto/webPushApiMa
 import rootScope from '../rootScope';
 import appImManager from './appImManager';
 import appRuntimeManager from './appRuntimeManager';
-import {getCurrentAccount} from './utils/currentAccount';
+import {getCurrentAccount} from '../accounts/getCurrentAccount';
 import limitSymbols from '../../helpers/string/limitSymbols';
 import apiManagerProxy, {NotificationBuildTaskPayload} from '../mtproto/mtprotoworker';
 import commonStateStorage from '../commonStateStorage';
-import {ActiveAccountNumber} from './utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../accounts/types';
 import {createProxiedManagersForAccount} from './getProxiedManagers';
-import AccountController from '../accountController';
-import {createAppURLForAccount} from '../createAppURLForAccount';
+import AccountController from '../accounts/accountController';
+import {createAppURLForAccount} from '../accounts/createAppURLForAccount';
 
 type MyNotification = Notification & {
   hidden?: boolean,
@@ -912,7 +912,3 @@ export class UiNotificationsManager {
     });
   }
 }
-
-// const uiNotificationsManager = new UiNotificationsManager();
-// MOUNT_CLASS_TO && (MOUNT_CLASS_TO.uiNotificationsManager = uiNotificationsManager);
-// export default uiNotificationsManager;

@@ -28,8 +28,8 @@ import rootScope from '../lib/rootScope';
 import TelInputField from '../components/telInputField';
 import apiManagerProxy from '../lib/mtproto/mtprotoworker';
 import CountryInputField from '../components/countryInputField';
-import {getCurrentAccount} from '../lib/appManagers/utils/currentAccount';
-import AccountController from '../lib/accountController';
+import {getCurrentAccount} from '../lib/accounts/getCurrentAccount';
+import AccountController from '../lib/accounts/accountController';
 import commonStateStorage from '../lib/commonStateStorage';
 
 // import _countries from '../countries_pretty.json';

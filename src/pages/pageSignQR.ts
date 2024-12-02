@@ -18,7 +18,7 @@ import fixBase64String from '../helpers/fixBase64String';
 import bytesCmp from '../helpers/bytes/bytesCmp';
 import bytesToBase64 from '../helpers/bytes/bytesToBase64';
 import textToSvgURL from '../helpers/textToSvgURL';
-import AccountController from '../lib/accountController';
+import AccountController from '../lib/accounts/accountController';
 
 const FETCH_INTERVAL = 3;
 

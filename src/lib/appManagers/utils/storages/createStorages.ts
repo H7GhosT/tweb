@@ -9,7 +9,7 @@ import type {Dialog} from '../../appMessagesManager';
 import type {User} from '../../appUsersManager';
 import {AccountDatabase, getDatabaseState} from '../../../../config/databases/state';
 import AppStorage from '../../../storage';
-import {ActiveAccountNumber} from '../currentAccountTypes';
+import {ActiveAccountNumber} from '../../../accounts/types';
 
 export type StoragesStorages = {
   users: AppStorage<Record<UserId, User>, AccountDatabase>,

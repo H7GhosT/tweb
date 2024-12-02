@@ -41,8 +41,8 @@ import pause from '../../helpers/schedulers/pause';
 import {getEnvironment} from '../../environment/utils';
 import {TimeManager} from './timeManager';
 import indexOfAndSplice from '../../helpers/array/indexOfAndSplice';
-import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
-import AccountController from '../accountController';
+import {ActiveAccountNumber} from '../accounts/types';
+import AccountController from '../accounts/accountController';
 
 // console.error('networker included!', new Error().stack);
 

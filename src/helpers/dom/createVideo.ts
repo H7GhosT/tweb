@@ -1,5 +1,5 @@
 import {getHeavyAnimationPromise} from '../../hooks/useHeavyAnimationCheck';
-import {getCurrentAccount} from '../../lib/appManagers/utils/currentAccount';
+import {getCurrentAccount} from '../../lib/accounts/getCurrentAccount';
 import apiManagerProxy from '../../lib/mtproto/mtprotoworker';
 import {Middleware} from '../middleware';
 

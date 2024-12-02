@@ -1,4 +1,4 @@
-import {MAX_ACCOUNTS_FREE, MAX_ACCOUNTS_PREMIUM} from '../../lib/accountController';
+import {MAX_ACCOUNTS_FREE, MAX_ACCOUNTS_PREMIUM} from '../../lib/accounts/constants';
 import {i18n, i18n_} from '../../lib/langPack';
 
 import Button from '../button';
