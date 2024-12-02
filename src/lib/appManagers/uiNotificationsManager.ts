@@ -348,7 +348,8 @@ export class UiNotificationsManager {
 
     const accountNumber = await this.managers.apiManager.getAccountNumber()
     const isDifferentAccount = accountNumber !== getCurrentAccount();
-    if(isOtherTabActive || isDifferentAccount) {
+    const hasMoreThanOneAccount = (await AccountController.getTotalAccounts()) > 1;
+    if((hasMoreThanOneAccount && isOtherTabActive) || isDifferentAccount) {
       // ' ➜ '
       notification.title += ' \u279C ' + wrapUserName(await this.managers.appUsersManager.getSelf());
     }
