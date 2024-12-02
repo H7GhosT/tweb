@@ -41,6 +41,8 @@ import IMAGE_MIME_TYPES_SUPPORTED, {IMAGE_MIME_TYPES_SUPPORTED_PROMISE} from './
 import MEDIA_MIME_TYPES_SUPPORTED from './environment/mediaMimeTypesSupport';
 import {doubleRaf} from './helpers/schedulers';
 import {getCurrentAccount} from './lib/appManagers/utils/currentAccount';
+import AccountController, {MAX_ACCOUNTS_FREE, MAX_ACCOUNTS_PREMIUM} from './lib/accountController';
+import {changeAccount} from './lib/changeAccount';
 
 
 IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {
@@ -393,6 +395,18 @@ IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {
 
   if(authState._ !== 'authStateSignedIn'/*  || 1 === 1 */) {
     console.log('Will mount auth page:', authState._, Date.now() / 1000);
+
+    (async() => {
+      const totalAccounts = await AccountController.getTotalAccounts();
+      const hasSomeonePremium = await apiManagerProxy.hasSomeonePremium();
+      const maxAccountNumber = hasSomeonePremium ? MAX_ACCOUNTS_PREMIUM : MAX_ACCOUNTS_FREE;
+
+      const currentAccount = getCurrentAccount();
+
+      if(currentAccount > Math.min(maxAccountNumber, totalAccounts + 1)) {
+        changeAccount(1);
+      }
+    })();
 
     const el = document.getElementById('auth-pages');
     let scrollable: HTMLElement;

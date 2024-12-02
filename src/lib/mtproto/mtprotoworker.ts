@@ -46,7 +46,7 @@ import {setAppStateSilent} from '../../stores/appState';
 import getObjectKeysAndSort from '../../helpers/object/getObjectKeysAndSort';
 import {reconcilePeer, reconcilePeers} from '../../stores/peers';
 import {getCurrentAccount} from '../appManagers/utils/currentAccount';
-import {ActiveAccountNumber, CURRENT_ACCOUNT_QUERY_PARAM} from '../appManagers/utils/currentAccountTypes';
+import {ActiveAccountNumber} from '../appManagers/utils/currentAccountTypes';
 import {createProxiedManagersForAccount, ProxiedManagers} from '../appManagers/getProxiedManagers';
 import noop from '../../helpers/noop';
 import AccountController from '../accountController';
@@ -939,6 +939,20 @@ class ApiManagerProxy extends MTProtoMessagePort {
     return callbackify(this.getAppConfig(), (appConfig) => {
       return !!appConfig.premium_purchase_blocked;
     });
+  }
+
+  public async hasSomeonePremium() {
+    const totalAccounts = await AccountController.getTotalAccounts();
+
+    let hasSomeonePremium = false;
+    for(let i = 1; i <= totalAccounts; i++) {
+      const accountNumber = i as ActiveAccountNumber;
+      const managers = createProxiedManagersForAccount(accountNumber);
+      hasSomeonePremium ||= await managers.rootScope.getPremium();
+      if(hasSomeonePremium) break;
+    }
+
+    return hasSomeonePremium;
   }
 
   public updateTabState<T extends keyof TabState>(key: T, value: TabState[T]) {
