@@ -499,7 +499,7 @@ IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {
         Promise.resolve();
 
       promise.then(async() => {
-        await pause(100);
+        await pause(20);
         finishEnteringAnimation();
       });
 
