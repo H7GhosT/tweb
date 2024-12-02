@@ -394,8 +394,6 @@ IMAGE_MIME_TYPES_SUPPORTED_PROMISE.then((mimeTypes) => {
   if(authState._ !== 'authStateSignedIn'/*  || 1 === 1 */) {
     console.log('Will mount auth page:', authState._, Date.now() / 1000);
 
-    document.body.classList.add('has-auth-pages');
-
     const el = document.getElementById('auth-pages');
     let scrollable: HTMLElement;
 

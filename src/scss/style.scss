@@ -556,6 +556,8 @@ body {
   color: var(--primary-text-color);
   user-select: none;
 
+  transition: background-color 0.2s;
+
   &.has-auth-pages {
     background-color: var(--surface-color);
   }

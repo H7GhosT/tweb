@@ -85,6 +85,7 @@ import pause from '../../helpers/schedulers/pause';
 import AccountsLimitPopup from './accountsLimitPopup';
 import {changeAccount} from '../../lib/changeAccount';
 import {UiNotificationsManager} from '../../lib/appManagers/uiNotificationsManager';
+import {updateStorageForWebA} from '../../lib/updateStorageForWebA';
 
 export const LEFT_COLUMN_ACTIVE_CLASSNAME = 'is-left-column-shown';
 
@@ -384,11 +385,11 @@ export class AppSidebarLeft extends SidebarSlider {
           },
           verify: () => liteMode.isEnabled()
         }, {
-          icon: 'char' as Icon,
-          className: 'a',
+          icon: 'aversion',
           text: 'ChatList.Menu.SwitchTo.A',
           onClick: () => {
             Promise.all([
+              updateStorageForWebA(),
               sessionStorage.set({kz_version: 'Z'}),
               sessionStorage.delete('tgme_sync')
             ]).then(() => {
@@ -1147,4 +1148,3 @@ function getVersionLink() {
   // const a = btnMenu.querySelector('.a .btn-menu-item-icon');
   // if(a) a.textContent = 'A';
 }
-
