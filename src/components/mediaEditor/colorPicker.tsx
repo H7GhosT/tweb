@@ -1,4 +1,4 @@
-import {createEffect, createMemo, createSignal, on, onCleanup, onMount, useContext} from 'solid-js';
+import {batch, createEffect, createMemo, createSignal, on, onCleanup, onMount, useContext} from 'solid-js';
 
 import {hexToRgb} from '../../helpers/color';
 import _ColorPicker from '../colorPicker';
@@ -139,25 +139,29 @@ export default function ColorPicker(props: {
         await doubleRaf();
         const newCollapsed = colorPickerSwatches.includes(props.value);
         if(newCollapsed !== collapsed()) {
-          setCollapsed(newCollapsed);
-          if(newCollapsed) {
-            setCollapsing(true);
-            await delay(200);
-            setCollapsing(false);
-          }
+          batch(() => {
+            setCollapsed(newCollapsed);
+            if(newCollapsed) {
+              setCollapsing(true);
+              delay(200).then(() => setCollapsing(false));
+            }
+          });
         }
       }
     )
   );
 
-  createEffect(() => {
-    if(!collapsing() && props.value !== colorPicker().getCurrentColor().hex) {
-      colorPicker().setColor(props.value);
-      doubleRaf().then(() => {
-        colorPicker().setColor(props.value);
-      });
-    }
-  });
+  createEffect(
+    on(
+      () => [collapsing(), colorPicker(), props.value],
+      async() => {
+        await doubleRaf();
+        if(!collapsing() && props.value !== colorPicker().getCurrentColor().hex) {
+          colorPicker().setColor(props.value);
+        }
+      }
+    )
+  );
 
   return <div ref={sizeContainer}>{colorPicker().container}</div>;
 }
