@@ -529,8 +529,7 @@ export class AppMessagesManager extends AppManager {
         // @ts-ignore
         const result = details.callback(details.batch);
         if(result && (!(result instanceof Array) || result.length)) {
-          // @ts-ignore
-          rootScope.dispatchEvent(event as keyof BatchUpdates, result);
+          this.rootScope.dispatchEvent(event as keyof BatchUpdates, result as any);
         }
       }
     }, 33, false, true);
