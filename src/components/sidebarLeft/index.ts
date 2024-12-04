@@ -191,6 +191,8 @@ export class AppSidebarLeft extends SidebarSlider {
 
         localStorage.setItem('previous-account', getCurrentAccount() + '');
         if(!e.ctrlKey) {
+          appImManager.goOffline();
+
           localStorage.setItem('should-animate-auth', 'true');
 
           const chatsPageEl = document.querySelector('.page-chats');
@@ -326,6 +328,8 @@ export class AppSidebarLeft extends SidebarSlider {
               regularText: content,
               onClick: async(e) => {
                 if(!e.ctrlKey) {
+                  appImManager.goOffline();
+
                   const chatListEl = document.querySelector('.chatlist-container')?.firstElementChild;
                   chatListEl.classList.add('chatlist-exit');
                   await doubleRaf();

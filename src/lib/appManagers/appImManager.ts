@@ -2143,6 +2143,11 @@ export class AppImManager extends EventListenerBase<{
     return this.managers.appUsersManager.updateMyOnlineStatus(this.offline);
   }
 
+  public goOffline() {
+    this.offline = true;
+    this.updateStatus();
+  }
+
   private createNewChat() {
     const chat = new Chat(
       this,
