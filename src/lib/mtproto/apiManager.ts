@@ -314,7 +314,7 @@ export class ApiManager extends ApiManagerMethods {
     const clear = async() => {
       this.baseDcId = undefined;
       // this.telegramMeNotify(false);
-      if(totalAccounts === 1) {
+      if(totalAccounts === 1 && accountNumber === 1 && !migrateAccountTo) {
         await sessionStorage.delete(`account1`);
         await AppStoragesManager.clearAllStoresForAccount(1);
         await commonStateStorage.clear();
