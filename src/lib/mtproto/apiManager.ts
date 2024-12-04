@@ -616,6 +616,11 @@ export class ApiManager extends ApiManagerMethods {
         }
 
         if(error.code === 401 && this.baseDcId === dcId) {
+          if(error.type !== 'SESSION_PASSWORD_NEEDED') {
+            AccountController.update(this.getAccountNumber(), {
+              dcId: undefined
+            });
+          }
           throw error;
         } else if(error.code === 401 && this.baseDcId && dcId !== this.baseDcId) {
           if(this.cachedExportPromise[dcId] === undefined) {
