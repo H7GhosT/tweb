@@ -12,7 +12,6 @@ import LocalStorageController from './localStorage';
 import {AccountSessionData} from './accounts/types';
 
 const sessionStorage = new LocalStorageController<{
-  dc: DcId,
   state_id: number,
 
   account1: AccountSessionData,
@@ -21,6 +20,7 @@ const sessionStorage = new LocalStorageController<{
   account4: AccountSessionData,
 
   // <-- DEPRECATED, use only for going to and from 'A' (a.k.a. 'Z') version
+  dc: DcId,
   user_auth: UserAuth,
   dc1_auth_key: string,
   dc2_auth_key: string,

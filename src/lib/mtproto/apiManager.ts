@@ -242,7 +242,8 @@ export class ApiManager extends ApiManagerMethods {
       return this.baseDcId;
     }
 
-    const baseDcId = await sessionStorage.get('dc');
+    const accountData = await AccountController.get(this.getAccountNumber());
+    const baseDcId = accountData?.dcId;
     if(!this.baseDcId) {
       if(!baseDcId) {
         this.setBaseDcId(App.baseDcId);
@@ -285,8 +286,8 @@ export class ApiManager extends ApiManagerMethods {
 
     this.baseDcId = dcId;
 
-    sessionStorage.set({
-      dc: this.baseDcId
+    AccountController.update(this.getAccountNumber(), {
+      dcId: this.baseDcId as TrueDcId
     });
   }
 
@@ -615,14 +616,6 @@ export class ApiManager extends ApiManagerMethods {
         }
 
         if(error.code === 401 && this.baseDcId === dcId) {
-          if(error.type !== 'SESSION_PASSWORD_NEEDED') {
-            sessionStorage.delete('dc')
-
-            // TODO Check here
-            sessionStorage.delete('user_auth'); // ! возможно тут вообще не нужно это делать, но нужно проверить случай с USER_DEACTIVATED (https://core.telegram.org/api/errors)
-            // this.telegramMeNotify(false);
-          }
-
           throw error;
         } else if(error.code === 401 && this.baseDcId && dcId !== this.baseDcId) {
           if(this.cachedExportPromise[dcId] === undefined) {

@@ -8,6 +8,7 @@ import sessionStorage from './sessionStorage';
 export async function updateStorageForWebA() {
   const accountNumber = getCurrentAccount();
   const accountData = await AccountController.get(accountNumber);
+  if(!accountData) return;
 
   for(let i = 1; i <= 5; i++) {
     const authKeyKey = `dc${i as TrueDcId}_auth_key` as const;
@@ -31,5 +32,8 @@ export async function updateStorageForWebA() {
       id: accountData.userId,
       dcID: accountData.dcId || 0
     }
+  });
+  if(accountData['dcId']) await sessionStorage.set({
+    dc: accountData.dcId
   });
 }
