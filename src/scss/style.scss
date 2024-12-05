@@ -488,6 +488,7 @@
 @import "partials/popups/aboutAd";
 @import "partials/popups/deleteMegagroupMessages";
 @import "partials/popups/stars";
+@import "partials/popups/accountsLimit";
 
 @import "partials/pages/pages";
 @import "partials/pages/authCode";
@@ -554,6 +555,12 @@ body {
   background-color: var(--body-background-color);
   color: var(--primary-text-color);
   user-select: none;
+
+  transition: background-color 0.2s;
+
+  &.has-auth-pages {
+    background-color: var(--surface-color);
+  }
 }
 
 

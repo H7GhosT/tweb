@@ -3,7 +3,8 @@
 import lang from '../../lang';
 import I18n from '../../lib/langPack';
 
-const mediaEditorLang = Object.fromEntries(Object.entries(lang).filter(([key]) => key.startsWith('MediaEditor')));
+const startIdx = Object.entries(lang).findIndex(([key]) => key.startsWith('MediaEditor'))
+const mediaEditorLang = Object.fromEntries(Object.entries(lang).slice(startIdx, Infinity));
 
 let injected = false;
 
