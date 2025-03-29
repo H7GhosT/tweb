@@ -17,7 +17,7 @@ import ChatContextMenu from './contextMenu';
 import ChatInput from './input';
 import ChatSelection from './selection';
 import ChatTopbar from './topbar';
-import {NULL_PEER_ID, REPLIES_PEER_ID, SEND_PAID_REACTION_DELAY} from '../../lib/mtproto/mtproto_config';
+import {NULL_PEER_ID, REPLIES_PEER_ID, SEND_PAID_WITH_STARS_DELAY} from '../../lib/mtproto/mtproto_config';
 import SetTransition from '../singleTransition';
 import AppPrivateSearchTab from '../sidebarRight/tabs/search';
 import renderImageFromUrl from '../../helpers/dom/renderImageFromUrl';
@@ -64,7 +64,7 @@ import PopupStars from '../popups/stars';
 import {getPendingPaidReactionKey, PENDING_PAID_REACTIONS} from './reactions';
 import ChatBackgroundStore from '../../lib/chatBackgroundStore';
 import appDownloadManager from '../../lib/appManagers/appDownloadManager';
-import showPaidReactionTooltip from './paidReactionTooltip';
+import showUndoablePaidTooltip, {paidReactionLangKeys} from './undoablePaidTooltip';
 
 export enum ChatType {
   Chat = 'chat',
@@ -142,6 +142,8 @@ export default class Chat extends EventListenerBase<{
   public isAnonymousSending: boolean;
   public isUserBlocked: boolean;
   public isPremiumRequired: boolean;
+
+  public starsAmount: number | undefined;
 
   public animationGroup: AnimationItemGroup;
 
@@ -835,7 +837,8 @@ export default class Chat extends EventListenerBase<{
       isBot,
       isAnonymousSending,
       isUserBlocked,
-      isPremiumRequired
+      isPremiumRequired,
+      starsAmount
     ] = await m(Promise.all([
       this.managers.appPeersManager.noForwards(peerId),
       this.managers.appPeersManager.isPeerRestricted(peerId),
@@ -848,7 +851,8 @@ export default class Chat extends EventListenerBase<{
       this.managers.appPeersManager.isBot(peerId),
       this.managers.appMessagesManager.isAnonymousSending(peerId),
       peerId.isUser() && this.managers.appProfileManager.isCachedUserBlocked(peerId),
-      this.isPremiumRequiredToContact(peerId)
+      this.isPremiumRequiredToContact(peerId),
+      this.managers.appPeersManager.getStarsAmount(peerId)
     ]));
 
     // ! WARNING: TEMPORARY, HAVE TO GET TOPIC
@@ -869,6 +873,7 @@ export default class Chat extends EventListenerBase<{
     this.isAnonymousSending = isAnonymousSending;
     this.isUserBlocked = isUserBlocked;
     this.isPremiumRequired = isPremiumRequired;
+    this.starsAmount = starsAmount;
 
     if(this.selection) {
       this.selection.isScheduled = type === ChatType.Scheduled;
@@ -1341,7 +1346,7 @@ export default class Chat extends EventListenerBase<{
       }
 
       pending.setCount((_count) => _count + count);
-      pending.setSendTime(Date.now() + SEND_PAID_REACTION_DELAY);
+      pending.setSendTime(Date.now() + SEND_PAID_WITH_STARS_DELAY);
       pending.sendTimeout = window.setTimeout(() => {
         const count = pending.count();
         pending.abortController.abort();
@@ -1349,13 +1354,17 @@ export default class Chat extends EventListenerBase<{
           ...options,
           count
         });
-      }, SEND_PAID_REACTION_DELAY);
+      }, SEND_PAID_WITH_STARS_DELAY);
 
       setReservedStars((reservedStars) => reservedStars + count);
 
       if(!hadPending) {
-        showPaidReactionTooltip({
-          pending
+        showUndoablePaidTooltip({
+          titleCount: pending.count,
+          subtitleCount: pending.count,
+          sendTime: pending.sendTime,
+          onUndo: () => void pending.abortController.abort(),
+          ...paidReactionLangKeys
         });
       }
     }
