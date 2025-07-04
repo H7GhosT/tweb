@@ -99,6 +99,8 @@ import DeferredIsUsingPasscode from '../../lib/passcode/deferredIsUsingPasscode'
 import EncryptionKeyStore from '../../lib/passcode/keyStore';
 import createLockButton from './lockButton';
 import {MAX_SIDEBAR_WIDTH, MIN_SIDEBAR_WIDTH, SIDEBAR_COLLAPSE_FACTOR} from './constants';
+import {AddToFolderDropdownMenu} from '../customSolidElements';
+import createElementFromMarkup from '../../helpers/createElementFromMarkup';
 
 export const LEFT_COLUMN_ACTIVE_CLASSNAME = 'is-left-column-shown';
 
@@ -140,6 +142,21 @@ export class AppSidebarLeft extends SidebarSlider {
   }
 
   construct(managers: AppManagers) {
+    const el = createElementFromMarkup(`
+      <div style="z-index:10000;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);min-width:320px;min-height:320px;background-color:white;border-radius:8px">
+      </div>
+    `);
+    const a = new AddToFolderDropdownMenu;
+    a.feedProps({
+      something: 777,
+      somethingElse: {
+        a: 'you are the best',
+        b: new Date()
+      }
+    })
+    el.append(a);
+    document.body.append(el);
+
     this.managers = managers;
     // this._selectTab(0); // make first tab as default
 
