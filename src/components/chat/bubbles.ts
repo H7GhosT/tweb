@@ -199,6 +199,7 @@ import {StarGiftBubble, UniqueStarGiftWebPageBox} from './bubbles/starGift';
 import {PremiumGiftBubble} from './bubbles/premiumGift';
 import {UnknownUserBubble} from './bubbles/unknownUser';
 import {isMessageForVerificationBot, isVerificationBot} from './utils';
+import {getPriceChangedActionMessageLangParams} from '../../lib/lang';
 
 export const USER_REACTIONS_INLINE = false;
 export const TEST_BUBBLES_DELETION = false;
@@ -5453,10 +5454,14 @@ export default class ChatBubbles {
           promise = peerTitle.update({peerId: action.channel_id.toPeerId(true), wrapOptions});
           s.append(i18n('ChatMigration.To', [peerTitle.element]));
         } else if(action._ === 'messageActionPaidMessagesPrice') {
-          const isFree = !+action.stars;
+          const result = getPriceChangedActionMessageLangParams(action, () => {
+            const peerTitle = new PeerTitle();
+            promise = peerTitle.update({peerId: message.peerId.toPeerId(true), wrapOptions});
+            return peerTitle.element;
+          });
           s.append(i18n(
-            isFree ? 'PaidMessages.GroupPriceChangedFree' : 'PaidMessages.GroupPriceChanged',
-            [+action.stars]
+            result.langPackKey,
+            result.args
           ));
         } else if(action._ === 'messageActionPaidMessagesRefunded') {
           const peerTitle = new PeerTitle();

@@ -27,6 +27,7 @@ import wrapMessageForReply, {WrapMessageForReplyOptions} from './messageForReply
 import wrapPeerTitle from './peerTitle';
 import shouldDisplayGiftCodeAsGift from '../../helpers/shouldDisplayGiftCodeAsGift';
 import apiManagerProxy from '../../lib/mtproto/mtprotoworker';
+import {getPriceChangedActionMessageLangParams} from '../../lib/lang';
 
 async function wrapLinkToMessage(options: WrapMessageForReplyOptions) {
   const wrapped = await wrapMessageForReply(options);
@@ -647,9 +648,9 @@ export default async function wrapMessageActionTextNewUnsafe(options: WrapMessag
       }
 
       case 'messageActionPaidMessagesPrice': {
-        const isFree = !+action.stars;
-        langPackKey = isFree ? 'PaidMessages.GroupPriceChangedFree' : 'PaidMessages.GroupPriceChanged';
-        args = [+action.stars]
+        const result = await getPriceChangedActionMessageLangParams(action, () => getNameDivHTML(message.fromId, plain));
+        langPackKey = result.langPackKey;
+        args = result.args;
         break;
       }
 
