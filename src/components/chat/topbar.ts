@@ -69,6 +69,8 @@ import PopupSendGift from '../popups/sendGift';
 import PaidMessagesInterceptor, {PAYMENT_REJECTED} from './paidMessagesInterceptor';
 import ChatRemoveFee from './removeFee';
 import ChatTopbarSponsored from './topbarSponsored';
+import pause from '../../helpers/schedulers/pause';
+import appImManager from '../../lib/appManagers/appImManager';
 
 type ButtonToVerify = {element?: HTMLElement, verify: () => boolean | Promise<boolean>};
 
@@ -92,6 +94,7 @@ export default class ChatTopbar {
   private btnMute: HTMLButtonElement;
   private btnSearch: HTMLButtonElement;
   private btnMore: HTMLElement;
+  private btnDirectMessages: HTMLElement;
 
   private chatActions: ChatActions;
   private chatRequests: ChatRequests;
@@ -200,6 +203,7 @@ export default class ChatTopbar {
       // this.chatAudio ? this.chatAudio.divAndCaption.container : null,
       // this.pinnedMessage ? this.pinnedMessage.pinnedMessageContainer.divAndCaption.container : null,
       this.btnJoin,
+      this.btnDirectMessages,
       this.btnPinned,
       this.btnCall,
       this.btnGroupCall,
@@ -212,6 +216,7 @@ export default class ChatTopbar {
     this.pushButtonToVerify(this.btnCall, this.verifyCallButton.bind(this, 'voice'));
     this.pushButtonToVerify(this.btnGroupCall, this.verifyVideoChatButton.bind(this, 'nonadmin'));
     this.pushButtonToVerify(this.btnGroupCallMenu, this.verifyVideoChatButton.bind(this, 'admin'));
+    this.pushButtonToVerify(this.btnDirectMessages, this.verifyDirectMessagesButton.bind(this));
 
     this.chatInfoContainer.append(this.btnBack, this.chatInfo, this.chatUtils);
     this.container.append(this.chatInfoContainer);
@@ -376,6 +381,14 @@ export default class ChatTopbar {
     const userFull = await this.managers.appProfileManager.getCachedFullUser(userId);
 
     return !!userFull && !!(type === 'voice' ? userFull.pFlags.phone_calls_available : userFull.pFlags.video_calls_available);
+  };
+
+  private verifyDirectMessagesButton = async() => {
+    if(!this.peerId.isAnyChat()) return false;
+    const chatFull = await this.managers.appChatsManager.getChat(this.peerId.toChatId());
+    if(chatFull._ !== 'channel') return false;
+
+    return !!(!chatFull.pFlags.monoforum && chatFull.linked_monoforum_id);
   };
 
   public constructUtils() {
@@ -690,6 +703,7 @@ export default class ChatTopbar {
     this.pinnedMessage = new ChatPinnedMessage(this, this.chat, this.managers);
 
     this.btnJoin = Button('btn-primary btn-color-primary chat-join hide');
+    this.btnDirectMessages = ButtonIcon('message');
     this.btnCall = ButtonIcon('phone');
     this.btnGroupCall = ButtonIcon('videochat');
     this.btnGroupCallMenu = ButtonMenuToggle({
@@ -729,6 +743,8 @@ export default class ChatTopbar {
     });
 
     this.attachClickEvent(this.btnJoin, this.onJoinClick.bind(this, this.btnJoin));
+
+    this.attachClickEvent(this.btnDirectMessages, this.onDirectMessagesClick.bind(this));
 
     this.listenerSetter.add(rootScope)('folder_unread', (folder) => {
       if(folder.id !== FOLDER_ID_ALL) {
@@ -864,6 +880,20 @@ export default class ChatTopbar {
       }
 
       button.removeAttribute('disabled');
+    });
+  };
+
+  private canClickOnDirectMessagesBtn = true;
+  private onDirectMessagesClick = async() => {
+    if(!this.canClickOnDirectMessagesBtn || !this.peerId.isAnyChat()) return;
+    this.canClickOnDirectMessagesBtn = false;
+    pause(200).then(() => this.canClickOnDirectMessagesBtn = true);
+
+    const chat = await this.managers.appChatsManager.getChat(this.peerId.toChatId());
+    if(chat._ !== 'channel') return;
+
+    appImManager.setInnerPeer({
+      peerId: chat.linked_monoforum_id.toPeerId(true)
     });
   };
 
