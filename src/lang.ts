@@ -3420,7 +3420,8 @@ const lang = {
   'ChannelsOnly': 'Channels',
   'NoResultsTitle': 'No results',
   'NoResultsSubtitle': 'Try a different search term',
-  'SearchInAllChats': 'Search in All Chats'
+  'SearchInAllChats': 'Search in All Chats',
+  'ChannelDirectMessagesBadge': 'Direct'
 };
 
 export default lang;
