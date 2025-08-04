@@ -3421,7 +3421,9 @@ const lang = {
   'NoResultsTitle': 'No results',
   'NoResultsSubtitle': 'Try a different search term',
   'SearchInAllChats': 'Search in All Chats',
-  'ChannelDirectMessagesBadge': 'Direct'
+  'ChannelDirectMessagesBadge': 'Direct',
+  'ChannelDirectMessagesWelcome': 'Send a direct message to the administrator of\n%s',
+  'ChannelDirectMessagesWelcomePaid': '%s\ncharges %s per message to its admin'
 };
 
 export default lang;

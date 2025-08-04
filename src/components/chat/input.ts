@@ -1544,8 +1544,8 @@ export default class ChatInput {
   }
 
   public getJoinButtonType() {
-    const {peerId, threadId} = this.chat;
-    if(peerId.isUser()) {
+    const {peerId, threadId, isMonoforum} = this.chat;
+    if(peerId.isUser() || isMonoforum) {
       return;
     }
 
