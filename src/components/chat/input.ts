@@ -124,7 +124,7 @@ import eachSecond from '../../helpers/eachSecond';
 import {wrapSlowModeLeftDuration} from '../wrappers/wrapDuration';
 import showTooltip from '../tooltip';
 import createContextMenu from '../../helpers/dom/createContextMenu';
-import {Accessor, createEffect, createMemo, createRoot, createSignal, Setter} from 'solid-js';
+import {Accessor, createEffect, createMemo, createRoot, createSignal, onCleanup, Setter} from 'solid-js';
 import {createStore} from 'solid-js/store';
 import SelectedEffect from './selectedEffect';
 import windowSize from '../../helpers/windowSize';
@@ -351,7 +351,8 @@ export default class ChatInput {
 
   public paidMessageInterceptor: PaidMessagesInterceptor;
 
-  private starsState: ReturnType<ChatInput['constructStarsState']>;
+  private starsState: ReturnType<ChatInput['createStarsState']>;
+  private directMessagesHandler: ReturnType<ChatInput['createDirectMessagesHandler']>;
 
   constructor(
     public chat: Chat,
@@ -480,7 +481,8 @@ export default class ChatInput {
       this.paidMessageInterceptor.dispose();
     });
 
-    this.starsState = this.constructStarsState();
+    this.starsState = this.createStarsState();
+    this.directMessagesHandler = this.createDirectMessagesHandler();
   }
 
   public freezeFocused(focused: boolean) {
@@ -1993,6 +1995,7 @@ export default class ChatInput {
     const placeholderParams = this.messageInput ? await this.getPlaceholderParams(canSendPlain) : undefined;
 
     return () => {
+      const {isMonoforum, canManageDirectMessages} = this.chat;
       // console.warn('[input] finishpeerchange start');
 
       chatInput.classList.remove('hide');
@@ -2132,6 +2135,11 @@ export default class ChatInput {
       this._center(neededFakeContainer, false);
 
       this.setStarsAmount(this.chat.starsAmount); // should reset when undefined
+
+      this.directMessagesHandler.set({
+        canManageDirectMessages,
+        isReplying: !!this.helperType
+      });
       // console.warn('[input] finishpeerchange ends');
     };
   }
@@ -2226,6 +2234,8 @@ export default class ChatInput {
       key = 'Comment';
     } else if(await this.managers.appPeersManager.isBroadcast(peerId)) {
       key = 'ChannelBroadcast';
+    } else if(this.chat.isMonoforum && this.chat.canManageDirectMessages) {
+      key = this.directMessagesHandler.store.isReplying ? 'Message' : 'ChannelDirectMessagesChooseMessage';
     } else if(
       (this.sendAsPeerId !== undefined && this.sendAsPeerId !== rootScope.myId) ||
       await this.managers.appMessagesManager.isAnonymousSending(peerId)
@@ -3309,6 +3319,8 @@ export default class ChatInput {
 
     this.clearHelper();
     this.updateSendBtn();
+
+    this.directMessagesHandler.set({isReplying: false});
   };
 
   private onHelperClick = (e?: Event) => {
@@ -3479,13 +3491,13 @@ export default class ChatInput {
   public async setStarsAmount(starsAmount: number | undefined) {
     this.starsState.set({starsAmount});
 
+    // TODO: review this `|| true` WTF?
     const params = await this.getPlaceholderParams(await this.chat?.canSend('send_plain') || true);
     this.updateMessageInputPlaceholder(params);
   }
 
-  private constructStarsState = () => createRoot((dispose) => {
-    const middleware = this.getMiddleware();
-    middleware.onDestroy(() => void dispose());
+  private createStarsState = () => createRoot((dispose) => {
+    this.getMiddleware()?.onDestroy(() => void dispose());
 
     const [store, set] = createStore({
       inited: false,
@@ -3520,6 +3532,35 @@ export default class ChatInput {
       if(!store.inited || !store.inputStarsCountEl || !forwardedMessagesStarsAmount()) return;
 
       store.inputStarsCountEl.textContent = numberThousandSplitterForStars(forwardedMessagesStarsAmount());
+    });
+
+    return {store, set};
+  });
+
+  private createDirectMessagesHandler = () => createRoot((dispose) => {
+    this.getMiddleware()?.onDestroy(() => void dispose());
+
+    const [store, set] = createStore({
+      canManageDirectMessages: false,
+      isReplying: false
+    });
+
+    createEffect(() => {
+      if(!store.canManageDirectMessages) return;
+
+      this.getPlaceholderParams().then(params => this.updateMessageInputPlaceholder(params));
+
+      if(store.isReplying) return;
+
+      this.messageInputField?.input?.classList.add('hide')
+      this.messageInputField?.setHidden(true);
+      if(this.btnToggleEmoticons) this.btnToggleEmoticons.disabled = true;
+      onCleanup(() => {
+        this.messageInputField?.input?.classList.remove('hide');
+        this.messageInputField?.setHidden(false);
+        this.btnToggleEmoticons.disabled = false;
+        if(this.btnToggleEmoticons) this.btnToggleEmoticons.disabled = false;
+      });
     });
 
     return {store, set};
@@ -4159,6 +4200,8 @@ export default class ChatInput {
     setTimeout(() => {
       this.updateSendBtn();
     }, 0);
+
+    this.directMessagesHandler.set({isReplying: true});
 
     return container;
   }
