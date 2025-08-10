@@ -119,6 +119,7 @@ import SortedDialogList from '../../components/sortedDialogList';
 import throttle from '../../helpers/schedulers/throttle';
 import {MAX_SIDEBAR_WIDTH} from '../../components/sidebarLeft/constants';
 import {unwrap} from 'solid-js/store';
+import type {MonoforumDrawerInstance} from '../../components/monoforumDrawer';
 
 export const DIALOG_LIST_ELEMENT_TAG = 'A';
 const DIALOG_LOAD_COUNT = 10;
@@ -1610,6 +1611,8 @@ export class AppDialogsManager {
 
   private forumsTabs: Map<PeerId, ForumTab>;
   private forumsSlider: HTMLElement;
+  private monoforumDrawersContainer: HTMLElement;
+  private openedMonoforumDrawers: MonoforumDrawerInstance[] = [];
   public forumTab: ForumTab;
   private forumNavigationItem: NavigationItem;
 
@@ -1642,10 +1645,15 @@ export class AppDialogsManager {
     const storiesListContainer = this.storiesListContainer = document.createElement('div');
     storiesListContainer.classList.add('stories-list');
 
+
     this.forumsTabs = new Map();
     this.forumsSlider = document.createElement('div');
     this.forumsSlider.classList.add('topics-slider');
-    this.chatsContainer.parentElement.parentElement.append(this.forumsSlider);
+
+    this.monoforumDrawersContainer = document.createElement('div');
+
+    const drawersParent = this.chatsContainer.parentElement.parentElement;
+    drawersParent.append(this.forumsSlider, this.monoforumDrawersContainer);
 
     // appSidebarLeft.onOpenTab = () => {
     //   return this.toggleForumTab();
@@ -2721,6 +2729,28 @@ export class AppDialogsManager {
     });
 
     dispatchHeavyAnimationEvent(deferred, duration).then(() => deferred.resolve());
+  }
+
+  public async openMonoforumDrawer(peerId: PeerId) {
+    const {default: MonoforumDrawer} = await import('../../components/monoforumDrawer');
+
+
+    const drawer = new MonoforumDrawer;
+    drawer.feedProps({
+      peerId,
+      onCloseFinish: () => {
+        this.openedMonoforumDrawers = this.openedMonoforumDrawers.filter(value => value !== drawer);
+      }
+    });
+
+    this.monoforumDrawersContainer.append(drawer);
+    this.openedMonoforumDrawers.push(drawer);
+
+    return drawer;
+  }
+
+  public closeMonoforumDrawer() {
+    this.openedMonoforumDrawers.forEach(value => value.controls.close());
   }
 
   public async toggleForumTabByPeerId(peerId: PeerId, show?: boolean, asInnerIfAsMessages?: boolean) {
